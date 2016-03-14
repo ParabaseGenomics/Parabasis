@@ -18,17 +18,17 @@ import java.util.ListIterator;
  * 
  * @author evanmauceli
  */
-public class Transcript {
+public class Transcript implements Comparable<Transcript> {
     
     private int numberOfExons;
-    private List<Interval> exons;
-    private String transcriptName;
-    private String geneName;
-    private Interval transcriptInterval;
-    private Interval codingInterval;
+    private final List<Exon> exons;
+    private final String transcriptName;
+    private final String geneName;
+    private final Interval transcriptInterval;
+    private final Interval codingInterval;
     private boolean isRC;
     
-    private ListIterator<Interval> exonIterator;
+    private ListIterator<Exon> exonIterator;
     
     /**
      * Constructor.  
@@ -50,7 +50,7 @@ public class Transcript {
         int numberOfExons,
         Interval transcriptSpan,
         Interval codingSpan,
-        List<Interval> exonList) {
+        List<Exon> exonList) {
             transcriptName=name;
             geneName=gene;
             transcriptInterval=transcriptSpan;
@@ -87,12 +87,23 @@ public class Transcript {
     } 
     
     /**
+     * Method to sort Transcripts by gene name. Implements Comparable::compareTo
+     * leveraging String::compareTo.
+     * @param toCompare Comparison transcript.
+     * @return int with results of the comparison.
+     */
+    @Override
+    public int compareTo(Transcript toCompare) {
+        return (geneName.compareTo(toCompare.getGeneName()));
+    }
+    
+    /**
      * From the transcript's perspective, get the first exon. Leaves 
      * the exonIterator at the next exon in the transcript.
      * @return The first exon of the transcript as an Interval, or null if 
      *  no exons, which in this case would be pathological.
      */
-    public Interval get5primeExon() {
+    public Exon get5primeExon() {
        
         // if this is a forward transcript, we've got an iterator to the first
         // exon.  If not, we'll have to go in reverse.
@@ -119,7 +130,7 @@ public class Transcript {
      * 
      * @return The next exon in the transcript, or null if no more. 
      */
-    public Interval getNextExon() {
+    public Exon getNextExon() {
         if (!isRC) {
             if (exonIterator.hasNext()) {
                 return exonIterator.next();

@@ -5,42 +5,29 @@
  */
 package com.parabasegenomics.parabasis;
 
+import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
+import java.util.ListIterator;
 
 /**
- * The GeneModel class provides translations from gene models (such as RefSeq) 
- * to genomic coordinates and back again.
+ * The GeneModel class provides translations from a gene model (represented by
+ * a list of transcripts) to genomics coordinates.
  * 
  * @author evanmauceli
  */
 public class GeneModel {
     
-    private List<Transcript> transcripts;
-    
-    private String modelName;
-    private String modelVersion;
-   
+    private final List<Transcript> transcripts;   
     private Transcript collapsedTranscript;
     
     /**
      * Constructor
      */
-    public GeneModel() {
-        
-        transcripts = new ArrayList<Transcript>();  
-    }
-    
-    /**
-     * Method to set the name of the gene models, i.e. "RefSeq" or "Ensembl" and
-     * the version.
-     * 
-     * @param name 
-     * @param version
-     */
-    public void setName(String name, String version) {
-        modelName = name;
-        modelVersion = version;
+    public GeneModel() {      
+        transcripts = new ArrayList<>();  
     }
     
     /**
@@ -49,6 +36,34 @@ public class GeneModel {
      */
     public void addTranscript(Transcript transcript) {
         transcripts.add(transcript);
+    }
+    
+ 
+    /**
+     * Method to collapse all transcripts from a gene into a flat representation 
+     * on the reference sequence. Sets the "collapsedTranscript" member variable.
+     * 
+     */
+    public void Collapse() 
+    throws IOException {
+ 
+        ListIterator<Transcript> transcriptsIteratorBegin 
+            = transcripts.listIterator(0);
+        ListIterator<Transcript> transcriptsIteratorEnd
+            = transcripts.listIterator(1);
+        
+        if (!transcriptsIteratorBegin.hasNext()) {
+            throw new IOException("No transcripts to collapse!");
+        }
+        
+        String thisGeneName = transcripts.get(0).getGeneName();
+       
+        int [] coordinateArray = new int[getGenomicSpanThisGene(thisGeneName)];
+        
+    }
+
+    private int getGenomicSpanThisGene(String thisGeneName) {
+        return 0;
     }
     
 }
