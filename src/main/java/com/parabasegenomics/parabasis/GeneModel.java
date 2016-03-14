@@ -5,6 +5,7 @@
  */
 package com.parabasegenomics.parabasis;
 
+import htsjdk.samtools.util.Interval;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -23,6 +24,8 @@ public class GeneModel {
     private final List<Transcript> transcripts;   
     private Transcript collapsedTranscript;
     
+    private String geneName;
+    
     /**
      * Constructor
      */
@@ -38,32 +41,63 @@ public class GeneModel {
         transcripts.add(transcript);
     }
     
- 
+    public void setGeneName(String name) {
+        geneName=name;
+    }
+    
     /**
      * Method to collapse all transcripts from a gene into a flat representation 
      * on the reference sequence. Sets the "collapsedTranscript" member variable.
      * 
      */
-    public void Collapse() 
-    throws IOException {
- 
-        ListIterator<Transcript> transcriptsIteratorBegin 
-            = transcripts.listIterator(0);
-        ListIterator<Transcript> transcriptsIteratorEnd
-            = transcripts.listIterator(1);
+    public void Collapse() {
+        Interval transcriptSpanInterval = getTranscriptSpanThisGene();
         
-        if (!transcriptsIteratorBegin.hasNext()) {
-            throw new IOException("No transcripts to collapse!");
+        // rely on java spec to enforce that ints are initialized to zero
+        int [] sequenceArray = new int[transcriptSpanInterval.length()];
+        
+        int offset = transcriptSpanInterval.getStart();
+        for (int base = transcriptSpanInterval.getStart(); 
+                base < transcriptSpanInterval.getEnd(); 
+                base++) {
+            
+            int sequenceArrayIndex = base - offset;
+            for (Transcript transcript : transcripts) {
+                
+                
+                
+            }
+            
         }
         
-        String thisGeneName = transcripts.get(0).getGeneName();
-       
-        int [] coordinateArray = new int[getGenomicSpanThisGene(thisGeneName)];
         
     }
 
-    private int getGenomicSpanThisGene(String thisGeneName) {
-        return 0;
+    
+    /**
+     * Method to return the maximum genomic span of this gene given all the 
+     * transcripts.
+     * @return Returns an Interval with the maximum genomic span given the
+     * associated transcripts.
+     * 
+     */
+    private Interval getTranscriptSpanThisGene() {
+        int index = 0;
+        int minTranscriptStart = transcripts.get(index).getTranscriptStart();
+        int maxTranscriptEnd = transcripts.get(index).getTranscriptEnd();
+        
+        for (; index<transcripts.size(); index++) {
+            minTranscriptStart = Math.min(
+                minTranscriptStart,transcripts.get(index).getTranscriptStart());
+            
+            maxTranscriptEnd = Math.max(
+                maxTranscriptEnd,transcripts.get(index).getTranscriptEnd());
+        }
+             
+        return new Interval(
+            transcripts.get(0).getChromosome(),
+            minTranscriptStart,
+            maxTranscriptEnd);
     }
     
 }

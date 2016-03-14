@@ -6,6 +6,7 @@
 package com.parabasegenomics.parabasis;
 
 import htsjdk.samtools.util.Interval;
+import java.io.IOException;
 import static java.lang.Boolean.FALSE;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -81,7 +82,8 @@ public class TranscriptTest {
      * to get5primeExon() to set up the iterator.
      */
     @Test
-    public void testGetNextExonFW() {
+    public void testGetNextExonFW() 
+    throws IOException {
         System.out.println("get next forward exon");
         
         transcript.get5primeExon();

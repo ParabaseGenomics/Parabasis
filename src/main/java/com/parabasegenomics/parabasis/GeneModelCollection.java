@@ -21,6 +21,8 @@ public class GeneModelCollection {
     
     private final List<Transcript> transcripts;
     
+    private final List<GeneModel> genes;
+    
     private String modelName;
     private String modelVersion;
     private boolean isSorted;
@@ -34,7 +36,8 @@ public class GeneModelCollection {
      */
     public GeneModelCollection() {      
         transcripts = new ArrayList<>();  
-        isSorted = false;       
+        isSorted = false;    
+        genes = new ArrayList<>();
     }
     
     /**
@@ -78,4 +81,52 @@ public class GeneModelCollection {
         isSorted=true;
     }
 
+    /**
+     * Method to iterate through the transcripts, pulling out those belonging to
+     * the same gene and collecting in separate GeneModel objects.
+     * 
+     * This class holds the GeneModel objects in a member List.
+     * @throws java.io.IOException
+     */
+    public void aggregateTranscriptsByGenes() 
+    throws IOException {
+        int beginIndex = 0;
+        int endIndex = 0;
+        
+        if (transcripts.isEmpty()) {
+            throw new IOException("No transcripts found to aggregate by gene.");
+        }
+        
+        /**
+         * The list of transcripts must be sorted (sorting by gene name is the
+         * default for the Transcript class) before proceeding.
+         */
+        if (!isSorted) {
+            sortTranscriptsByGeneName();
+        }
+        
+        int transcriptCount = transcripts.size();
+        
+        /**
+         * traverse the list of transcripts by gene, aggregating into separate
+         * GeneModel objects according to the gene name.
+         */       
+        while (beginIndex < transcriptCount) {
+            String thisGene = transcripts.get(beginIndex).getGeneName();
+            GeneModel geneModel = new GeneModel();
+            geneModel.setGeneName(thisGene);
+            endIndex = beginIndex+1;
+            
+            while (endIndex < transcriptCount 
+                && transcripts.get(endIndex).getGeneName().equals(thisGene)) {
+                geneModel.addTranscript(transcripts.get(endIndex));
+        
+                endIndex++;
+            }
+        
+            beginIndex = endIndex;
+            
+        }
+   
+    }
 }

@@ -6,6 +6,7 @@
 package com.parabasegenomics.parabasis;
 
 import htsjdk.samtools.util.Interval;
+import java.io.IOException;
 import static java.lang.Boolean.FALSE;
 import static java.lang.Boolean.TRUE;
 import java.util.List;
@@ -27,6 +28,7 @@ public class Transcript implements Comparable<Transcript> {
     private final Interval transcriptInterval;
     private final Interval codingInterval;
     private boolean isRC;
+    private boolean haveGotten5primeExon;
     
     private ListIterator<Exon> exonIterator;
     
@@ -61,6 +63,8 @@ public class Transcript implements Comparable<Transcript> {
             if (strand.equals("-")) {
                 isRC=TRUE;
             }
+            
+            haveGotten5primeExon=false;
         }
     
     /**
@@ -73,6 +77,23 @@ public class Transcript implements Comparable<Transcript> {
     public String getGeneName() {
         return geneName;
     }
+    
+    public String getChromosome() {
+        return transcriptInterval.getContig();
+    }
+    public int getTranscriptStart() {
+        return transcriptInterval.getStart();
+    }
+    public int getTranscriptEnd() {
+        return transcriptInterval.getEnd();
+    }
+    public int getCodingStart() {
+        return codingInterval.getStart();
+    }
+    public int getCodingEnd() {
+        return codingInterval.getEnd();
+    }
+    
     
     public boolean isRC() {
         return isRC;
@@ -87,10 +108,10 @@ public class Transcript implements Comparable<Transcript> {
     } 
     
     /**
-     * Method to sort Transcripts by gene name. Implements Comparable::compareTo
-     * leveraging String::compareTo.
+     * Method to sort Transcripts by gene name. Necessary for grouping transcripts
+     * by the genes they are associated with.  
      * @param toCompare Comparison transcript.
-     * @return int with results of the comparison.
+     * @return int 
      */
     @Override
     public int compareTo(Transcript toCompare) {
@@ -98,13 +119,16 @@ public class Transcript implements Comparable<Transcript> {
     }
     
     /**
-     * From the transcript's perspective, get the first exon. Leaves 
-     * the exonIterator at the next exon in the transcript.
-     * @return The first exon of the transcript as an Interval, or null if 
+     * From the transcript's perspective get the first exon (i.e. if one were 
+     * to translate the gene into a protein, which exon would be the first).
+     * Leaves the exonIterator at the next exon in the transcript.
+     * @return The first exon of the transcript as an Exon, or null if 
      *  no exons, which in this case would be pathological.
      */
     public Exon get5primeExon() {
-       
+        
+        haveGotten5primeExon = true;
+        
         // if this is a forward transcript, we've got an iterator to the first
         // exon.  If not, we'll have to go in reverse.
         if (!isRC) {
@@ -125,12 +149,18 @@ public class Transcript implements Comparable<Transcript> {
     }
     
     /**
-     * Get the next exon in the transcript reading 5' to 3'.  Must be called 
-     * after get5primeExon().
+     * Get the next exon in the transcript reading 5' to 3' along the gene.  
+     * Must be called after get5primeExon().
      * 
      * @return The next exon in the transcript, or null if no more. 
      */
-    public Exon getNextExon() {
+    public Exon getNextExon() 
+    throws IOException {
+        
+        if (!haveGotten5primeExon) {
+            throw new IOException("Looking for next exon without finding the first.");
+        }
+        
         if (!isRC) {
             if (exonIterator.hasNext()) {
                 return exonIterator.next();
