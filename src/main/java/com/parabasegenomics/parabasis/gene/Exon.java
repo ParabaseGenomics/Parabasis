@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package com.parabasegenomics.parabasis;
+package com.parabasegenomics.parabasis.gene;
 
 import htsjdk.samtools.util.Interval;
 
@@ -17,9 +17,19 @@ import htsjdk.samtools.util.Interval;
 public class Exon {
     
     private Interval interval;
+    private int spliceDistance;
     
     public Exon(Interval i) {
         interval=i;
+    }
+    
+    /**
+     * Splicing distance is the amount of bases to add +/- to the coding 
+     * exons to capture splicing effects.
+     * @param d Distance to capture splicing effects (bp)
+     */
+    public void setSpliceDistance(int d) {
+        spliceDistance = d;
     }
     
     /**
@@ -38,6 +48,9 @@ public class Exon {
     }
     public String getChromosome() {
         return interval.getContig();
+    }
+    public int getSpliceDistance() {
+        return spliceDistance;
     }
 
     

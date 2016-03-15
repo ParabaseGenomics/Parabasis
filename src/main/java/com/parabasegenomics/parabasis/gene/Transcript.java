@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package com.parabasegenomics.parabasis;
+package com.parabasegenomics.parabasis.gene;
 
 import htsjdk.samtools.util.Interval;
 import java.io.IOException;
@@ -93,7 +93,9 @@ public class Transcript implements Comparable<Transcript> {
     public int getCodingEnd() {
         return codingInterval.getEnd();
     }
-    
+    public int getExonCount() {
+        return exons.size();
+    }
     
     public boolean isRC() {
         return isRC;
@@ -149,10 +151,20 @@ public class Transcript implements Comparable<Transcript> {
     }
     
     /**
+     * Method returns true if there are more exons in the transcript.
+     * @return 
+     */
+    public boolean hasNextExon() {
+        return (exonIterator.hasNext());
+    }
+    
+    
+    /**
      * Get the next exon in the transcript reading 5' to 3' along the gene.  
      * Must be called after get5primeExon().
      * 
      * @return The next exon in the transcript, or null if no more. 
+     * @throws java.io.IOException 
      */
     public Exon getNextExon() 
     throws IOException {

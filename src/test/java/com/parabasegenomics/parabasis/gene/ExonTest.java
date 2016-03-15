@@ -3,8 +3,9 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package com.parabasegenomics.parabasis;
+package com.parabasegenomics.parabasis.gene;
 
+import com.parabasegenomics.parabasis.gene.Exon;
 import htsjdk.samtools.util.Interval;
 import static java.lang.Boolean.FALSE;
 import java.util.ArrayList;
