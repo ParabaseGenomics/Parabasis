@@ -72,7 +72,7 @@ public class GeneModelTest {
             
         secondTranscript
             = new Transcript(
-                name,
+                "NM_032292",
                 gene,
                 strand,
                 1,
@@ -85,7 +85,9 @@ public class GeneModelTest {
        Interval collapsedCodingInterval
            = new Interval("chr1",67000041,67091559);
        
-       exons.add(new Exon(new Interval("chr1",67091529,67091593,FALSE,"3")));
+       List<Exon> collapsedExons = new ArrayList<>();
+       collapsedExons.add(new Exon(new Interval("chr1",66999824,67000051,FALSE,"1")));
+       collapsedExons.add(new Exon(new Interval("chr1",67091529,67091593,FALSE,"3")));
         collapsedTranscript 
             = new Transcript(
                 name,
@@ -94,7 +96,7 @@ public class GeneModelTest {
                 2,
                 collapsedTranscriptInterval,
                 collapsedCodingInterval,
-                exons);
+                collapsedExons);
     }
     
     @After
@@ -149,5 +151,24 @@ public class GeneModelTest {
         Assert.assertEquals(expected.getCodingEnd(), actual.getCodingEnd());
         Assert.assertEquals(2, expected.getExonCount());
     }
+    
+    @Test
+    public void testOverlap() 
+    throws IOException {
+        System.out.println("overlap");
+        GeneModel instance = new GeneModel();
+        instance.setGeneName(gene);
+        instance.addTranscript(transcript);
+        instance.addTranscript(secondTranscript);
+        instance.Collapse();
+          
+        Interval intervalToOverlap  = new Interval("chr1",66999700,67091540);
+        
+        String actual = instance.overlap(intervalToOverlap);
+        String expected = "SGIP1:NM_032291-Exon1-NM_032292-Exon2-";
+         Assert.assertEquals(expected,actual);
+        
+    }
+        
     
 }

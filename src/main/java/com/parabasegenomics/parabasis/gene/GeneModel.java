@@ -22,6 +22,10 @@ import java.util.List;
  */
 public class GeneModel {
     
+    private final static String dash = "-";
+    private final static String colon = ":";
+    
+    
     private final List<Transcript> transcripts;   
     private Transcript collapsedTranscript;
     
@@ -48,6 +52,7 @@ public class GeneModel {
     
     /**
      * Getter methods
+     * @return 
      */
     public int getTranscriptCount() {
         return transcripts.size();
@@ -65,6 +70,7 @@ public class GeneModel {
      * on the reference sequence. Sets the "collapsedTranscript" member variable.
      * Useful for creating a list of genomic targets from a gene list, for
      * example.
+     * @throws java.io.IOException
      */
     public void Collapse() 
     throws IOException {
@@ -218,6 +224,58 @@ public class GeneModel {
             transcripts.get(0).getChromosome(),
             minCodingStart,
             maxCodingEnd);
+    }
+    
+    /**
+     * Method to find overlap between the given Interval and a gene model. 
+     * 
+     * @param interval Takes an Interval.
+     * @return Returns a String with the portions of each transcript overlapping
+     * the given interval. Returns null if there is no overlap.
+     * 
+     * TODO: 5', 3' where applicable
+     * TODO: introns, promoter.
+     * 
+     * @throws java.io.IOException
+     * 
+     */
+    public String overlap(Interval interval) 
+    throws IOException {
+        String overlapString = null;
+               
+        // fail as early as possible
+        if (!interval.intersects(collapsedTranscript.getTranscriptInterval())) {
+            return overlapString;
+        }
+        
+        StringBuilder overlapStringBuilder = new StringBuilder();
+        
+        overlapStringBuilder.append(geneName);
+        overlapStringBuilder.append(colon);
+        for (Transcript transcript : transcripts) {
+            if (!transcript.getTranscriptInterval().intersects(interval)) {
+                continue;
+            }
+            
+            overlapStringBuilder.append(transcript.getTranscriptName());
+            overlapStringBuilder.append(dash);
+            
+            Exon exon = transcript.get5primeExon();
+            if (exon.getInterval().intersects(interval)) {
+                overlapStringBuilder.append("Exon"+exon.getName());
+                overlapStringBuilder.append(dash);
+            }
+            while (transcript.hasNextExon()) {
+                exon = transcript.getNextExon();
+                if (!exon.getInterval().intersects(interval)) {
+                    continue;
+                }
+                overlapStringBuilder.append("Exon"+exon.getName());
+                overlapStringBuilder.append(dash);             
+            }         
+        }
+        
+        return overlapStringBuilder.toString();
     }
     
     

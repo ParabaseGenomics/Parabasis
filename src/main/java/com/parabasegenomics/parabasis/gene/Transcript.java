@@ -77,7 +77,12 @@ public class Transcript implements Comparable<Transcript> {
     public String getGeneName() {
         return geneName;
     }
-    
+    public Interval getTranscriptInterval() {
+        return transcriptInterval;
+    }
+    public Interval getCodingInterval() {
+        return codingInterval;
+    }
     public String getChromosome() {
         return transcriptInterval.getContig();
     }

@@ -94,9 +94,18 @@ public class GeneCollectionFileReaderTest {
         int exonCount = 2;
         String chr = "chr1";
         String strand = "-";
+        int codingStart = 16767256;
+        int codingEnd = 16785385;
         
         List<Exon> exons 
-            = reader.parseExons(exonCount, chr, exonStarts, exonEnds, strand);
+            = reader.parseExons(
+                exonCount, 
+                chr, 
+                exonStarts, 
+                exonEnds, 
+                strand,
+                codingStart,
+                codingEnd);
         
     }
     
@@ -114,9 +123,18 @@ public class GeneCollectionFileReaderTest {
         int exonCount = 2;
         String chr = "chr1";
         String strand = "-";
+        int codingStart = 16767256;
+        int codingEnd = 16785385;
         
          List<Exon> exons 
-            = reader.parseExons(exonCount, chr, exonStarts, exonEnds, strand);
+            = reader.parseExons(
+                exonCount, 
+                chr, 
+                exonStarts, 
+                exonEnds, 
+                strand,
+                codingStart,
+                codingEnd);
     }
 
     

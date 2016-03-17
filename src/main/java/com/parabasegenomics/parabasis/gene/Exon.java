@@ -16,20 +16,16 @@ import htsjdk.samtools.util.Interval;
  */
 public class Exon {
     
-    private Interval interval;
-    private int spliceDistance;
+    private final Interval interval;
+    private Interval codingInterval;
     
     public Exon(Interval i) {
         interval=i;
+        codingInterval=null;
     }
     
-    /**
-     * Splicing distance is the amount of bases to add +/- to the coding 
-     * exons to capture splicing effects.
-     * @param d Distance to capture splicing effects (bp)
-     */
-    public void setSpliceDistance(int d) {
-        spliceDistance = d;
+    public void addCodingInterval(Interval i) {
+        codingInterval=i;
     }
     
     /**
@@ -49,32 +45,25 @@ public class Exon {
     public String getChromosome() {
         return interval.getContig();
     }
-    public int getSpliceDistance() {
-        return spliceDistance;
+    public Interval getInterval() {
+        return interval;
+    } 
+    public Interval getCodingInterval() {
+        return codingInterval;
     }
-
+    
+    
     
     /**
-     * Method to return an Exon object representing only the coding portion
-     * of the exon.
-     * @param codingIntervalOfTranscript An Interval defining the coding
-     * portion of this transcript.  This is read in from the file with the gene
-     * models and help by each Transcript.
-     * @return An Exon corresponding to the coding portion of this Exon.
+     * Returns the coding-only portion of the exon.
+     * @return 
      */
-    public Exon getCodingExon(Interval codingIntervalOfTranscript) {
-            
-        if (codingIntervalOfTranscript == null) {
+    public Exon getCodingExon() {
+        if (codingInterval != null) {
+            return new Exon(codingInterval);
+        } else {
             return null;
         }
-        
-        if (!interval.intersects(codingIntervalOfTranscript)) {
-            return null;
-        }
-
-        return(new Exon(interval.intersect(codingIntervalOfTranscript)));
-                           
     }
-
-
+    
 }

@@ -36,8 +36,21 @@ public class ExonTest {
     @Before
     public void setUp() {
         exons = new ArrayList<>();
-        exons.add(new Exon(new Interval("chr1",66999824,67000051,FALSE,"1")));
-        exons.add(new Exon(new Interval("chr1",67091529,67091593,FALSE,"2")));
+        Interval interval1
+            = new Interval("chr1",66999824,67000051,FALSE,"1");
+        Exon exon1 
+            = new Exon(interval1);
+        exon1.addCodingInterval(interval1.intersect(codingInterval));
+        
+        Interval interval2 
+            = new Interval("chr1",67091529,67091593,FALSE,"2");
+        Exon exon2
+            = new Exon(interval2);
+        
+        exon2.addCodingInterval(interval2.intersect(codingInterval));
+        
+        exons.add(exon1);
+        exons.add(exon2);
     }
     
     @After
@@ -89,7 +102,7 @@ public class ExonTest {
             67000041,
             67000051));
         
-        Exon result = exons.get(0).getCodingExon(codingInterval);
+        Exon result = exons.get(0).getCodingExon();
         assertEquals(expResult.getChromosome(), result.getChromosome());
         assertEquals(expResult.getStart(),result.getStart());
         assertEquals(expResult.getEnd(),result.getEnd());
@@ -104,7 +117,7 @@ public class ExonTest {
 
         Exon expResult = exons.get(1);
         
-        Exon result = exons.get(1).getCodingExon(codingInterval);
+        Exon result = exons.get(1).getCodingExon();
         assertEquals(expResult.getChromosome(), result.getChromosome());
         assertEquals(expResult.getStart(),result.getStart());
         assertEquals(expResult.getEnd(),result.getEnd());
@@ -117,8 +130,13 @@ public class ExonTest {
     public void testGetCodingExonNull() {
         System.out.println("getCodingExon (null)");
     
-        Exon result = exons.get(0).getCodingExon(codingIntervalShort);
-        assertEquals(result,null);
+        Interval interval1
+            = new Interval("chr1",66999824,67000051,FALSE,"1");
+        Exon exon1 
+            = new Exon(interval1);
+            
+        Exon result = exon1.getCodingExon();
+        assertEquals(null,result);
     }
     
 }

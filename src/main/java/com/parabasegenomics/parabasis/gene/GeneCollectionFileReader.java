@@ -134,7 +134,9 @@ public class GeneCollectionFileReader {
                 chromosome,
                 tokens[exonStartsColumn], 
                 tokens[exonEndsColumn],
-                strand);
+                strand,
+                codingStart,
+                codingEnd);
         
         Interval transcriptSpan 
             = new Interval(chromosome,transcriptStart,transcriptEnd);
@@ -162,6 +164,9 @@ public class GeneCollectionFileReader {
      * @param exonStarts Comma-separated list of exon starting coordindates.
      * @param exonEnds Comma-separated list of exon ending coordinates.
      * @param strand Gene orientation is forward ("+") or rc ("-").
+     * @param codingStart Start of coding region for this transcript.
+     * @param codingEnd End of coding region for this transcript.
+     * 
      * @return Returns a list of Interval objects corresponding to this 
      * transcript's exons.
      * 
@@ -172,10 +177,15 @@ public class GeneCollectionFileReader {
         String chromosome,
         String exonStarts, 
         String exonEnds,
-        String strand) 
+        String strand,
+        int codingStart,
+        int codingEnd) 
     throws IOException {
         
         List<Exon> returnList = new ArrayList<>();
+        
+        Interval codingIntervalOfTranscript 
+            = new Interval(chromosome,codingStart,codingEnd);
         
         String [] startTokens = exonStarts.split(comma);
         String [] endTokens = exonEnds.split(comma);
@@ -196,9 +206,29 @@ public class GeneCollectionFileReader {
                 Integer index = startTokens.length - i;
                 exonName = index.toString();
             }
+           
+            Interval exonInterval
+                = new Interval(chromosome,exonStart,exonEnd,FALSE,exonName);
             
-            returnList.add(
-                new Exon(new Interval(chromosome,exonStart,exonEnd,FALSE,exonName)));
+            Interval codingExonInterval = null;
+            
+            Interval overlapInterval = null;
+            if (exonInterval.intersects(codingIntervalOfTranscript)) {
+                    overlapInterval 
+                        = exonInterval.intersect(codingIntervalOfTranscript);
+      
+                    codingExonInterval 
+                        = new Interval(
+                            chromosome,
+                            overlapInterval.getStart(),
+                            overlapInterval.getEnd(),
+                            FALSE,
+                            exonName);
+            }
+            
+            Exon newExon = new Exon(exonInterval);
+            newExon.addCodingInterval(codingExonInterval);
+            returnList.add(newExon);                      
         }
         
         return returnList;

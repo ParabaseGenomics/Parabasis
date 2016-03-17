@@ -51,6 +51,7 @@ public class GeneModelCollection {
             = new GeneCollectionFileReader(file);
         
         geneCollectionFileReader.readFile(transcripts);
+        sortTranscriptsByGeneName();
     }
     
     /**
@@ -66,6 +67,15 @@ public class GeneModelCollection {
     }
     
     /**
+     * Method that returns the list of gene models held by the collection.
+     * @return 
+     */
+    public List<GeneModel> getGeneModels() {
+        return genes;
+    }
+    
+    
+    /**
      * Add a new transcript to the list being held by the model.
      * @param transcript 
      */
@@ -76,7 +86,7 @@ public class GeneModelCollection {
     /**
      * Method to sort the transcripts by gene name. Sets the isSorted flag.
      */
-    public void sortTranscriptsByGeneName() {
+    protected void sortTranscriptsByGeneName() {
         Collections.sort(transcripts);
         isSorted=true;
     }
