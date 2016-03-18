@@ -7,6 +7,7 @@ package com.parabasegenomics.parabasis.gene;
 
 import htsjdk.samtools.util.Interval;
 import java.io.IOException;
+import static java.lang.Boolean.FALSE;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -30,12 +31,14 @@ public class GeneModel {
     private Transcript collapsedTranscript;
     
     private String geneName;
+    private int spliceDistance;
     
     /**
      * Constructor
      */
     public GeneModel() {      
         transcripts = new ArrayList<>();  
+        spliceDistance = 10;
     }
     
     /**
@@ -48,6 +51,9 @@ public class GeneModel {
     
     public void setGeneName(String name) {
         geneName=name;
+    }
+    public void setSpliceDistance(int s) {
+        spliceDistance=s;
     }
     
     /**
@@ -62,6 +68,9 @@ public class GeneModel {
     }
     public Transcript getCollapsedTranscript() {
         return collapsedTranscript;
+    }
+    public int getSpliceDistance() {
+        return spliceDistance;
     }
     
     
@@ -233,8 +242,8 @@ public class GeneModel {
      * @return Returns a String with the portions of each transcript overlapping
      * the given interval. Returns null if there is no overlap.
      * 
-     * TODO: 5', 3' where applicable
-     * TODO: introns, promoter.
+     * TODO: 5', 3' utr where applicable
+     * TODO: promoter.
      * 
      * @throws java.io.IOException
      * 
@@ -247,6 +256,11 @@ public class GeneModel {
         if (!interval.intersects(collapsedTranscript.getTranscriptInterval())) {
             return overlapString;
         }
+        
+        int intronStart = 0;
+        int intronEnd = 0;
+        int intronIndex = 1;
+        String chromosome = transcripts.get(0).getChromosome();
         
         StringBuilder overlapStringBuilder = new StringBuilder();
         
@@ -261,12 +275,130 @@ public class GeneModel {
             overlapStringBuilder.append(dash);
             
             Exon exon = transcript.get5primeExon();
+            if (!transcript.isRC()) {
+                intronStart = exon.getEnd();
+            } else {
+                intronEnd = exon.getStart()-1;
+            }
             if (exon.getInterval().intersects(interval)) {
+                overlapStringBuilder.append("Exon").append(exon.getName());
+                overlapStringBuilder.append(dash);
+            }
+            
+            // loop over any other exons
+            while (transcript.hasNextExon()) {
+                exon = transcript.getNextExon();
+                if (!transcript.isRC()) {
+                    intronEnd = exon.getStart()-1;
+                } else {
+                    intronStart = exon.getEnd();
+                }
+                
+                Interval intron 
+                    = new Interval(
+                        chromosome, 
+                        intronStart,
+                        intronEnd,
+                        FALSE,
+                        Integer.toString(intronIndex));
+                
+                /**
+                 * this comes before the exon overlap test so the string we're  
+                 * building runs 5'->3' along the transcript. 
+                 */
+                if (intron.intersects(interval)) {
+                    overlapStringBuilder.append("Intron").append(intron.getName());
+                    
+                    // check if the gap overlaps a splicing region
+                    if (!transcript.isRC()) {
+                        if (interval.getStart() <= intron.getStart() 
+                            && interval.getEnd() >= intron.getStart()+getSpliceDistance()) {
+                            overlapStringBuilder.append("(splicing5p)");
+                        } 
+                        if (interval.getStart() <= intron.getEnd()
+                            && interval.getEnd() >= intron.getEnd()) {
+                            overlapStringBuilder.append("(splicing3p)");
+                        }
+                    } else {
+                         if (interval.getStart() <= intron.getStart() 
+                            && interval.getEnd() >= intron.getStart()+getSpliceDistance()) {
+                            overlapStringBuilder.append("(splicing3p)");
+                        } 
+                        if (interval.getStart() <= intron.getEnd()
+                            && interval.getEnd() >= intron.getEnd()) {
+                            overlapStringBuilder.append("(splicing5p)");
+                        }
+                    }
+                    
+                    overlapStringBuilder.append(dash);     
+                }
+                
+                if (exon.getInterval().intersects(interval)) {
+                    overlapStringBuilder.append("Exon").append(exon.getName());
+                    overlapStringBuilder.append(dash);     
+                }
+                
+                // keep this half of the intron around in case there is another
+                // exon
+                if (!transcript.isRC()) {
+                    intronStart = exon.getEnd();
+                } else {
+                    intronEnd = exon.getStart()-1;
+                }
+                intronIndex++;
+            }
+        }
+        
+        // remove the trailing dash before returning
+        overlapStringBuilder.deleteCharAt(overlapStringBuilder.length()-1);
+        
+        return overlapStringBuilder.toString();
+    }
+    
+    /**
+     * Method to find overlap between the given Interval and the coding
+     * portion of a gene model. 
+     * 
+     * @param interval Takes an Interval.
+     * @return Returns a String with the portions of each transcript overlapping
+     * the given interval. Returns null if there is no overlap.
+     * 
+     * TODO: 5', 3' utr where applicable
+     * TODO: introns, promoter.
+     * TODO: splicing
+     * TODO: remove trailing dash
+     * 
+     * @throws java.io.IOException
+     * 
+     */
+    public String overlapCoding(Interval interval) 
+    throws IOException {
+        String overlapString = null;
+               
+        // fail as early as possible
+        if (!interval.intersects(collapsedTranscript.getCodingInterval())) {
+            return overlapString;
+        }
+        
+        StringBuilder overlapStringBuilder = new StringBuilder();
+        
+        overlapStringBuilder.append(geneName);
+        overlapStringBuilder.append(colon);
+        for (Transcript transcript : transcripts) {
+            if (!transcript.getCodingInterval().intersects(interval)) {
+                continue;
+            }
+            
+            overlapStringBuilder.append(transcript.getTranscriptName());
+            overlapStringBuilder.append(dash);
+            
+            Exon exon = transcript.get5primeExon();
+            if (exon.getCodingExon().getInterval().intersects(interval)) {
                 overlapStringBuilder.append("Exon"+exon.getName());
                 overlapStringBuilder.append(dash);
             }
             while (transcript.hasNextExon()) {
-                exon = transcript.getNextExon();
+                exon = transcript.getNextExon().getCodingExon();
                 if (!exon.getInterval().intersects(interval)) {
                     continue;
                 }
@@ -277,6 +409,4 @@ public class GeneModel {
         
         return overlapStringBuilder.toString();
     }
-    
-    
 }
