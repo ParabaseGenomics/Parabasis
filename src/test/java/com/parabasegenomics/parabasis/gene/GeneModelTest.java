@@ -5,9 +5,6 @@
  */
 package com.parabasegenomics.parabasis.gene;
 
-import com.parabasegenomics.parabasis.gene.Transcript;
-import com.parabasegenomics.parabasis.gene.Exon;
-import com.parabasegenomics.parabasis.gene.GeneModel;
 import htsjdk.samtools.util.Interval;
 import java.io.IOException;
 import static java.lang.Boolean.FALSE;
@@ -15,11 +12,8 @@ import java.util.ArrayList;
 import java.util.List;
 import junit.framework.Assert;
 import org.junit.After;
-import org.junit.AfterClass;
 import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Test;
-import static org.junit.Assert.*;
 
 /**
  *
@@ -165,10 +159,27 @@ public class GeneModelTest {
         Interval intervalToOverlap  = new Interval("chr1",66999700,67091540);
         
         String actual = instance.overlap(intervalToOverlap);
-        String expected = "SGIP1:NM_032291-Exon1-NM_032292-Exon2-";
+        String expected = "SGIP1:NM_032291-Exon1-NM_032292-Exon2";
          Assert.assertEquals(expected,actual);
         
     }
+     
+    @Test
+    public void testOverlapWithIntron() 
+    throws IOException {
+        System.out.println("overlap");
+        GeneModel instance = new GeneModel();
+        instance.setGeneName(gene);
+        instance.addTranscript(collapsedTranscript);
+        instance.Collapse();
+          
+        Interval intervalToOverlap  = new Interval("chr1",66999700,67091540);
         
+        String actual = instance.overlap(intervalToOverlap);
+        String expected = "SGIP1:NM_032291-Exon1-Intron1(splicing5p)(splicing3p)-Exon3";
+        
+        Assert.assertEquals(expected,actual);
+        
+    }   
     
 }
