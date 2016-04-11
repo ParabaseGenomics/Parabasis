@@ -14,6 +14,7 @@ import java.util.List;
 
 //TODO - full length genes
 //TODO - id non-coding genes
+// TODO - draw method()
 
 /**
  * The GeneModel class provides translations from a gene model (represented by
@@ -39,6 +40,7 @@ public class GeneModel {
     public GeneModel() {      
         transcripts = new ArrayList<>();  
         spliceDistance = 10;
+        collapsedTranscript = null;
     }
     
     /**
@@ -122,6 +124,7 @@ public class GeneModel {
             
             while (transcript.hasNextExon()) {
                 exon = transcript.getNextExon();
+                                
                 if (exon == null) {
                     throw new IOException("no exon, but one expected.");
                 }
@@ -159,7 +162,7 @@ public class GeneModel {
                 start=i+offset;
             } else if (markup && sequenceArray[i]==0) {
                 markup=false;
-                end=i;
+                end=i+offset;
                 Exon exon = new Exon(
                     new Interval(
                         chromosome,start,end));
@@ -234,6 +237,47 @@ public class GeneModel {
             minCodingStart,
             maxCodingEnd);
     }
+    
+    
+    public double percentOverlap(Interval interval) 
+    throws IOException {
+        
+        double percentOverlap = 0.0;
+        int basesOverlap = 0;
+        int totalBases = 0;
+        // fail as early as possible
+        if (!interval.intersects(collapsedTranscript.getTranscriptInterval())) {
+            return percentOverlap;
+        }
+            
+       for (Transcript transcript : transcripts) {
+            if (!transcript.getTranscriptInterval().intersects(interval)) {
+                continue;
+            }
+
+
+            Exon exon = transcript.get5primeExon();
+            if (exon.getInterval().intersects(interval)) {
+                Interval intersect = exon.getInterval().intersect(interval);
+                totalBases += (exon.getEnd() - exon.getStart());
+                basesOverlap += intersect.length();
+            }
+
+            // loop over any other exons
+            while (transcript.hasNextExon()) {
+                exon = transcript.getNextExon();
+                 if (exon.getInterval().intersects(interval)) {
+                    Interval intersect = exon.getInterval().intersect(interval);
+                    totalBases += (exon.getEnd() - exon.getStart());
+                    basesOverlap += intersect.length();
+                }    
+            }
+        }
+        
+       percentOverlap = basesOverlap/totalBases;
+       return percentOverlap;
+    }
+        
     
     /**
      * Method to find overlap between the given Interval and a gene model. 

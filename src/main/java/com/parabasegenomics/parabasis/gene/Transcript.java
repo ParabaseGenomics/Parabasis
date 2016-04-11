@@ -17,6 +17,10 @@ import java.util.ListIterator;
  * corresponds to one line from a file containing gene models, such as downloaded
  * from UCSC.
  * 
+ * 
+ * TODO: add draw() method
+ * TODO: add value member, methods
+ * 
  * @author evanmauceli
  */
 public class Transcript implements Comparable<Transcript> {
@@ -102,6 +106,50 @@ public class Transcript implements Comparable<Transcript> {
         return exons.size();
     }
     
+    /**
+     * The genomic span of the transcript.
+     * @return 
+     */
+    public int getLength() {
+        return (transcriptInterval.length());
+    }
+    
+    /**
+     * The genomic span of the coding portion of the transcript.
+     * @return 
+     */
+    public int getCodingLength() {
+        return (codingInterval.length());
+    }
+    
+    /**
+     * Returns the amount of coding sequence for this transcript.  This is not
+     * the same as the "coding length", as this does not include intronic 
+     * sequence or utrs. 
+     * @return 
+     */
+    public int getCodingContent() {
+        int codingBases = 0;
+        for (Exon exon : exons) {
+            codingBases += exon.getCodingLength();
+        }
+        return codingBases;
+    }
+    
+    /**
+     * Returns the amount of exonic sequence for this transcript.  Similar to 
+     * coding content, except this measure includes any utr sequence.  Intronic 
+     * sequence is still excluded.
+     * @return 
+     */
+    public int getExonicContent() {
+        int exonicBases = 0;
+        for (Exon exon : exons) {
+            exonicBases += exon.getLength();
+        }
+        return exonicBases;
+    } 
+    
     public boolean isRC() {
         return isRC;
     }
@@ -127,8 +175,8 @@ public class Transcript implements Comparable<Transcript> {
     
     /**
      * From the transcript's perspective get the first exon (i.e. if one were 
-     * to translate the gene into a protein, which exon would be the first).
-     * Leaves the exonIterator at the next exon in the transcript.
+     * to translate the gene into a protein, which exon would be the first 
+     * processed). Leaves the exonIterator at the next exon in the transcript.
      * @return The first exon of the transcript as an Exon, or null if 
      *  no exons, which in this case would be pathological.
      */
@@ -160,9 +208,20 @@ public class Transcript implements Comparable<Transcript> {
      * @return 
      */
     public boolean hasNextExon() {
-        return (exonIterator.hasNext());
+        if (!isRC) {
+            return (exonIterator.hasNext());
+        } else {
+            return (exonIterator.hasPrevious());
+        }
     }
     
+    public boolean is3primeExon() {
+        if (!isRC) {
+            return (!exonIterator.hasNext());
+        } else {
+            return (!exonIterator.hasPrevious());
+        }
+    }
     
     /**
      * Get the next exon in the transcript reading 5' to 3' along the gene.  

@@ -5,11 +5,15 @@
  */
 package com.parabasegenomics.parabasis.gene;
 
+import com.parabasegenomics.parabasis.util.Reader;
+import htsjdk.samtools.util.Interval;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 /**
  * The GeneModelCollection class provides access to a Reference Sequence collection 
@@ -19,8 +23,9 @@ import java.util.List;
  */
 public class GeneModelCollection {
     
-    private final List<Transcript> transcripts;
+    private final String FULL_LENGTH = "_FL";
     
+    private final List<Transcript> transcripts;  
     private final List<GeneModel> genes;
     
     private String modelName;
@@ -30,6 +35,7 @@ public class GeneModelCollection {
     private Transcript collapsedTranscript;
     
     private GeneCollectionFileReader geneCollectionFileReader;
+    private Reader utilityReader;
     
     /**
      * Constructor
@@ -38,6 +44,112 @@ public class GeneModelCollection {
         transcripts = new ArrayList<>();  
         isSorted = false;    
         genes = new ArrayList<>();
+    }
+    
+       
+    /**
+     * Full length genes have "_FL" appended to the end of the gene name
+     * in the list of genes to target.
+     * @param gene Name of the gene.
+     * @return Returns true if the gene has "_FL" appended to the 
+     * end (full-length), false otherwise.
+     */
+    public boolean isFullLength(String gene) {
+        return (gene.contains(FULL_LENGTH));
+    }
+    
+    /**
+     * Turns the given list of genes into a list of sequencing targets.
+     * 
+     * @param genesToTarget Input list of genes to target.
+     * @param splicingDistance Distance in bp from exon/intron boundary to look
+     * for splicing effects. 10 bp is standard.
+     * @return Returns a list of targets as chr, start, end.
+     * @throws java.io.IOException
+     */
+    public List<Interval> createTargets(
+        Set<String> genesToTarget, 
+        int splicingDistance) 
+    throws IOException {
+       
+        List<Interval> targets = new ArrayList<>();
+        
+        for (String gene : genesToTarget) {
+            String realGeneName = gene;
+            if (isFullLength(gene)) {
+                realGeneName = gene.substring(0,gene.length()-3);
+            }
+            
+            //System.out.println("gene " + gene +" "+realGeneName);
+            int index=0;
+            for (; index<genes.size(); index++) {
+                if (genes.get(index).getGeneName().equals(realGeneName)) {
+                    break;
+                }
+            }
+            
+            if (index==genes.size()) {
+                //System.out.println("aiiiiggggg");
+                throw new IOException("Cannot find " + realGeneName + " in models.");
+            }
+            
+            if (isFullLength(gene)) {
+                GeneModel geneModel = genes.get(index);
+                Transcript transcript = geneModel.getCollapsedTranscript();
+                if (transcript == null) {
+                    geneModel.Collapse();
+                }
+                
+                targets.add(
+                    genes
+                        .get(index)
+                        .getCollapsedTranscript()
+                        .getTranscriptInterval());
+                            
+            } else {
+                GeneModel geneModel = genes.get(index);
+                Transcript transcript = geneModel.getCollapsedTranscript();
+                if (transcript == null) {
+                    geneModel.Collapse();
+                    transcript = geneModel.getCollapsedTranscript();
+                }
+                String chromosome = transcript.getChromosome();
+                Exon exon = transcript.get5primeExon();
+                int start = exon.getStart();
+                int end = exon.getEnd();
+                if (transcript.getExonCount() > 1) {
+                    if (transcript.isRC()) {
+                        start -= splicingDistance;
+                    } else {
+                        end += splicingDistance;
+                    }
+                }
+                //System.out.println("adding 5ptarget " + chromosome +" "+start+" "+end);
+                targets.add(new Interval(chromosome,start,end));
+                
+                while (transcript.hasNextExon()) {
+                    exon = transcript.getNextExon();
+                    if (!transcript.is3primeExon()) {
+                        start = exon.getStart() - splicingDistance;
+                        end = exon.getEnd() + splicingDistance;
+                         //System.out.println("adding target " + chromosome +" "+start+" "+end);
+                        targets.add(new Interval(chromosome,start,end));
+                    } else {
+                        start = exon.getStart();
+                        end = exon.getEnd();
+                        if (transcript.isRC()) {
+                            end += splicingDistance;
+                        } else {
+                            start -= splicingDistance;
+                        }
+                         //System.out.println("adding 3ptarget " + chromosome +" "+start+" "+end);
+                        targets.add(new Interval(chromosome,start,end)); 
+                    }                   
+                } 
+            }
+         }
+                   
+        return targets;
     }
     
     /**
@@ -54,6 +166,26 @@ public class GeneModelCollection {
         sortTranscriptsByGeneName();
     }
     
+    public void addGeneModelCollection(String file) 
+    throws FileNotFoundException, IOException {
+       List<Transcript> transcriptsToAdd = new ArrayList<>();
+       geneCollectionFileReader 
+            = new GeneCollectionFileReader(file);
+        
+        geneCollectionFileReader.readFile(transcriptsToAdd);
+        
+        Set<String> genesAlreadyLoaded = new HashSet<>();
+        for (Transcript transcript : transcripts) {
+            genesAlreadyLoaded.add(transcript.getGeneName());
+        }
+        
+        for (Transcript transcriptToAdd : transcriptsToAdd) {
+            if (!genesAlreadyLoaded.contains(transcriptToAdd.getGeneName())) {
+               transcripts.add(transcriptToAdd);
+            }
+        }
+    }
+    
     /**
      * Method to set the name of the gene models, i.e. "RefSeq" or "Ensembl" and
      * the version.
@@ -67,11 +199,22 @@ public class GeneModelCollection {
     }
     
     /**
+     * Return the name of the gene model, i.e. "RefSeq".
+     * @return 
+     */
+    public String getName() {
+        return modelName;
+    }
+    /**
      * Method that returns the list of gene models held by the collection.
      * @return 
      */
     public List<GeneModel> getGeneModels() {
-        return genes;
+        if (!genes.isEmpty()) {
+            return genes;
+        } else {
+            return null;
+        }
     }
     
     
@@ -115,7 +258,7 @@ public class GeneModelCollection {
             sortTranscriptsByGeneName();
         }
         
-        int transcriptCount = transcripts.size();
+        int transcriptCount = transcripts.size();  
         
         /**
          * traverse the list of transcripts by gene, aggregating into separate
@@ -125,15 +268,17 @@ public class GeneModelCollection {
             String thisGene = transcripts.get(beginIndex).getGeneName();
             GeneModel geneModel = new GeneModel();
             geneModel.setGeneName(thisGene);
+            geneModel.addTranscript(transcripts.get(beginIndex));
             endIndex = beginIndex+1;
             
             while (endIndex < transcriptCount 
                 && transcripts.get(endIndex).getGeneName().equals(thisGene)) {
                 geneModel.addTranscript(transcripts.get(endIndex));
-        
+
                 endIndex++;
             }
         
+            genes.add(geneModel);           
             beginIndex = endIndex;
             
         }

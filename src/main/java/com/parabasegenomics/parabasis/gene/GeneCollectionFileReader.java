@@ -38,6 +38,7 @@ public class GeneCollectionFileReader {
     final static String plus = "+";
     final static String minus = "-";
     final static String hash = "#";
+    final static String hap = "hap";
     
     final static int transcriptNameColumn = 1;
     final static int chromosomeColumn = 2;
@@ -116,6 +117,12 @@ public class GeneCollectionFileReader {
         String transcriptName = tokens[transcriptNameColumn];
         String geneName = tokens[geneNameColumn];
         String chromosome = tokens[chromosomeColumn];
+        
+        // Do not allow alternate haplotypes as we're not set up to handle 
+        // them.
+        if (chromosome.contains(hap)) {
+            return null;
+        }
         String strand = tokens[strandColumn];
         int transcriptStart
             = Integer.valueOf(tokens[transcriptStartColumn]);

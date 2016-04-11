@@ -24,7 +24,7 @@
     
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-       
+       <mainClass>com.parabasegenomics.parabasis.coverage.GapsTranslator</mainClass>
     </properties>
     
      <organization>

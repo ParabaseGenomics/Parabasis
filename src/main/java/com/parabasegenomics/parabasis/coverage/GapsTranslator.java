@@ -7,13 +7,10 @@ package com.parabasegenomics.parabasis.coverage;
 
 import com.parabasegenomics.parabasis.gene.GeneModel;
 import com.parabasegenomics.parabasis.gene.GeneModelCollection;
+import com.parabasegenomics.parabasis.util.Reader;
 import htsjdk.samtools.util.Interval;
-import java.io.BufferedReader;
-import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.FileReader;
 import java.io.IOException;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -27,11 +24,10 @@ import java.util.Set;
 public class GapsTranslator {
     
     private final GapsFileReader gapsFileReader;
-    private final GeneModelCollection geneModelCollection;
-    private final BufferedReader reader;   
-    private final File testGenelistFile;
+    private static GeneModelCollection geneModelCollection; 
+    private final Reader utilityReader;
     
-    private final Set<String> geneNamesInTest;
+    private static Set<String> geneNamesInTest;
     
     /**
      * Translate the gaps.csv file produced by the MiSeq (regions of assay with 
@@ -53,29 +49,51 @@ public class GapsTranslator {
         // read in the transcript models and aggregate by gene
         geneModelCollection = new GeneModelCollection();
         geneModelCollection.readGeneModelCollection(geneModelFile);
-        geneModelCollection.aggregateTranscriptsByGenes();
+        //geneModelCollection.aggregateTranscriptsByGenes();
         
-        testGenelistFile = new File(genelistFile);
-        reader = new BufferedReader(new FileReader(testGenelistFile));          
-        geneNamesInTest = new HashSet<>();
+        utilityReader = new Reader();
+        geneNamesInTest = utilityReader.readHashSet(genelistFile);
             
     }
     
-    /**
-     * Method to read in a list of gene names (one name per line, no header) from
-     * a file into a HashSet.
-     * 
-     * @throws IOException 
-     */
-    protected void readGeneNamesFromFile() 
+    public void addGeneModel(String geneModelFileToAdd) 
     throws IOException {
-        while (reader.ready()) {
-            geneNamesInTest.add(reader.readLine());
-        }
+        geneModelCollection.addGeneModelCollection(geneModelFileToAdd);
     }
+    
+    public static void main(String[] args) 
+    throws IOException {     
+ 
+        String gapsFile = args[3];
+        String refSeqGeneModelFile = args[0];
+        String gencodeGeneModelFile = args[4];
+        String genelistFile = args[1];
+        GapsTranslator gapsTranslator 
+            = new GapsTranslator(gapsFile, refSeqGeneModelFile, genelistFile);
+        
+        gapsTranslator.addGeneModel(gencodeGeneModelFile);
+        geneModelCollection.aggregateTranscriptsByGenes();
+  
+        int splicingDistance = Integer.valueOf(args[2]);
+        List<Interval> targets 
+            = geneModelCollection
+                .createTargets(
+                    geneNamesInTest,
+                    splicingDistance);
+        
+        
+        for (Interval target : targets) {
+            System.out.println(target);
+        }
+        
+        System.exit(0);
+    }
+    
+ 
     
     public void grab() 
     throws IOException {
+        
         List<String> overlaps = null;
         
         List<Interval> gaps = gapsFileReader.readFile();
@@ -91,7 +109,7 @@ public class GapsTranslator {
                 if (!geneNamesInTest.contains(gene.getGeneName())) {
                     continue;
                 }
-                               
+                         
                 String overlapWithGene = gene.overlap(gap);
                 if (overlapWithGene != null) {
                     boolean add = overlaps.add(overlapWithGene);
