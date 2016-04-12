@@ -25,6 +25,9 @@ import java.util.ListIterator;
  */
 public class Transcript implements Comparable<Transcript> {
     
+    private static String FORWARD = "+";
+    private static String REVERSE = "-";
+    
     private int numberOfExons;
     private final List<Exon> exons;
     private final String transcriptName;
@@ -64,12 +67,24 @@ public class Transcript implements Comparable<Transcript> {
             exons=exonList;
             
             isRC=FALSE;
-            if (strand.equals("-")) {
+            if (strand.equals(REVERSE)) {
                 isRC=TRUE;
             }
             
             haveGotten5primeExon=false;
         }
+    
+    public Transcript(Transcript toCopy) {
+        this.transcriptName = toCopy.getTranscriptName();
+        this.geneName = toCopy.getGeneName();
+        this.transcriptInterval = toCopy.getTranscriptInterval();
+        this.codingInterval = toCopy.getCodingInterval();
+        this.exons = toCopy.getExonList();
+        this.isRC = toCopy.isRC();
+        this.haveGotten5primeExon = toCopy.haveGotten5primeExon;
+        this.exonIterator = toCopy.exonIterator;
+        this.numberOfExons = toCopy.getExonCount();
+    }
     
     /**
      * Basic getter methods.
@@ -106,6 +121,9 @@ public class Transcript implements Comparable<Transcript> {
         return exons.size();
     }
     
+    public List<Exon> getExonList() {
+        return exons;
+    }
     /**
      * The genomic span of the transcript.
      * @return 
@@ -156,9 +174,9 @@ public class Transcript implements Comparable<Transcript> {
     
     public String getStrand() {
         if (isRC) {
-            return "-";
+            return REVERSE;
         } else {
-            return "+";
+            return FORWARD;
         }
     } 
     

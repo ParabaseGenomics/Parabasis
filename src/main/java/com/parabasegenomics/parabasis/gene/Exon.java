@@ -23,13 +23,23 @@ public class Exon {
     
     private final Interval interval;
     private Interval codingInterval;
-    Map<String, String> valuesMap;
+    private Map<String, String> valuesMap;
     
     
     public Exon(Interval i) {
         interval=i;
         codingInterval=null;
         valuesMap = new TreeMap<>();
+    }
+    
+    /**
+     * Copy constructor.
+     * @param toCopy 
+     */
+    public Exon(Exon toCopy) {
+        this.interval = toCopy.getInterval();
+        this.codingInterval = toCopy.getCodingInterval();
+        this.valuesMap = toCopy.getValuesMap();
     }
     
     public void addCodingInterval(Interval i) {
@@ -68,6 +78,9 @@ public class Exon {
     
     public String getValue(String key) {
         return valuesMap.get(key);
+    }
+    public Map<String,String> getValuesMap() {
+        return valuesMap;
     }
     
     /**

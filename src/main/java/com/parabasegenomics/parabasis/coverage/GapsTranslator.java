@@ -81,9 +81,26 @@ public class GapsTranslator {
                     geneNamesInTest,
                     splicingDistance);
         
-        
+
         for (Interval target : targets) {
-            System.out.println(target);
+            String strand = "+";
+            if (target.isNegativeStrand()) {
+                strand = "-";
+            }
+            System.out.println(
+                target.getContig()
+                + "\t"
+                + target.getStart()
+                + "\t"
+                + target.getEnd()
+                + "\t"
+                + strand
+                + "\t"
+                + target.getName()
+                + "\t"
+                + target.length());
+                
+            //System.out.println(target.toString());
         }
         
         System.exit(0);

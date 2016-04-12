@@ -43,6 +43,13 @@ public class GeneModel {
         collapsedTranscript = null;
     }
     
+    public GeneModel(GeneModel toCopy) {
+        this.transcripts = toCopy.transcripts;
+        this.collapsedTranscript = toCopy.getCollapsedTranscript();
+        this.geneName = toCopy.getGeneName();
+        this.spliceDistance = toCopy.getSpliceDistance();
+    }
+    
     /**
      * Add a new transcript to the list being held by the model.
      * @param transcript 
@@ -105,7 +112,7 @@ public class GeneModel {
          * change this setting.
          * 
          */
-        for (Transcript transcript : transcripts) {           
+        for (Transcript transcript : transcripts) {    
             int codingStart = transcript.getCodingStart();
             int codingEnd = transcript.getCodingEnd();
  
@@ -148,7 +155,8 @@ public class GeneModel {
         int end=0;
         int codingStart=0;
         int codingEnd=0;
-        List<Exon> collapsedExons = new ArrayList<>();
+        int exonCount=0;
+        boolean isRC = transcripts.get(0).isRC();
         for (int i=0; i<sequenceArray.length; i++) {
             if (codingStart==0 && sequenceArray[i]==2) {
                 codingStart = i+offset;
@@ -163,15 +171,51 @@ public class GeneModel {
             } else if (markup && sequenceArray[i]==0) {
                 markup=false;
                 end=i+offset;
+
+                exonCount++;
+            }     
+        }
+               
+        // repeat this block as the block above is solely to count the exons
+        List<Exon> collapsedExons = new ArrayList<>();
+        int exonIndex = 1;
+        for (int i=0; i<sequenceArray.length; i++) {
+            if (codingStart==0 && sequenceArray[i]==2) {
+                codingStart = i+offset;
+            }
+            if (sequenceArray[i]==2) {
+                codingEnd = i+offset;
+            }
+            
+            if (!markup && sequenceArray[i]>0) {
+                markup=true;
+                start=i+offset;
+            } else if (markup && sequenceArray[i]==0) {
+                markup=false;
+                end=i+offset;
+                
+                String exonName = Integer.toString(exonIndex);
+                if (isRC) {
+                    exonName = Integer.toString(exonCount-exonIndex+1);
+                }
+                
                 Exon exon = new Exon(
                     new Interval(
-                        chromosome,start,end));
+                        chromosome,start,end,isRC,exonName));
                 collapsedExons.add(exon);
+                exonIndex++;
             }     
         }
         
         Interval codingInterval 
-            = new Interval(chromosome,codingStart,codingEnd);
+            = new Interval(chromosome,codingStart,codingEnd,isRC,"coding");
+        Interval transcriptInterval 
+            = new Interval(
+                chromosome, 
+                transcriptSpanInterval.getStart(),
+                transcriptSpanInterval.getEnd(),
+                isRC,
+                "transcript");
         
         collapsedTranscript 
             = new Transcript(
@@ -179,11 +223,9 @@ public class GeneModel {
                 geneName,
                 transcripts.get(0).getStrand(),
                 collapsedExons.size(),
-                transcriptSpanInterval,
+                transcriptInterval,
                 codingInterval,
-                collapsedExons);
-                
-        
+                collapsedExons);        
     }
 
     
@@ -210,7 +252,9 @@ public class GeneModel {
         return new Interval(
             transcripts.get(0).getChromosome(),
             minTranscriptStart,
-            maxTranscriptEnd);
+            maxTranscriptEnd,
+            transcripts.get(0).isRC(),
+            transcripts.get(0).getTranscriptName());
     }
     
         /**
@@ -235,7 +279,9 @@ public class GeneModel {
         return new Interval(
             transcripts.get(0).getChromosome(),
             minCodingStart,
-            maxCodingEnd);
+            maxCodingEnd,
+            transcripts.get(0).isRC(),
+            transcripts.get(0).getTranscriptName());
     }
     
     

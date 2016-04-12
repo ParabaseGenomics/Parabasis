@@ -12,6 +12,7 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import static java.lang.Boolean.FALSE;
+import static java.lang.Boolean.TRUE;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -145,9 +146,15 @@ public class GeneCollectionFileReader {
                 codingStart,
                 codingEnd);
         
+        boolean isRC = FALSE;
+        if (strand.equals(minus)) {
+            isRC = TRUE;
+        }
+        
         Interval transcriptSpan 
-            = new Interval(chromosome,transcriptStart,transcriptEnd);
-        Interval codingSpan = new Interval(chromosome,codingStart,codingEnd);
+            = new Interval(chromosome,transcriptStart,transcriptEnd,isRC,"transcript");
+        Interval codingSpan 
+            = new Interval(chromosome,codingStart,codingEnd,isRC,"coding");
         
         Transcript transcript 
             = new Transcript(
@@ -191,6 +198,11 @@ public class GeneCollectionFileReader {
         
         List<Exon> returnList = new ArrayList<>();
         
+        boolean isRC = FALSE;
+        if (strand.equals(minus)) {
+            isRC = TRUE;
+        }
+        
         Interval codingIntervalOfTranscript 
             = new Interval(chromosome,codingStart,codingEnd);
         
@@ -209,13 +221,13 @@ public class GeneCollectionFileReader {
             int exonStart = Integer.valueOf(startTokens[i]);
             int exonEnd = Integer.valueOf(endTokens[i]);
             String exonName = Integer.toString(i+1);
-            if (strand.equals(minus)) {
+            if (isRC) {
                 Integer index = startTokens.length - i;
                 exonName = index.toString();
             }
-           
+ 
             Interval exonInterval
-                = new Interval(chromosome,exonStart,exonEnd,FALSE,exonName);
+                = new Interval(chromosome,exonStart,exonEnd,isRC,exonName);
             
             Interval codingExonInterval = null;
             
@@ -229,7 +241,7 @@ public class GeneCollectionFileReader {
                             chromosome,
                             overlapInterval.getStart(),
                             overlapInterval.getEnd(),
-                            FALSE,
+                            isRC,
                             exonName);
             }
             

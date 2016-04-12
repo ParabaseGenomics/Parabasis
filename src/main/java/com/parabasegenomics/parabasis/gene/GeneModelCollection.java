@@ -89,8 +89,9 @@ public class GeneModelCollection {
             }
             
             if (index==genes.size()) {
-                //System.out.println("aiiiiggggg");
-                throw new IOException("Cannot find " + realGeneName + " in models.");
+                System.out.println("Cannot find " + realGeneName + " in models.");
+                continue;
+                //throw new IOException("Cannot find " + realGeneName + " in models.");
             }
             
             if (isFullLength(gene)) {
@@ -113,8 +114,11 @@ public class GeneModelCollection {
                     geneModel.Collapse();
                     transcript = geneModel.getCollapsedTranscript();
                 }
+                       
                 String chromosome = transcript.getChromosome();
                 Exon exon = transcript.get5primeExon();
+                String name = realGeneName + "_" + exon.getName();
+                
                 int start = exon.getStart();
                 int end = exon.getEnd();
                 if (transcript.getExonCount() > 1) {
@@ -124,16 +128,19 @@ public class GeneModelCollection {
                         end += splicingDistance;
                     }
                 }
+                
                 //System.out.println("adding 5ptarget " + chromosome +" "+start+" "+end);
-                targets.add(new Interval(chromosome,start,end));
+                targets.add(new Interval(chromosome,start,end,transcript.isRC(),name));
                 
                 while (transcript.hasNextExon()) {
                     exon = transcript.getNextExon();
+                    name = realGeneName + "_" + exon.getName();
                     if (!transcript.is3primeExon()) {
                         start = exon.getStart() - splicingDistance;
                         end = exon.getEnd() + splicingDistance;
                          //System.out.println("adding target " + chromosome +" "+start+" "+end);
-                        targets.add(new Interval(chromosome,start,end));
+                        targets
+                            .add(new Interval(chromosome,start,end,transcript.isRC(),name));
                     } else {
                         start = exon.getStart();
                         end = exon.getEnd();
@@ -143,7 +150,8 @@ public class GeneModelCollection {
                             start -= splicingDistance;
                         }
                          //System.out.println("adding 3ptarget " + chromosome +" "+start+" "+end);
-                        targets.add(new Interval(chromosome,start,end)); 
+                        targets
+                            .add(new Interval(chromosome,start,end,transcript.isRC(),name)); 
                     }                   
                 } 
             }
