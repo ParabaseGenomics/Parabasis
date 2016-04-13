@@ -5,6 +5,7 @@
  */
 package com.parabasegenomics.parabasis.util;
 
+import htsjdk.samtools.util.Interval;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -21,12 +22,32 @@ import java.util.Set;
  */
 public class Reader {
     
+    private static final String TAB = "\t";
     
     private  BufferedReader reader;   
     private  File fileToRead;
     
     public Reader() {
         
+    }
+    
+    public List<Interval> readBEDFile(String file) 
+    throws FileNotFoundException, IOException {
+        List<Interval> entries = new ArrayList<>();
+        fileToRead = new File(file);
+        reader = new BufferedReader(new FileReader(fileToRead));    
+        while (reader.ready()) {
+           String line = reader.readLine();
+           String [] tokens = line.split(TAB);
+           if (tokens[0].equals("track")) {
+               continue;
+           }
+           String name = tokens[0];
+           int start = Integer.parseInt(tokens[1])+1;
+           int end = Integer.parseInt(tokens[2]);
+           entries.add(new Interval(name,start,end));
+        }
+       return entries;        
     }
     
     /**
