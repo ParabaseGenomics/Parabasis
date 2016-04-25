@@ -6,7 +6,9 @@
 package com.parabasegenomics.parabasis.vcf;
 
 import com.parabasegenomics.parabasis.util.Reader;
+import htsjdk.samtools.SAMFileHeader;
 import htsjdk.samtools.util.Interval;
+import htsjdk.samtools.util.IntervalList;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.List;
@@ -50,8 +52,7 @@ public class VcfComparator {
         truthLoader.loadFile();
         
         truthRegions = utilityReader.readBEDFile(bedFile);  
-        
-        
+               
     }
     
      /**
@@ -67,13 +68,41 @@ public class VcfComparator {
     throws FileNotFoundException, IOException {
         testLoader = new VcfLoader(vcfFile);
         testLoader.loadFile();
-        
-        testRegions = utilityReader.readBEDFile(bedFile);        
-        
+  
+        testRegions = utilityReader.readBEDFile(bedFile);              
     }
     
     
     public void compare() {
+        // intersect truth and test regions
+        SAMFileHeader header = new SAMFileHeader();
+        header.addComment("this is a dummy header");
+        
+        IntervalList truthIntervalList = new IntervalList(header);
+        truthIntervalList.addall(truthRegions);
+        
+        IntervalList testIntervalList = new IntervalList(header);
+        testIntervalList.addall(testRegions);
+        
+        IntervalList intersection 
+            = IntervalList.intersection(truthIntervalList,testIntervalList);
+        
+        // get unique intervals only (may be overlap due to overlapping genes,
+        // for example)
+        List<Interval> uniqueIntersection
+            = IntervalList.getUniqueIntervals(intersection, true);
+        
+        // compare cohort from truth loader to that from test loader
+        // only within intersection from above
+        VcfCohort truthCohort = truthLoader.getCohort();
+        List<VcfCohortVariant> selectedTruthVariants
+            = truthCohort.select(uniqueIntersection);
+        
+        VcfCohort testCohort = testLoader.getCohort();
+        List<VcfCohortVariant> selectedTestVariants
+            = testCohort.select(uniqueIntersection);
+        
+        
         
     }
     

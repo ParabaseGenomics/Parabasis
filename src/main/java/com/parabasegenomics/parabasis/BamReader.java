@@ -5,9 +5,15 @@
  */
 package com.parabasegenomics.parabasis;
 
+import htsjdk.samtools.util.SamLocusIterator;
+import htsjdk.samtools.SAMRecord;
+import htsjdk.samtools.SAMRecordIterator;
 import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
+import htsjdk.samtools.ValidationStringency;
+import htsjdk.samtools.util.IntervalList;
 import java.io.File;
+import java.util.List;
 
 /**
  *
@@ -19,9 +25,29 @@ public class BamReader {
     File bamFile = new File(path);
     
     final SamReaderFactory samReaderFactory 
-        = SamReaderFactory.makeDefault();
+        = SamReaderFactory.makeDefault()
+            .validationStringency(ValidationStringency.SILENT);
     
-    final SamReader samReader 
-        = samReaderFactory.open(bamFile);
-    
+    final SamReader samReader;
+
+  
+    public BamReader() {
+        this.samReader = samReaderFactory.open(bamFile);
+        
+        IntervalList intervalList = null;
+        SamLocusIterator locusIterator 
+            = new SamLocusIterator(samReader,intervalList);
+        
+   
+        while (locusIterator.hasNext()) {
+            SamLocusIterator.LocusInfo locusInfo 
+                = locusIterator.next();
+            
+            int pos = locusInfo.getPosition();
+            List<SamLocusIterator.RecordAndOffset> list
+                = locusInfo.getRecordAndPositions();
+            int coverage = list.size();
+            
+        }
+    }
 }

@@ -42,6 +42,8 @@ public class VcfLoader {
         vcfFile = new File(filePath);
         passingVariantsOnly = false;
         reader = new BufferedReader(new FileReader(vcfFile)); 
+        variantCount = 0;
+        cohort = new VcfCohort();
     }
     
     /**
@@ -52,10 +54,27 @@ public class VcfLoader {
         passingVariantsOnly = true;
     }
 
+    public int getVariantCount() {
+        return variantCount;
+    }
+    
+    /**
+     * Returns the cohort of variants from the vcf file.
+     * @return 
+     */
+    public VcfCohort getCohort() {
+        return cohort;
+    }
+    
+    /**
+     * Load a vcf file.
+     * @throws IOException 
+     */
     public void loadFile() 
     throws IOException {
         parseHeader();
         parseLines();
+        variantCount = cohort.getVariantCount();
     }
     
     /**
@@ -95,8 +114,8 @@ public class VcfLoader {
             String chromosome = tokens[0];
             
             if (passingVariantsOnly
-                && (tokens[6].equals(PASS)
-                    || tokens[6].equals(PERIOD))) {
+                && (!tokens[6].equals(PASS)
+                    && !tokens[6].equals(PERIOD))) {
                 continue;
             }
             
@@ -109,10 +128,10 @@ public class VcfLoader {
             String refAllele = tokens[3];
             String altAllele = tokens[4];
             String firstRefAllele = refAllele.substring(0,1);
-            String secondRefAllele = refAllele.substring(1,2);
+           
             
             String firstAltAllele = altAllele.substring(0,1);
-            String secondAltAllele = altAllele.substring(1,2);
+            
             
             // problematic MNPs. The MiSeq reports these as two SNPs, NIST as a
             // single MNP.
@@ -136,6 +155,8 @@ public class VcfLoader {
                 
                 cohort.addCohortVariant(cohortVariant);
                 
+                String secondRefAllele = refAllele.substring(1,2);
+                String secondAltAllele = altAllele.substring(1,2);
                 VcfCohortVariant cohortVariant2 
                     = new VcfCohortVariant(
                         chromosome,
