@@ -5,6 +5,7 @@
  */
 package com.parabasegenomics.parabasis.vcf;
 
+import htsjdk.samtools.util.Interval;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -86,6 +87,9 @@ public class VcfCohort {
         return cohortVariants.get(index);
     }
     
-    
+     public List<VcfCohortVariant> select(List<Interval> intervals) {
+        List<VcfCohortVariant> variantList = new ArrayList<>();
+        return variantList;
+    }
     
 }

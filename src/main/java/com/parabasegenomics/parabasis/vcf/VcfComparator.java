@@ -11,6 +11,7 @@ import htsjdk.samtools.util.Interval;
 import htsjdk.samtools.util.IntervalList;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 /**
  * Class to compare two vcf files, matching positions and genotypes.
@@ -106,4 +107,6 @@ public class VcfComparator {
         
     }
     
+   
+        
 }
