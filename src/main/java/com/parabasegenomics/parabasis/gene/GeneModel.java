@@ -22,7 +22,7 @@ import java.util.List;
  * 
  * @author evanmauceli
  */
-public class GeneModel {
+public class GeneModel implements Comparable<GeneModel> {
     
     private final static String dash = "-";
     private final static String colon = ":";
@@ -48,6 +48,11 @@ public class GeneModel {
         this.collapsedTranscript = toCopy.getCollapsedTranscript();
         this.geneName = toCopy.getGeneName();
         this.spliceDistance = toCopy.getSpliceDistance();
+    }
+    
+    @Override
+    public int compareTo(GeneModel toCompare) {
+        return (geneName.compareTo(toCompare.getGeneName()));
     }
     
     /**
@@ -82,6 +87,9 @@ public class GeneModel {
         return spliceDistance;
     }
     
+    public boolean hasCollapsedTranscript() {
+        return (collapsedTranscript != null);
+    }
     
     /**
      * Method to collapse all transcripts from a gene into a flat representation 
@@ -347,9 +355,9 @@ public class GeneModel {
             return overlapString;
         }
         
-        int intronStart = 0;
-        int intronEnd = 0;
-        int intronIndex = 1;
+        //int intronStart = 0;
+        //int intronEnd = 0;
+        //int intronIndex = 1;
         String chromosome = transcripts.get(0).getChromosome();
         
         StringBuilder overlapStringBuilder = new StringBuilder();
@@ -360,6 +368,9 @@ public class GeneModel {
             if (!transcript.getTranscriptInterval().intersects(interval)) {
                 continue;
             }
+             int intronStart = 0;
+            int intronEnd = 0;
+         int intronIndex = 1;
             
             overlapStringBuilder.append(transcript.getTranscriptName());
             overlapStringBuilder.append(dash);
@@ -412,11 +423,11 @@ public class GeneModel {
                     } else {
                          if (interval.getStart() <= intron.getStart() 
                             && interval.getEnd() >= intron.getStart()+getSpliceDistance()) {
-                            overlapStringBuilder.append("(splicing3p)");
+                            overlapStringBuilder.append("(splicing5p)");
                         } 
                         if (interval.getStart() <= intron.getEnd()
                             && interval.getEnd() >= intron.getEnd()) {
-                            overlapStringBuilder.append("(splicing5p)");
+                            overlapStringBuilder.append("(splicing3p)");
                         }
                     }
                     

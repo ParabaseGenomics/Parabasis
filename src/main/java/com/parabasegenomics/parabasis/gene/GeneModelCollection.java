@@ -225,6 +225,22 @@ public class GeneModelCollection {
         }
     }
     
+    /**
+     * Returns gene models for the requested list of genes.
+     * @param genesToSelect The list of gene names to collect and return.
+     * @return 
+     */
+    public List<GeneModel> selectGeneModels(Set<String> genesToSelect) {
+        List<GeneModel> selected = new ArrayList<>();
+        
+        for (GeneModel gene : genes) {
+            if (genesToSelect.contains(gene.getGeneName())) {
+                selected.add(gene);
+            }
+        }
+        
+        return selected;
+    }
     
     /**
      * Add a new transcript to the list being held by the model.

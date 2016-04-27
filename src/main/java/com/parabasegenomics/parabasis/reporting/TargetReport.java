@@ -6,6 +6,8 @@
 package com.parabasegenomics.parabasis.reporting;
 
 import com.parabasegenomics.parabasis.coverage.AnnotatedInterval;
+import com.parabasegenomics.parabasis.decorators.GCPctDecorator;
+import com.parabasegenomics.parabasis.decorators.GeneModelDecorator;
 import com.parabasegenomics.parabasis.gene.GeneModel;
 import com.parabasegenomics.parabasis.gene.GeneModelCollection;
 import com.parabasegenomics.parabasis.util.Reader;
@@ -18,7 +20,9 @@ import java.io.IOException;
 import java.nio.charset.Charset;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 /**
  *
@@ -32,12 +36,13 @@ public class TargetReport {
     private final static String geneKey = "GEN";
   
     private final static String formatPattern = "###.##";
-    private DecimalFormat decimalFormat;
+    private final DecimalFormat decimalFormat;
     
     private final Reader utilityReader;
     
     private List<Interval> targetIntervals;
     private List<Interval> captureIntervals;
+    private Set<String> targetGenelist;
     
     private final GeneModelCollection geneModelCollection;
     private IndexedFastaSequenceFile referenceSequence;
@@ -51,6 +56,8 @@ public class TargetReport {
        utilityReader = new Reader();
        targetIntervals = new ArrayList<>();
        captureIntervals = new ArrayList<>();
+       
+       targetGenelist = new HashSet<>();
        
        annotatedIntervals = new ArrayList<>();
        reportFile = null;//new File(fileToWrite);
@@ -132,6 +139,11 @@ public class TargetReport {
         captureIntervals = utilityReader.readBEDFile(captureIntervalFile);
     }
     
+    public void loadTargetGenelist(String targetGenelistFile) 
+    throws IOException {
+        targetGenelist = utilityReader.readHashSet(targetGenelistFile);
+    }
+    
     public static void main(String[] args) 
     throws IOException {
         
@@ -140,22 +152,24 @@ public class TargetReport {
         String refSeqGeneModelFile = args[2];
         String gencodeGeneModelFile = args[3];
         String outputFile = args[4];
+        String targetGenelistFile = args[5];
         String captureIntervalFile = null;
-        if (args.length == 6) {
-            captureIntervalFile = args[5];
+        if (args.length == 7) {
+            captureIntervalFile = args[6];
         }
         
-        TargetReport targetReport = new TargetReport(outputFile);      
+        TargetReport targetReport = new TargetReport(outputFile);  
         targetReport.loadGeneModelCollection(refSeqGeneModelFile,gencodeGeneModelFile);
         targetReport.loadReferenceSequence(humanReferenceFile);
-        
-        
+
         targetReport.loadTargetFile(targetIntervalFile);
         if (captureIntervalFile != null) {
             targetReport.loadCaptureFile(captureIntervalFile);
         }
         
-        targetReport.aggregateData();
+        targetReport.loadTargetGenelist(targetGenelistFile);
+
+        targetReport.aggregateData();        
         targetReport.report();
         
     }
@@ -167,24 +181,23 @@ public class TargetReport {
     public void aggregateData() 
     throws IOException {
         
+       GeneModelDecorator geneModelDecorator 
+           = new GeneModelDecorator(geneModelCollection,targetGenelist);
+        
+       GCPctDecorator gcPctDecorator = null;
+       if (referenceSequence != null) {
+           gcPctDecorator = new GCPctDecorator(referenceSequence,referenceIndex);
+       }
+       
         for (Interval interval : targetIntervals) {
             AnnotatedInterval annotatedTarget = new AnnotatedInterval(interval);
-            if (referenceSequence != null) {
-                annotatedTarget
-                    .addAnnotation(
-                        pctGCKey, 
-                        decimalFormat.format(getGCPercentage(interval)));
+            if (gcPctDecorator != null) {
+                gcPctDecorator.annotate(annotatedTarget);
+            } else { 
             } 
-            
-            List<GeneModel> genes = geneModelCollection.getGeneModels();
-            for (GeneModel gene : genes) {
-                gene.Collapse();
-                String overlap = gene.overlap(interval);
-                if (overlap != null) {
-                    annotatedTarget.addAnnotation(geneKey,overlap);
-                }
-            }
-            
+
+            geneModelDecorator.annotate(annotatedTarget);
+                       
             annotatedIntervals.add(annotatedTarget);
         }
     }

@@ -25,6 +25,7 @@ public class TargetReportTest {
     private final String origTargetIntervalFile;
     private final String humanReferenceFile;
     private final String refSeqGeneModelFile;
+    private final String targetGenelistFile;
 
     
     public TargetReportTest() {
@@ -34,6 +35,7 @@ public class TargetReportTest {
         origTargetIntervalFile = "src/main/resources/targetIntervalFileOrig.bed";
         humanReferenceFile = "src/main/resources/hg19sample.fasta";
         refSeqGeneModelFile = "src/main/resources/refseq_genemodel.txt";
+        targetGenelistFile = "src/main/resources/targetGenelistFile";
         
     }
     
@@ -52,12 +54,13 @@ public class TargetReportTest {
     @Test
     public void testMain() throws Exception {
         System.out.println("main");
-        String[] args = new String [5];
+        String[] args = new String [6];
         args[0] = targetIntervalFile;
         args[1] = humanReferenceFile;
         args[2] = refSeqGeneModelFile;
         args[3] = refSeqGeneModelFile;
-        args[4] = null; 
+        args[4] = null;
+        args[5] = targetGenelistFile;
                
         TargetReport.main(args);
         
