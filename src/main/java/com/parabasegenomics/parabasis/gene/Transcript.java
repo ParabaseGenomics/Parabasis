@@ -9,6 +9,7 @@ import htsjdk.samtools.util.Interval;
 import java.io.IOException;
 import static java.lang.Boolean.FALSE;
 import static java.lang.Boolean.TRUE;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.ListIterator;
 
@@ -35,6 +36,7 @@ public class Transcript implements Comparable<Transcript> {
     private final Interval transcriptInterval;
     private final Interval codingInterval;
     private boolean isRC;
+    private boolean isNonCoding;
     private boolean haveGotten5primeExon;
     
     private ListIterator<Exon> exonIterator;
@@ -71,6 +73,10 @@ public class Transcript implements Comparable<Transcript> {
                 isRC=TRUE;
             }
             
+            isNonCoding=false;
+            if (codingSpan.getStart()==codingSpan.getEnd()) {
+                isNonCoding=true;
+            }
             haveGotten5primeExon=false;
         }
     
@@ -79,15 +85,22 @@ public class Transcript implements Comparable<Transcript> {
         this.geneName = toCopy.getGeneName();
         this.transcriptInterval = toCopy.getTranscriptInterval();
         this.codingInterval = toCopy.getCodingInterval();
-        this.exons = toCopy.getExonList();
+        //this.exons = toCopy.getExonList();
         this.isRC = toCopy.isRC();
+        this.isNonCoding = toCopy.isNonCoding();
         this.haveGotten5primeExon = toCopy.haveGotten5primeExon;
         this.exonIterator = toCopy.exonIterator;
         this.numberOfExons = toCopy.getExonCount();
+        
+        this.exons = new ArrayList<>();
+        for (Exon exon : toCopy.getExonList()) {
+            this.exons.add(exon);
+        }
     }
     
     /**
      * Basic getter methods.
+     * @return 
      */
     public String getTranscriptName() {
         return transcriptName;
@@ -168,6 +181,10 @@ public class Transcript implements Comparable<Transcript> {
         return exonicBases;
     } 
     
+    public boolean isNonCoding() {
+        return isNonCoding;
+    }
+    
     public boolean isRC() {
         return isRC;
     }
@@ -201,7 +218,6 @@ public class Transcript implements Comparable<Transcript> {
     public Exon get5primeExon() {
         
         haveGotten5primeExon = true;
-        
         // if this is a forward transcript, we've got an iterator to the first
         // exon.  If not, we'll have to go in reverse.
         if (!isRC) {

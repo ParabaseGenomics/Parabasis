@@ -51,10 +51,14 @@ public class GeneModelDecorator implements IntervalDecorator {
     @Override
     public void annotate(AnnotatedInterval annotatedInterval) {
         try {
-            annotatedInterval
-                .addAnnotation(
-                    KEY,
-                    getGeneModelOverlap(annotatedInterval.getInterval()));
+            String overlap 
+                = getGeneModelOverlap(annotatedInterval.getInterval());
+            if (!overlap.isEmpty()) {
+                annotatedInterval
+                    .addAnnotation(
+                        KEY,
+                        overlap);
+            }
         } catch (IOException ex) {
             Logger.getLogger(GeneModelDecorator.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -62,7 +66,7 @@ public class GeneModelDecorator implements IntervalDecorator {
     
     /**
      * Returns a string of the gene-transcript-exon# for each overlap this interval
-     * has with the gene models.
+     * has with the gene models.  If no overlap, returns an empty string.
      * @param interval
      * @return
      * @throws IOException 

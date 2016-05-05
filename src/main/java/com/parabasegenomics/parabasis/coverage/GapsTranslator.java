@@ -9,7 +9,10 @@ import com.parabasegenomics.parabasis.gene.GeneModel;
 import com.parabasegenomics.parabasis.gene.GeneModelCollection;
 import com.parabasegenomics.parabasis.util.Reader;
 import htsjdk.samtools.util.Interval;
+import java.io.BufferedWriter;
+import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.util.List;
 import java.util.Set;
@@ -28,6 +31,7 @@ public class GapsTranslator {
     private final Reader utilityReader;
     
     private static Set<String> geneNamesInTest;
+    
     
     /**
      * Translate the gaps.csv file produced by the MiSeq (regions of assay with 
@@ -61,33 +65,24 @@ public class GapsTranslator {
         geneModelCollection.addGeneModelCollection(geneModelFileToAdd);
     }
     
-    public static void main(String[] args) 
-    throws IOException {     
- 
-        String gapsFile = args[3];
-        String refSeqGeneModelFile = args[0];
-        String gencodeGeneModelFile = args[4];
-        String genelistFile = args[1];
-        GapsTranslator gapsTranslator 
-            = new GapsTranslator(gapsFile, refSeqGeneModelFile, genelistFile);
+    /**
+     * Write targets to a file.
+     * @param file
+     * @param targets
+     * @throws IOException 
+     */
+    public static void writeTargets(File file, List<Interval> targets) 
+    throws IOException {
+        BufferedWriter writer = new BufferedWriter(new FileWriter(file));
         
-        gapsTranslator.addGeneModel(gencodeGeneModelFile);
-        geneModelCollection.aggregateTranscriptsByGenes();
-  
-        int splicingDistance = Integer.valueOf(args[2]);
-        List<Interval> targets 
-            = geneModelCollection
-                .createTargets(
-                    geneNamesInTest,
-                    splicingDistance);
-        
-
         for (Interval target : targets) {
+            
             String strand = "+";
             if (target.isNegativeStrand()) {
                 strand = "-";
             }
-            System.out.println(
+            int length = Math.abs(target.getStart()-target.getEnd());
+            String targetString = 
                 target.getContig()
                 + "\t"
                 + target.getStart()
@@ -98,10 +93,49 @@ public class GapsTranslator {
                 + "\t"
                 + target.getName()
                 + "\t"
-                + target.length());
+                + Integer.toString(length);
                 
+            writer.write(targetString);
+            writer.newLine();
             //System.out.println(target.toString());
         }
+        writer.close();
+            
+    }
+    
+    public static void main(String[] args) 
+    throws IOException {     
+ 
+        String refSeqGeneModelFile = args[0];
+        String genelistFile = args[1];
+        int splicingDistance = Integer.valueOf(args[2]);
+        String gapsFile = args[3];
+        String gencodeGeneModelFile = args[4];
+        String targetsFile = args[5];
+        String codingTargetsFile = args[6];
+
+        GapsTranslator gapsTranslator 
+            = new GapsTranslator(gapsFile, refSeqGeneModelFile, genelistFile);
+        
+        gapsTranslator.addGeneModel(gencodeGeneModelFile);
+        geneModelCollection.aggregateTranscriptsByGenes();
+  
+        
+        List<Interval> targets 
+            = geneModelCollection
+                .createTargets(
+                    geneNamesInTest,
+                    splicingDistance);
+        
+        writeTargets(new File(targetsFile),targets);
+              
+        List<Interval> codingTargets
+            = geneModelCollection
+                .createCodingTargets(
+                    geneNamesInTest, 
+                    splicingDistance);
+
+        writeTargets(new File(codingTargetsFile),codingTargets);
         
         System.exit(0);
     }

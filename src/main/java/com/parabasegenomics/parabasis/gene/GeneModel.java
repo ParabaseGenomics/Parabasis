@@ -133,7 +133,11 @@ public class GeneModel implements Comparable<GeneModel> {
                     sequenceArray[i-offset] 
                         = Math.max(sequenceArray[i-offset],1);
                 } else {
-                    sequenceArray[i-offset] = 2;
+                    if (codingStart != codingEnd ) {
+                        sequenceArray[i-offset] = 2;
+                    } else {
+                        sequenceArray[i-offset] = 1;
+                    }
                 }
             }
             
@@ -148,7 +152,11 @@ public class GeneModel implements Comparable<GeneModel> {
                         sequenceArray[i-offset] 
                             = Math.max(sequenceArray[i-offset],1);
                     } else {
-                        sequenceArray[i-offset] = 2;
+                        if (codingStart != codingEnd ) {
+                            sequenceArray[i-offset] = 2;
+                        } else {
+                            sequenceArray[i-offset] = 1;
+                        }
                     }
                 }
             }
@@ -166,13 +174,6 @@ public class GeneModel implements Comparable<GeneModel> {
         int exonCount=0;
         boolean isRC = transcripts.get(0).isRC();
         for (int i=0; i<sequenceArray.length; i++) {
-            if (codingStart==0 && sequenceArray[i]==2) {
-                codingStart = i+offset;
-            }
-            if (sequenceArray[i]==2) {
-                codingEnd = i+offset;
-            }
-            
             if (!markup && sequenceArray[i]>0) {
                 markup=true;
                 start=i+offset;
@@ -187,6 +188,7 @@ public class GeneModel implements Comparable<GeneModel> {
         // repeat this block as the block above is solely to count the exons
         List<Exon> collapsedExons = new ArrayList<>();
         int exonIndex = 1;
+        markup=false;
         for (int i=0; i<sequenceArray.length; i++) {
             if (codingStart==0 && sequenceArray[i]==2) {
                 codingStart = i+offset;
@@ -194,7 +196,7 @@ public class GeneModel implements Comparable<GeneModel> {
             if (sequenceArray[i]==2) {
                 codingEnd = i+offset;
             }
-            
+           
             if (!markup && sequenceArray[i]>0) {
                 markup=true;
                 start=i+offset;
@@ -207,11 +209,32 @@ public class GeneModel implements Comparable<GeneModel> {
                     exonName = Integer.toString(exonCount-exonIndex+1);
                 }
                 
+                
                 Exon exon = new Exon(
                     new Interval(
                         chromosome,start,end,isRC,exonName));
+                
+                // look for coding portions of this exon
+                int codingExonStart=0;
+                int codingExonEnd=0;
+                for (int exonBase=start-offset; exonBase<end-offset; exonBase++) {
+                    if (codingExonStart==0 && sequenceArray[exonBase]==2) {
+                        codingExonStart=exonBase+offset;
+                    }
+                    if (sequenceArray[exonBase]==2) {
+                        codingExonEnd=exonBase+offset;
+                    }
+                }
+                     
+                if (codingExonStart != codingExonEnd) {
+                    exon.addCodingInterval(
+                        new Interval(
+                            chromosome,codingExonStart,codingExonEnd,isRC,exonName));
+                }
                 collapsedExons.add(exon);
                 exonIndex++;
+                codingExonStart=0;
+                codingExonEnd=0;
             }     
         }
         
@@ -245,11 +268,15 @@ public class GeneModel implements Comparable<GeneModel> {
      * 
      */
     private Interval getTranscriptSpanThisGene() {
-        int index = 0;
+        int index = 0;       
         int minTranscriptStart = transcripts.get(index).getTranscriptStart();
         int maxTranscriptEnd = transcripts.get(index).getTranscriptEnd();
         
         for (; index<transcripts.size(); index++) {
+            if (transcripts.get(index).getGeneName().equals("SHOX")
+                && transcripts.get(index).getChromosome().equals("chrY")) {
+                continue;
+            }
             minTranscriptStart = Math.min(
                 minTranscriptStart,transcripts.get(index).getTranscriptStart());
             
@@ -351,7 +378,16 @@ public class GeneModel implements Comparable<GeneModel> {
         String overlapString = null;
                
         // fail as early as possible
+        //TODO. This ugly hack is implemented to deal with the fact that
+        // we're using 0-based, open intervals, but htsjdk Interval methods
+        // are expecting 1-based, closed intervals.  Therefore, abutting
+        // genes are counted as overlapping, when that should not be the case.
         if (!interval.intersects(collapsedTranscript.getTranscriptInterval())) {
+            return overlapString;
+        } else if (interval.intersects(collapsedTranscript.getTranscriptInterval())
+            && interval
+                .intersect(collapsedTranscript.getTranscriptInterval())
+                .length()<=1) {
             return overlapString;
         }
         
@@ -368,9 +404,20 @@ public class GeneModel implements Comparable<GeneModel> {
             if (!transcript.getTranscriptInterval().intersects(interval)) {
                 continue;
             }
-             int intronStart = 0;
+            
+            // TODO. This ugly hack is implemented to deal with the fact that
+            // we're using 0-based, open intervals, but htsjdk Interval methods
+            // are expecting 1-based, closed intervals.  Therefore, abutting
+            // genes are counted as overlapping, when that should not be the case.
+            if (transcript
+                .getTranscriptInterval()
+                .intersect(interval)
+                .length()<=1) {
+                continue;
+            }
+            int intronStart = 0;
             int intronEnd = 0;
-         int intronIndex = 1;
+            int intronIndex = 1;
             
             overlapStringBuilder.append(transcript.getTranscriptName());
             overlapStringBuilder.append(dash);
@@ -410,6 +457,7 @@ public class GeneModel implements Comparable<GeneModel> {
                 if (intron.intersects(interval)) {
                     overlapStringBuilder.append("Intron").append(intron.getName());
                     
+                    
                     // check if the gap overlaps a splicing region
                     if (!transcript.isRC()) {
                         if (interval.getStart() <= intron.getStart() 
@@ -423,11 +471,11 @@ public class GeneModel implements Comparable<GeneModel> {
                     } else {
                          if (interval.getStart() <= intron.getStart() 
                             && interval.getEnd() >= intron.getStart()+getSpliceDistance()) {
-                            overlapStringBuilder.append("(splicing5p)");
+                            overlapStringBuilder.append("(splicing3p)");
                         } 
                         if (interval.getStart() <= intron.getEnd()
                             && interval.getEnd() >= intron.getEnd()) {
-                            overlapStringBuilder.append("(splicing3p)");
+                            overlapStringBuilder.append("(splicing5p)");
                         }
                     }
                     
@@ -451,8 +499,11 @@ public class GeneModel implements Comparable<GeneModel> {
         }
         
         // remove the trailing dash before returning
-        overlapStringBuilder.deleteCharAt(overlapStringBuilder.length()-1);
-        
+        if (overlapStringBuilder
+            .substring(overlapStringBuilder.length()-1)
+            .equals(dash)) {
+                overlapStringBuilder.deleteCharAt(overlapStringBuilder.length()-1);
+        }
         return overlapStringBuilder.toString();
     }
     

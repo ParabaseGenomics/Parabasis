@@ -5,7 +5,6 @@
  */
 package com.parabasegenomics.parabasis.gene;
 
-import com.parabasegenomics.parabasis.gene.Exon;
 import htsjdk.samtools.util.Interval;
 import static java.lang.Boolean.FALSE;
 import java.util.ArrayList;

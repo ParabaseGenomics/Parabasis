@@ -23,6 +23,7 @@ import java.util.Set;
 public class Reader {
     
     private static final String TAB = "\t";
+    private static final String NEG = "-";
     
     private  BufferedReader reader;   
     private  File fileToRead;
@@ -43,9 +44,22 @@ public class Reader {
                continue;
            }
            String name = tokens[0];
-           int start = Integer.parseInt(tokens[1])+1;
+           int start = Integer.parseInt(tokens[1]);
            int end = Integer.parseInt(tokens[2]);
-           entries.add(new Interval(name,start,end));
+           
+           boolean negative = false;
+           if (tokens.length >= 4) {
+               if (tokens[3].equals(NEG)) {
+                   negative = true;
+               }
+           }
+           
+           String lineName = "";
+           if (tokens.length >=5) {
+               lineName = tokens[4];
+           }
+           
+           entries.add(new Interval(name,start,end,negative,lineName));
         }
        return entries;        
     }

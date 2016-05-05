@@ -17,7 +17,7 @@ import java.text.DecimalFormat;
  *
  * @author evanmauceli
  */
-public class GCPctDecorator implements IntervalDecorator {
+public class GCCountDecorator implements IntervalDecorator {
     
     private static final String KEY = "GC";
     
@@ -27,7 +27,7 @@ public class GCPctDecorator implements IntervalDecorator {
     private final static String formatPattern = "###.##";
     private final DecimalFormat decimalFormat;
     
-    public GCPctDecorator(
+    public GCCountDecorator(
         IndexedFastaSequenceFile reference,
         FastaSequenceIndex index) {
             referenceSequence=reference;
@@ -48,7 +48,7 @@ public class GCPctDecorator implements IntervalDecorator {
                 KEY, 
                 decimalFormat
                     .format(
-                        getGCPercentage(annotatedInterval.getInterval())));
+                        getGCCount(annotatedInterval.getInterval())));
     } 
     
     /**
@@ -56,13 +56,13 @@ public class GCPctDecorator implements IntervalDecorator {
      * @param interval
      * @return 
      */
-    private double getGCPercentage(Interval interval) {
+    private int getGCCount(Interval interval) {
         
         String chromosome = interval.getContig();
         int startPosition = interval.getStart();
         int endPosition = interval.getEnd();
         ReferenceSequence seq 
-            = referenceSequence.getSubsequenceAt(chromosome, startPosition, endPosition);
+            = referenceSequence.getSubsequenceAt(chromosome, startPosition, endPosition-1);
         
         int gcCount = 0;
         
@@ -77,6 +77,6 @@ public class GCPctDecorator implements IntervalDecorator {
             }
         }
         
-        return (100.0* (double) gcCount/(double)interval.length());         
+        return gcCount;        
     }
 }

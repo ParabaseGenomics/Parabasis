@@ -23,7 +23,7 @@ public class Exon {
     
     private final Interval interval;
     private Interval codingInterval;
-    private Map<String, String> valuesMap;
+    private final Map<String, String> valuesMap;
     
     
     public Exon(Interval i) {
@@ -57,6 +57,12 @@ public class Exon {
     public int getEnd() {
         return interval.getEnd();
     }
+    public int getCodingStart() {
+        return codingInterval.getStart();
+    }
+    public int getCodingEnd() {
+        return codingInterval.getEnd();
+    }
     public String getName() {
         return interval.getName();
     }
@@ -70,10 +76,10 @@ public class Exon {
         return codingInterval;
     }
     public int getLength() {
-        return (interval.length());
+        return (interval.getEnd()-interval.getStart());
     }
     public int getCodingLength() {
-        return (codingInterval.length());
+        return (codingInterval.getEnd()-interval.getStart());
     }
     
     public String getValue(String key) {

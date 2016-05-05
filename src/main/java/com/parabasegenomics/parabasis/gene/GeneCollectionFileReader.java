@@ -124,6 +124,15 @@ public class GeneCollectionFileReader {
         if (chromosome.contains(hap)) {
             return null;
         }
+        
+        /**
+         * Ugly bit of code to remove the chrY homolog of SHOX (we only
+         * want the copy on chrX).
+         */
+        if (chromosome.equals("chrY") && geneName.equals("SHOX")) {
+            return null;
+        }
+        
         String strand = tokens[strandColumn];
         int transcriptStart
             = Integer.valueOf(tokens[transcriptStartColumn]);
@@ -228,25 +237,23 @@ public class GeneCollectionFileReader {
  
             Interval exonInterval
                 = new Interval(chromosome,exonStart,exonEnd,isRC,exonName);
+            Exon newExon = new Exon(exonInterval);
             
-            Interval codingExonInterval = null;
-            
-            Interval overlapInterval = null;
             if (exonInterval.intersects(codingIntervalOfTranscript)) {
-                    overlapInterval 
-                        = exonInterval.intersect(codingIntervalOfTranscript);
-      
-                    codingExonInterval 
-                        = new Interval(
-                            chromosome,
-                            overlapInterval.getStart(),
-                            overlapInterval.getEnd(),
-                            isRC,
-                            exonName);
+                Interval overlapInterval 
+                    = exonInterval.intersect(codingIntervalOfTranscript);
+                Interval codingExonInterval 
+                    = new Interval(
+                        chromosome,
+                        overlapInterval.getStart(),
+                        overlapInterval.getEnd(),
+                        isRC,
+                        exonName);
+              
+                newExon.addCodingInterval(codingExonInterval);
+ 
             }
             
-            Exon newExon = new Exon(exonInterval);
-            newExon.addCodingInterval(codingExonInterval);
             returnList.add(newExon);                      
         }
         

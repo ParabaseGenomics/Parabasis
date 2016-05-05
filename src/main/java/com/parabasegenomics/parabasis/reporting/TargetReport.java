@@ -6,9 +6,10 @@
 package com.parabasegenomics.parabasis.reporting;
 
 import com.parabasegenomics.parabasis.coverage.AnnotatedInterval;
-import com.parabasegenomics.parabasis.decorators.GCPctDecorator;
+import com.parabasegenomics.parabasis.coverage.AnnotatedIntervalManager;
+import com.parabasegenomics.parabasis.decorators.CaptureDecorator;
+import com.parabasegenomics.parabasis.decorators.GCCountDecorator;
 import com.parabasegenomics.parabasis.decorators.GeneModelDecorator;
-import com.parabasegenomics.parabasis.gene.GeneModel;
 import com.parabasegenomics.parabasis.gene.GeneModelCollection;
 import com.parabasegenomics.parabasis.util.Reader;
 import htsjdk.samtools.reference.FastaSequenceIndex;
@@ -184,16 +185,23 @@ public class TargetReport {
        GeneModelDecorator geneModelDecorator 
            = new GeneModelDecorator(geneModelCollection,targetGenelist);
         
-       GCPctDecorator gcPctDecorator = null;
+       GCCountDecorator gcPctDecorator = null;
        if (referenceSequence != null) {
-           gcPctDecorator = new GCPctDecorator(referenceSequence,referenceIndex);
+           gcPctDecorator = new GCCountDecorator(referenceSequence,referenceIndex);
+       }
+       
+       CaptureDecorator captureDecorator = null;
+       if (!captureIntervals.isEmpty()) {
+           captureDecorator = new CaptureDecorator(captureIntervals);
        }
        
         for (Interval interval : targetIntervals) {
             AnnotatedInterval annotatedTarget = new AnnotatedInterval(interval);
             if (gcPctDecorator != null) {
                 gcPctDecorator.annotate(annotatedTarget);
-            } else { 
+            } 
+            if (captureDecorator != null) { 
+                captureDecorator.annotate(annotatedTarget);
             } 
 
             geneModelDecorator.annotate(annotatedTarget);
@@ -235,13 +243,67 @@ public class TargetReport {
     /**
      * Print a report to stdout.
      */
-    public void report() {
+    public void report() 
+    throws IOException {
+        
+        AnnotatedIntervalManager annotatedIntervalManager
+            = new AnnotatedIntervalManager();
+        
+        annotatedIntervalManager.setIntervals(annotatedIntervals);
+        annotatedIntervalManager.aggregate();
+       
+        
         for (AnnotatedInterval interval : annotatedIntervals) {
-            System.out.print(interval.getInterval().toString());
+            
+            Interval genomicInterval = interval.getInterval();
+            String direction = "+";
+            if (genomicInterval.isNegativeStrand()) {
+                direction = "-";
+            }
+            
+            int intervalLength = interval.length();
+            int gcCount = -1;
+            double gcPct = 0.0;
+            String gcCountAnnotation = interval.getAnnotation(pctGCKey);
+            if (gcCountAnnotation != null) {
+                gcCount = Integer.parseInt(gcCountAnnotation);
+                gcPct 
+                    = 100.0* (double) gcCount/(double) intervalLength;
+            }
+            
+            
+            int captureCount = -1;
+            double capPct = 0.0;
+            String captureCountAnnotation = interval.getAnnotation(pctCaptureKey);
+            if (captureCountAnnotation != null) {
+                captureCount = Integer.parseInt(interval.getAnnotation(pctCaptureKey));
+            
+                capPct 
+                    = 100.0* (double) captureCount/(double) intervalLength;
+                if (capPct > 100.0) {
+                    capPct = 100.0;
+                }
+            }
+            
+            System.out.print(genomicInterval.getContig());
+            System.out.print("\t");
+            System.out.print(genomicInterval.getStart());
+            System.out.print("\t");
+            System.out.print(genomicInterval.getEnd());
+            System.out.print("\t");
+            System.out.print(direction);
             System.out.print("\t");
             System.out.print(interval.getAnnotation(geneKey));
             System.out.print("\t");
-            System.out.println(interval.getAnnotation(pctGCKey));          
+            System.out.print(interval.length());
+            System.out.print("\t");
+            if (captureCountAnnotation != null) {
+                System.out.print(decimalFormat.format(capPct));
+                System.out.print("\t");
+            }
+            if (gcCountAnnotation != null ) {
+                System.out.println(decimalFormat.format(gcPct));   
+            }
         }
     }
     

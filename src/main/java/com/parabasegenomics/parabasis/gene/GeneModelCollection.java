@@ -160,6 +160,141 @@ public class GeneModelCollection {
         return targets;
     }
     
+    
+     /**
+     * Turns the given list of genes into a list of sequencing targets, but
+     * only for coding portions of exons and splice junctions.
+     * 
+     * @param genesToTarget Input list of genes to target.
+     * @param splicingDistance Distance in bp from exon/intron boundary to look
+     * for splicing effects. 10 bp is standard.
+     * @return Returns a list of targets as chr, start, end.
+     * @throws java.io.IOException
+     */
+    public List<Interval> createCodingTargets(
+        Set<String> genesToTarget, 
+        int splicingDistance) 
+    throws IOException {
+       
+        List<Interval> targets = new ArrayList<>();
+        
+        for (String gene : genesToTarget) {
+            String realGeneName = gene;
+            if (isFullLength(gene)) {
+                realGeneName = gene.substring(0,gene.length()-3);
+            }
+            
+            //System.out.println("gene " + gene +" "+realGeneName);
+            int index=0;
+            for (; index<genes.size(); index++) {
+                if (genes.get(index).getGeneName().equals(realGeneName)) {
+                    break;
+                }
+            }
+            
+            if (index==genes.size()) {
+                System.out.println("Cannot find " + realGeneName + " in models.");
+                continue;
+                //throw new IOException("Cannot find " + realGeneName + " in models.");
+            }
+            
+            if (isFullLength(gene)) {
+                GeneModel geneModel = genes.get(index);
+                Transcript transcript = geneModel.getCollapsedTranscript();
+                if (transcript == null) {
+                    geneModel.Collapse();
+                }
+                
+                targets.add(
+                    genes
+                        .get(index)
+                        .getCollapsedTranscript()
+                        .getTranscriptInterval());
+                            
+            } else {
+                GeneModel geneModel = genes.get(index);
+                Transcript transcript = geneModel.getCollapsedTranscript();
+                if (transcript == null) {
+                    geneModel.Collapse();
+                    transcript = geneModel.getCollapsedTranscript();
+                }
+                    
+                // non-coding transcripts need to be included
+                if (transcript.isNonCoding()) {
+                    String name=gene;
+                    
+                    int start = transcript.getTranscriptStart();
+                    int end = transcript.getTranscriptEnd();
+                    String chr = transcript.getChromosome();
+                    targets.add(
+                        new Interval(
+                            chr,
+                            start,
+                            end,
+                            transcript.isRC(),
+                            name));
+                    continue;
+                }
+                
+                String chromosome = transcript.getChromosome();
+                Exon exon 
+                    = transcript
+                        .get5primeExon()
+                        .getCodingExon();
+                
+                if (exon != null) {
+                    String name = realGeneName + "_" + exon.getName();
+
+                    int start = exon.getStart();
+                    int end = exon.getEnd();
+                    if (transcript.getExonCount() > 1) {
+                        if (transcript.isRC()) {
+                            start -= splicingDistance;
+                        } else {
+                            end += splicingDistance;
+                        }
+                    }
+
+                    //System.out.println("adding 5ptarget " + chromosome +" "+start+" "+end);
+                    targets
+                        .add(
+                            new Interval(chromosome,start,end,transcript.isRC(),name));
+                }
+                
+                while (transcript.hasNextExon()) {
+                    exon = transcript.getNextExon().getCodingExon();
+                    if (exon == null) {
+                        continue;
+                    }
+                    String name = realGeneName + "_" + exon.getName();
+                    if (!transcript.is3primeExon()) {
+                        int start = exon.getStart() - splicingDistance;
+                        int end = exon.getEnd() + splicingDistance;
+                         //System.out.println("adding target " + chromosome +" "+start+" "+end);
+                        targets
+                            .add(
+                                new Interval(chromosome,start,end,transcript.isRC(),name));
+                    } else {
+                        int start = exon.getStart();
+                        int end = exon.getEnd();
+                        if (transcript.isRC()) {
+                            end += splicingDistance;
+                        } else {
+                            start -= splicingDistance;
+                        }
+                         //System.out.println("adding 3ptarget " + chromosome +" "+start+" "+end);
+                        targets
+                            .add(
+                                new Interval(chromosome,start,end,transcript.isRC(),name)); 
+                    }                   
+                } 
+            }
+         }
+                
+        return targets;
+    }
+    
+    
     /**
      * Method to read a collection of gene models from a file.
      * @param file
