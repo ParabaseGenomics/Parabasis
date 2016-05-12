@@ -3,11 +3,10 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package com.parabasegenomics.parabasis.coverage;
+package com.parabasegenomics.parabasis.util;
 
-import com.parabasegenomics.parabasis.gene.GeneModel;
+import com.parabasegenomics.parabasis.coverage.GapsFileReader;
 import com.parabasegenomics.parabasis.gene.GeneModelCollection;
-import com.parabasegenomics.parabasis.util.Reader;
 import htsjdk.samtools.util.Interval;
 import java.io.BufferedWriter;
 import java.io.File;
@@ -24,7 +23,7 @@ import java.util.Set;
  * 
  * @author evanmauceli
  */
-public class GapsTranslator {
+public class TargetMaker {
     
     private final GapsFileReader gapsFileReader;
     private static GeneModelCollection geneModelCollection; 
@@ -46,7 +45,7 @@ public class GapsTranslator {
      * @throws FileNotFoundException
      * @throws IOException 
      */
-    public GapsTranslator(String gapsFile, String geneModelFile, String genelistFile) 
+    public TargetMaker(String gapsFile, String geneModelFile, String genelistFile) 
     throws FileNotFoundException, IOException {
         gapsFileReader = new GapsFileReader(gapsFile);  
         
@@ -114,13 +113,12 @@ public class GapsTranslator {
         String targetsFile = args[5];
         String codingTargetsFile = args[6];
 
-        GapsTranslator gapsTranslator 
-            = new GapsTranslator(gapsFile, refSeqGeneModelFile, genelistFile);
+        TargetMaker targetMaker 
+            = new TargetMaker(gapsFile, refSeqGeneModelFile, genelistFile);
         
-        gapsTranslator.addGeneModel(gencodeGeneModelFile);
+        targetMaker.addGeneModel(gencodeGeneModelFile);
         geneModelCollection.aggregateTranscriptsByGenes();
-  
-        
+    
         List<Interval> targets 
             = geneModelCollection
                 .createTargets(
@@ -139,42 +137,5 @@ public class GapsTranslator {
         
         System.exit(0);
     }
-    
  
-    
-    public void grab() 
-    throws IOException {
-        
-        List<String> overlaps = null;
-        
-        List<Interval> gaps = gapsFileReader.readFile();
-        for (Interval gap : gaps ) {
-            boolean foundGap = false;
-            
-            List<GeneModel> genes = geneModelCollection.getGeneModels();
-            for (GeneModel gene : genes) {
-                
-                // we only want to look at genes in the test definition, and
-                // since the gaps file based on the assay, we filter any genes
-                // on the assay not in the test.
-                if (!geneNamesInTest.contains(gene.getGeneName())) {
-                    continue;
-                }
-                         
-                String overlapWithGene = gene.overlap(gap);
-                if (overlapWithGene != null) {
-                    boolean add = overlaps.add(overlapWithGene);
-                    foundGap=true;
-                }
-            }
-            if (!foundGap) {
-                // problem
-            } 
-           
-            
-        }
-        
-    }
-    
-    
 }

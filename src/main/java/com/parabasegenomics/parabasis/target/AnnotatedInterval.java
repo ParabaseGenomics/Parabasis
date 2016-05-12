@@ -3,8 +3,9 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package com.parabasegenomics.parabasis.coverage;
+package com.parabasegenomics.parabasis.target;
 
+import static com.parabasegenomics.parabasis.decorators.AnnotationKeys.GENE_KEY;
 import htsjdk.samtools.util.Interval;
 import java.util.HashMap;
 import java.util.Map;
@@ -15,7 +16,6 @@ import java.util.Map;
  */
 public class AnnotatedInterval {
     
-    private static final String GENE_KEY = "GEN";
     private static final String COLON = ":";
     private final Interval interval;
     private final Map<String,String> annotations;

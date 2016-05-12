@@ -5,7 +5,9 @@
  */
 package com.parabasegenomics.parabasis.decorators;
 
-import com.parabasegenomics.parabasis.coverage.AnnotatedInterval;
+import static com.parabasegenomics.parabasis.decorators.AnnotationKeys.CAPTURE_KEY;
+import static com.parabasegenomics.parabasis.decorators.FormatPatterns.percentPattern;
+import com.parabasegenomics.parabasis.target.AnnotatedInterval;
 import htsjdk.samtools.util.Interval;
 import java.text.DecimalFormat;
 import java.util.List;
@@ -15,8 +17,8 @@ import java.util.List;
  * @author evanmauceli
  */
 public class CaptureDecorator implements IntervalDecorator {
-    private static final String KEY = "CAP";
-    private final static String formatPattern = "###.##";
+    private static final String KEY = CAPTURE_KEY;
+    private final static String formatPattern = percentPattern;
     private final DecimalFormat decimalFormat;
     
     private final List<Interval> captureIntervals;

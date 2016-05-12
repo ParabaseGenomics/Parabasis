@@ -5,7 +5,9 @@
  */
 package com.parabasegenomics.parabasis.decorators;
 
-import com.parabasegenomics.parabasis.coverage.AnnotatedInterval; 
+import static com.parabasegenomics.parabasis.decorators.AnnotationKeys.GC_KEY;
+import static com.parabasegenomics.parabasis.decorators.FormatPatterns.percentPattern;
+import com.parabasegenomics.parabasis.target.AnnotatedInterval; 
 import htsjdk.samtools.reference.FastaSequenceIndex;
 import htsjdk.samtools.reference.IndexedFastaSequenceFile;
 import htsjdk.samtools.reference.ReferenceSequence;
@@ -19,12 +21,12 @@ import java.text.DecimalFormat;
  */
 public class GCCountDecorator implements IntervalDecorator {
     
-    private static final String KEY = "GC";
+    private static final String KEY = GC_KEY;
     
     private final IndexedFastaSequenceFile referenceSequence;
     private final FastaSequenceIndex referenceIndex; 
     
-    private final static String formatPattern = "###.##";
+    private final static String formatPattern = percentPattern;
     private final DecimalFormat decimalFormat;
     
     public GCCountDecorator(

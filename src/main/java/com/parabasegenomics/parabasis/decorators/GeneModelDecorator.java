@@ -5,7 +5,8 @@
  */
 package com.parabasegenomics.parabasis.decorators;
 
-import com.parabasegenomics.parabasis.coverage.AnnotatedInterval; 
+import static com.parabasegenomics.parabasis.decorators.AnnotationKeys.GENE_KEY;
+import com.parabasegenomics.parabasis.target.AnnotatedInterval; 
 import com.parabasegenomics.parabasis.gene.GeneModel;
 import com.parabasegenomics.parabasis.gene.GeneModelCollection;
 import htsjdk.samtools.util.Interval;
@@ -21,7 +22,7 @@ import java.util.logging.Logger;
  */
 public class GeneModelDecorator implements IntervalDecorator {
     
-    private static final String KEY = "GEN";
+    private static final String KEY = GENE_KEY;
     
     private final GeneModelCollection geneModelCollection;
     private final Set<String> targetGenelist;

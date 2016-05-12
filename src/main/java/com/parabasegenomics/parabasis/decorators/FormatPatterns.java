@@ -5,17 +5,15 @@
  */
 package com.parabasegenomics.parabasis.decorators;
 
-    
-import com.parabasegenomics.parabasis.target.AnnotatedInterval; 
-
 /**
  *
  * @author evanmauceli
  */
-public interface IntervalDecorator {
+public class FormatPatterns {
     
-    void annotate(AnnotatedInterval annotatedInterval);
-   
+    public static String percentPattern = "###.##";
+    
+    private FormatPatterns() {
+        
+    }
 }
-
-

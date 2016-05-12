@@ -5,7 +5,8 @@
  */
 package com.parabasegenomics.parabasis.reporting;
 
-import com.parabasegenomics.parabasis.coverage.AnnotatedInterval;
+import com.parabasegenomics.parabasis.target.TargetReport;
+import com.parabasegenomics.parabasis.target.AnnotatedInterval;
 import htsjdk.samtools.util.Interval;
 import java.io.IOException;
 import java.util.List;
@@ -67,7 +68,7 @@ public class TargetReportTest {
     }
 
     /**
-     * Test of aggregateData method, of class TargetReport.
+     * Test of decorateTargets method, of class TargetReport.
      */
     @Test
     public void testAggregateData() throws Exception {
@@ -76,7 +77,7 @@ public class TargetReportTest {
         targetReport.loadGeneModelCollection(refSeqGeneModelFile,refSeqGeneModelFile);
         targetReport.loadTargetFile(targetIntervalFile);
         targetReport.loadReferenceSequence(humanReferenceFile);
-        targetReport.aggregateData();
+        targetReport.decorateTargets();
     
         List<AnnotatedInterval> annotatedTargets 
             = targetReport.getAnnotatedIntervals();
@@ -109,7 +110,7 @@ public class TargetReportTest {
         TargetReport targetReport = new TargetReport(reportFile);
         targetReport.loadGeneModelCollection(refSeqGeneModelFile,refSeqGeneModelFile);
         targetReport.loadTargetFile(origTargetIntervalFile);
-        targetReport.aggregateData();
+        targetReport.decorateTargets();
         
         targetReport.report();
         

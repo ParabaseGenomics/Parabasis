@@ -3,11 +3,13 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package com.parabasegenomics.parabasis.reporting;
+package com.parabasegenomics.parabasis.target;
 
-import com.parabasegenomics.parabasis.coverage.AnnotatedInterval;
-import com.parabasegenomics.parabasis.coverage.AnnotatedIntervalManager;
+import static com.parabasegenomics.parabasis.decorators.AnnotationKeys.CAPTURE_KEY;
+import static com.parabasegenomics.parabasis.decorators.AnnotationKeys.GC_KEY;
+import static com.parabasegenomics.parabasis.decorators.AnnotationKeys.GENE_KEY;
 import com.parabasegenomics.parabasis.decorators.CaptureDecorator;
+import static com.parabasegenomics.parabasis.decorators.FormatPatterns.percentPattern;
 import com.parabasegenomics.parabasis.decorators.GCCountDecorator;
 import com.parabasegenomics.parabasis.decorators.GeneModelDecorator;
 import com.parabasegenomics.parabasis.gene.GeneModelCollection;
@@ -31,12 +33,12 @@ import java.util.Set;
  */
 public class TargetReport {
     
-    private final static String pctGCKey = "GC";
+    private final static String pctGCKey = GC_KEY;
     private final static String pctHomKey = "HOM";
-    private final static String pctCaptureKey = "CAP";
-    private final static String geneKey = "GEN";
+    private final static String pctCaptureKey = CAPTURE_KEY;
+    private final static String geneKey = GENE_KEY;
   
-    private final static String formatPattern = "###.##";
+    private final static String formatPattern = percentPattern;
     private final DecimalFormat decimalFormat;
     
     private final Reader utilityReader;
@@ -50,7 +52,9 @@ public class TargetReport {
     private FastaSequenceIndex referenceIndex;
     
     private final List<AnnotatedInterval> annotatedIntervals;
+    AnnotatedIntervalManager annotatedIntervalManager;
     private final File reportFile;
+    private final File summaryFile;
     
     public TargetReport(String fileToWrite) {
        geneModelCollection = new GeneModelCollection();
@@ -61,7 +65,11 @@ public class TargetReport {
        targetGenelist = new HashSet<>();
        
        annotatedIntervals = new ArrayList<>();
-       reportFile = null;//new File(fileToWrite);
+       annotatedIntervalManager
+            = new AnnotatedIntervalManager();
+       
+       reportFile = new File(fileToWrite + ".report");
+       summaryFile = new File(fileToWrite + ".summary");
        referenceSequence = null;
        
        decimalFormat = new DecimalFormat(formatPattern);
@@ -170,7 +178,7 @@ public class TargetReport {
         
         targetReport.loadTargetGenelist(targetGenelistFile);
 
-        targetReport.aggregateData();        
+        targetReport.decorateTargets();        
         targetReport.report();
         
     }
@@ -179,7 +187,7 @@ public class TargetReport {
      * For each target interval, annotate with gene location, gc content, etc.
      * @throws IOException 
      */
-    public void aggregateData() 
+    public void decorateTargets() 
     throws IOException {
         
        GeneModelDecorator geneModelDecorator 
@@ -209,50 +217,16 @@ public class TargetReport {
             annotatedIntervals.add(annotatedTarget);
         }
     }
-    
-    
-    /**
-     * Returns the percentage of bases in the interval that are "G" or "C".
-     * @param interval Interval in which to calculate GC content.
-     * @return 
-     */
-    public double getGCPercentage(Interval interval) {
-        
-        String chromosome = interval.getContig();
-        int startPosition = interval.getStart();
-        int endPosition = interval.getEnd();
-        ReferenceSequence seq 
-            = referenceSequence.getSubsequenceAt(chromosome, startPosition, endPosition);
-        
-        int gcCount = 0;
-        
-        byte [] bases = seq.getBases();
-        String basesString = new String(bases,Charset.defaultCharset());
-        String upperCaseBases = basesString.toUpperCase();
-        
-        for (int i=0 ; i<upperCaseBases.length(); i++) {
-            if (upperCaseBases.charAt(i) == 'C' 
-                || upperCaseBases.charAt(i) == 'G') {
-                gcCount++;
-            }
-        }
-        
-        return (100.0* (double) gcCount/(double)interval.length());       
-    }
-    
+
     /**
      * Print a report to stdout.
+     * @throws java.io.IOException
      */
     public void report() 
     throws IOException {
         
-        AnnotatedIntervalManager annotatedIntervalManager
-            = new AnnotatedIntervalManager();
-        
-        annotatedIntervalManager.setIntervals(annotatedIntervals);
+        annotatedIntervalManager.setIntervals(annotatedIntervals);  
         annotatedIntervalManager.aggregate();
-       
-        
         for (AnnotatedInterval interval : annotatedIntervals) {
             
             Interval genomicInterval = interval.getInterval();
@@ -270,8 +244,7 @@ public class TargetReport {
                 gcPct 
                     = 100.0* (double) gcCount/(double) intervalLength;
             }
-            
-            
+   
             int captureCount = -1;
             double capPct = 0.0;
             String captureCountAnnotation = interval.getAnnotation(pctCaptureKey);
@@ -306,5 +279,35 @@ public class TargetReport {
             }
         }
     }
+    
+     /**
+     * Returns the percentage of bases in the interval that are "G" or "C".
+     * @param interval Interval in which to calculate GC content.
+     * @return 
+     */
+    public double getGCPercentage(Interval interval) {
+        
+        String chromosome = interval.getContig();
+        int startPosition = interval.getStart();
+        int endPosition = interval.getEnd();
+        ReferenceSequence seq 
+            = referenceSequence.getSubsequenceAt(chromosome, startPosition, endPosition);
+        
+        int gcCount = 0;
+        
+        byte [] bases = seq.getBases();
+        String basesString = new String(bases,Charset.defaultCharset());
+        String upperCaseBases = basesString.toUpperCase();
+        
+        for (int i=0 ; i<upperCaseBases.length(); i++) {
+            if (upperCaseBases.charAt(i) == 'C' 
+                || upperCaseBases.charAt(i) == 'G') {
+                gcCount++;
+            }
+        }
+        
+        return (100.0* (double) gcCount/(double)interval.length());       
+    }
+    
     
 }

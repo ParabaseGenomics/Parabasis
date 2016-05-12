@@ -5,6 +5,7 @@
  */
 package com.parabasegenomics.parabasis.coverage;
 
+import com.parabasegenomics.parabasis.target.AnnotatedInterval;
 import htsjdk.samtools.util.Interval;
 import java.util.Map;
 import org.junit.After;

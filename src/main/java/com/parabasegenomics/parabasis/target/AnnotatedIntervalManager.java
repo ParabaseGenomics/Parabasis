@@ -3,8 +3,10 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package com.parabasegenomics.parabasis.coverage;
+package com.parabasegenomics.parabasis.target;
 
+import static com.parabasegenomics.parabasis.decorators.AnnotationKeys.GENE_KEY;
+import static com.parabasegenomics.parabasis.decorators.FormatPatterns.percentPattern;
 import java.io.IOException;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
@@ -19,7 +21,7 @@ import java.util.Set;
  * @author evanmauceli
  */
 public class AnnotatedIntervalManager {
-    private final static String formatPattern = "###.##";
+    private final static String formatPattern = percentPattern;
     private final DecimalFormat decimalFormat;
     
     private List<AnnotatedInterval> intervals;
@@ -46,7 +48,7 @@ public class AnnotatedIntervalManager {
         intervals=list;
     }
     
-   
+  
     
     public void aggregate() 
     throws IOException {     
@@ -75,7 +77,7 @@ public class AnnotatedIntervalManager {
                 geneLength += interval.length();
                 for (String key : keys) {
                     // don't want the gene annotation
-                    if (key.equals("GEN")) {
+                    if (key.equals(GENE_KEY)) {
                         continue;
                     }
                     int count = Integer.parseInt(interval.getAnnotation(key));
