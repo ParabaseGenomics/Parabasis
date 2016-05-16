@@ -48,6 +48,8 @@ public class AnnotatedIntervalManager {
         intervals=list;
     }
     
+    public void summarize() {
+    }
   
     
     public void aggregate() 
@@ -71,7 +73,7 @@ public class AnnotatedIntervalManager {
             for (AnnotatedInterval interval : intervalsThisGene) { 
                 
                 // this shouldn't happen but sometimes does
-                if (interval.getGeneName().isEmpty()) {
+                if (interval.getGeneNames().isEmpty()) {
                     continue;
                 }
                 geneLength += interval.length();
@@ -130,12 +132,12 @@ public class AnnotatedIntervalManager {
         
         int index = 0;
         while (index < intervals.size() 
-            && !(intervals.get(index).getGeneName().equals(gene))) {
+            && !(intervals.get(index).getGeneNames().contains(gene))) {
             index++;
         }
         int startIndex = index;
         while (index<intervals.size()
-            && intervals.get(index).getGeneName().equals(gene)) {
+            && intervals.get(index).getGeneNames().contains(gene)) {
             index++;
         }
         int endIndex = index;
@@ -151,9 +153,11 @@ public class AnnotatedIntervalManager {
      */
     private void getGeneNames() {
         for (AnnotatedInterval interval : intervals) {
-            String name = interval.getGeneName();
-            if (name!=null) {
-                geneNamesHeldByManager.add(interval.getGeneName());   
+            List<String> names = interval.getGeneNames();
+            if (names!=null) {
+                for (String name : names) {
+                    geneNamesHeldByManager.add(name);   
+                }
             }
         }
     }

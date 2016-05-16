@@ -11,7 +11,7 @@ package com.parabasegenomics.parabasis.decorators;
  */
 public class FormatPatterns {
     
-    public static String percentPattern = "###.##";
+    public final static String percentPattern = "###.##";
     
     private FormatPatterns() {
         

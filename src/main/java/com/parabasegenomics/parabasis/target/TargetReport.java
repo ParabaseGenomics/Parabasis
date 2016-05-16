@@ -8,11 +8,16 @@ package com.parabasegenomics.parabasis.target;
 import static com.parabasegenomics.parabasis.decorators.AnnotationKeys.CAPTURE_KEY;
 import static com.parabasegenomics.parabasis.decorators.AnnotationKeys.GC_KEY;
 import static com.parabasegenomics.parabasis.decorators.AnnotationKeys.GENE_KEY;
+import static com.parabasegenomics.parabasis.decorators.AnnotationKeys.HOM_KEY;
 import com.parabasegenomics.parabasis.decorators.CaptureDecorator;
 import static com.parabasegenomics.parabasis.decorators.FormatPatterns.percentPattern;
 import com.parabasegenomics.parabasis.decorators.GCCountDecorator;
 import com.parabasegenomics.parabasis.decorators.GeneModelDecorator;
+import com.parabasegenomics.parabasis.gene.Exon;
+import com.parabasegenomics.parabasis.gene.GeneModel;
 import com.parabasegenomics.parabasis.gene.GeneModelCollection;
+import com.parabasegenomics.parabasis.gene.Transcript;
+import com.parabasegenomics.parabasis.reporting.Report;
 import com.parabasegenomics.parabasis.util.Reader;
 import htsjdk.samtools.reference.FastaSequenceIndex;
 import htsjdk.samtools.reference.IndexedFastaSequenceFile;
@@ -32,10 +37,9 @@ import java.util.Set;
  * @author evanmauceli
  */
 public class TargetReport {
-    
-    private final static String pctGCKey = GC_KEY;
-    private final static String pctHomKey = "HOM";
-    private final static String pctCaptureKey = CAPTURE_KEY;
+    private final static String TAB = "\t";
+    private final static String NEWLINE = "\n";
+    private final static String pctHomKey = HOM_KEY;
     private final static String geneKey = GENE_KEY;
   
     private final static String formatPattern = percentPattern;
@@ -53,8 +57,11 @@ public class TargetReport {
     
     private final List<AnnotatedInterval> annotatedIntervals;
     AnnotatedIntervalManager annotatedIntervalManager;
-    private final File reportFile;
-    private final File summaryFile;
+    private final File targetReportFile;
+    private final File summaryReportFile;
+    private Report targetReport;
+    private Report summaryReport;
+    
     
     public TargetReport(String fileToWrite) {
        geneModelCollection = new GeneModelCollection();
@@ -68,8 +75,8 @@ public class TargetReport {
        annotatedIntervalManager
             = new AnnotatedIntervalManager();
        
-       reportFile = new File(fileToWrite + ".report");
-       summaryFile = new File(fileToWrite + ".summary");
+       targetReportFile = new File(fileToWrite + ".report.bed");
+       summaryReportFile = new File(fileToWrite+ ".summary.txt");
        referenceSequence = null;
        
        decimalFormat = new DecimalFormat(formatPattern);
@@ -180,6 +187,8 @@ public class TargetReport {
 
         targetReport.decorateTargets();        
         targetReport.report();
+        targetReport.codingSummary();
+        targetReport.summary();
         
     }
     
@@ -219,14 +228,14 @@ public class TargetReport {
     }
 
     /**
-     * Print a report to stdout.
+     * Print a target-level report.
      * @throws java.io.IOException
      */
     public void report() 
     throws IOException {
-        
-        annotatedIntervalManager.setIntervals(annotatedIntervals);  
-        annotatedIntervalManager.aggregate();
+       
+        targetReport = new Report(targetReportFile);
+       
         for (AnnotatedInterval interval : annotatedIntervals) {
             
             Interval genomicInterval = interval.getInterval();
@@ -235,50 +244,238 @@ public class TargetReport {
                 direction = "-";
             }
             
-            int intervalLength = interval.length();
-            int gcCount = -1;
-            double gcPct = 0.0;
-            String gcCountAnnotation = interval.getAnnotation(pctGCKey);
-            if (gcCountAnnotation != null) {
-                gcCount = Integer.parseInt(gcCountAnnotation);
-                gcPct 
-                    = 100.0* (double) gcCount/(double) intervalLength;
-            }
-   
-            int captureCount = -1;
-            double capPct = 0.0;
-            String captureCountAnnotation = interval.getAnnotation(pctCaptureKey);
-            if (captureCountAnnotation != null) {
-                captureCount = Integer.parseInt(interval.getAnnotation(pctCaptureKey));
+            Double gcPct = interval.getPercentOfIntervalForAnnotation(GC_KEY);
+            Double capPct = interval.getPercentOfIntervalForAnnotation(CAPTURE_KEY);
             
-                capPct 
-                    = 100.0* (double) captureCount/(double) intervalLength;
-                if (capPct > 100.0) {
-                    capPct = 100.0;
+            StringBuilder reportLine = new StringBuilder();
+            reportLine.append(genomicInterval.getContig());
+            reportLine.append(TAB);
+            reportLine.append(genomicInterval.getStart());
+            reportLine.append(TAB);
+            reportLine.append(genomicInterval.getEnd());
+            reportLine.append(TAB);
+            reportLine.append(direction);
+            reportLine.append(TAB);
+            reportLine.append(interval.getAnnotation(geneKey));
+            reportLine.append(TAB);
+            reportLine.append(interval.length());
+            reportLine.append(TAB);
+            if (capPct != null) {
+                reportLine.append(decimalFormat.format(capPct));
+                reportLine.append(TAB);
+            }
+            if (gcPct != null ) {
+                reportLine.append(decimalFormat.format(gcPct));   
+            }
+            //reportLine.append(NEWLINE);
+            targetReport.write(reportLine.toString());
+            
+        }
+        targetReport.close();
+    }
+    
+    /**
+     * Print a gene-level report summary based on coding regions.
+     * @throws IOException 
+     */
+    public void codingSummary() 
+    throws IOException {
+        summaryReport = new Report(summaryReportFile);
+        
+        List<GeneModel> genes = geneModelCollection.selectGeneModels(targetGenelist);
+        for (GeneModel gene : genes) {            
+            Transcript collapsedTranscript = gene.getCollapsedTranscript();
+            int [] markupArray;
+            int offset = 0;
+            
+            if (collapsedTranscript.isNonCoding()) {
+               markupArray = new int [collapsedTranscript.getTranscriptInterval().length()]; 
+               offset = collapsedTranscript.getTranscriptStart();
+            } else {
+                markupArray = new int [collapsedTranscript.getCodingInterval().length()];
+                offset = collapsedTranscript.getCodingStart();
+            }
+          
+            Exon exon = collapsedTranscript.get5primeExon();
+              
+            int startBase = 0;
+            int endBase = 0;
+            
+            if (collapsedTranscript.isNonCoding()) {
+                startBase = exon.getStart();
+                endBase = exon.getEnd();
+            } else if (exon.getCodingExon() != null) {
+                startBase = exon.getCodingStart();
+                endBase = exon.getCodingEnd();
+            }
+
+            for (int base = startBase; base<endBase;base++) {
+                int index = base-offset;
+                markupArray[index] = 1;
+            }
+            while (collapsedTranscript.hasNextExon()) {
+                exon = collapsedTranscript.getNextExon();
+                if (exon.getCodingInterval()==null) {
+                    continue;
+                }
+                for (int base = exon.getCodingStart(); base<exon.getCodingEnd();base++) {
+                int index = base-offset;
+                markupArray[index] = 1;
                 }
             }
             
-            System.out.print(genomicInterval.getContig());
-            System.out.print("\t");
-            System.out.print(genomicInterval.getStart());
-            System.out.print("\t");
-            System.out.print(genomicInterval.getEnd());
-            System.out.print("\t");
-            System.out.print(direction);
-            System.out.print("\t");
-            System.out.print(interval.getAnnotation(geneKey));
-            System.out.print("\t");
-            System.out.print(interval.length());
-            System.out.print("\t");
-            if (captureCountAnnotation != null) {
-                System.out.print(decimalFormat.format(capPct));
-                System.out.print("\t");
+            for (Interval capture : captureIntervals) {
+                if (!capture.intersects(collapsedTranscript.getTranscriptInterval())) {
+                    continue;
+                }
+                
+                if (capture
+                        .intersect(
+                            collapsedTranscript.getTranscriptInterval())
+                            .length()<=1) {
+                    continue;
+                }
+              
+                
+                for (int base=capture.getStart(); base<capture.getEnd(); base++) {
+                    int index = base-offset;
+                    if (index<0 ||index>=markupArray.length) {
+                        continue;
+                    }
+                    if (markupArray[index]<1) {
+                        continue;
+                    } 
+                    markupArray[index]=2;
+                }
             }
-            if (gcCountAnnotation != null ) {
-                System.out.println(decimalFormat.format(gcPct));   
+                
+            int numberBasesCaptured = 0;
+            int numberBasesInGene = 0;
+            for (int index=0; index<markupArray.length; index++) {
+                if (markupArray[index]>=1) {
+                    numberBasesInGene++;
+                }
+                if (markupArray[index]==2) {
+                    numberBasesCaptured++;
+                }
             }
+            
+            double capturePercent 
+                = 100.0*(double) numberBasesCaptured/(double) numberBasesInGene;
+            
+            StringBuilder reportLine = new StringBuilder();
+            reportLine.append(gene.getGeneName());
+            reportLine.append(TAB);
+            reportLine.append(numberBasesInGene);
+            reportLine.append(TAB);
+            reportLine.append(numberBasesCaptured);
+            reportLine.append(TAB);
+            reportLine.append(decimalFormat.format(capturePercent));
+            //reportLine.append(NEWLINE);
+            summaryReport.write(reportLine.toString());
+            
         }
+        summaryReport.close();
     }
+               
+    
+    
+    public void summary() 
+    throws IOException {
+        File fullTranscriptReportFile = new File(summaryReportFile.getAbsoluteFile() + ".full");
+        Report fullTranscriptReport = new Report(fullTranscriptReportFile);
+        
+        List<GeneModel> genes = geneModelCollection.selectGeneModels(targetGenelist);
+        for (GeneModel gene : genes) {            
+            Transcript collapsedTranscript = gene.getCollapsedTranscript();
+            int [] markupArray;
+            int offset = 0;
+
+            markupArray = new int [collapsedTranscript.getTranscriptInterval().length()]; 
+            offset = collapsedTranscript.getTranscriptStart();
+            
+          
+            Exon exon = collapsedTranscript.get5primeExon();
+              
+            int startBase = 0;
+            int endBase = 0;
+  
+            startBase = exon.getStart();
+            endBase = exon.getEnd();
+            
+            for (int base = startBase; base<endBase;base++) {
+                int index = base-offset;
+                markupArray[index] = 1;
+            }
+            while (collapsedTranscript.hasNextExon()) {
+                exon = collapsedTranscript.getNextExon();
+                if (exon.getInterval()==null) {
+                    continue;
+                }
+                for (int base = exon.getStart(); base<exon.getEnd();base++) {
+                int index = base-offset;
+                markupArray[index] = 1;
+                }
+            }
+            
+            for (Interval capture : captureIntervals) {
+                if (!capture.intersects(collapsedTranscript.getTranscriptInterval())) {
+                    continue;
+                }
+                
+                if (capture
+                        .intersect(
+                            collapsedTranscript.getTranscriptInterval())
+                            .length()<=1) {
+                    continue;
+                }
+              
+                
+                for (int base=capture.getStart(); base<capture.getEnd(); base++) {
+                    int index = base-offset;
+                    if (index<0 ||index>=markupArray.length) {
+                        continue;
+                    }
+                    if (markupArray[index]<1) {
+                        continue;
+                    } 
+                    markupArray[index]=2;
+                }
+            }
+                
+            int numberBasesCaptured = 0;
+            int numberBasesInGene = 0;
+            for (int index=0; index<markupArray.length; index++) {
+                if (markupArray[index]>=1) {
+                    numberBasesInGene++;
+                }
+                if (markupArray[index]==2) {
+                    numberBasesCaptured++;
+                }
+            }
+            
+            double capturePercent 
+                = 100.0*(double) numberBasesCaptured/(double) numberBasesInGene;
+            
+            StringBuilder reportLine = new StringBuilder();
+            reportLine.append(gene.getGeneName());
+            reportLine.append(TAB);
+            reportLine.append(numberBasesInGene);
+            reportLine.append(TAB);
+            reportLine.append(numberBasesCaptured);
+            reportLine.append(TAB);
+            reportLine.append(decimalFormat.format(capturePercent));
+            //reportLine.append(NEWLINE);
+            fullTranscriptReport.write(reportLine.toString());
+            
+        }
+        fullTranscriptReport.close();
+    }
+                        
+            
+        
+        
+            
     
      /**
      * Returns the percentage of bases in the interval that are "G" or "C".

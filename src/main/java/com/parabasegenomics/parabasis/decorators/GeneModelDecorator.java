@@ -26,7 +26,7 @@ public class GeneModelDecorator implements IntervalDecorator {
     
     private final GeneModelCollection geneModelCollection;
     private final Set<String> targetGenelist;
-    private List<GeneModel> genes;
+    private final List<GeneModel> genes;
     
 
     public GeneModelDecorator(

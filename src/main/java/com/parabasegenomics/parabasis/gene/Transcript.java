@@ -218,6 +218,7 @@ public class Transcript implements Comparable<Transcript> {
     public Exon get5primeExon() {
         
         haveGotten5primeExon = true;
+  
         // if this is a forward transcript, we've got an iterator to the first
         // exon.  If not, we'll have to go in reverse.
         if (!isRC) {

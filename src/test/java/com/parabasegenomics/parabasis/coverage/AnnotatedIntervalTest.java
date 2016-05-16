@@ -7,6 +7,7 @@ package com.parabasegenomics.parabasis.coverage;
 
 import com.parabasegenomics.parabasis.target.AnnotatedInterval;
 import htsjdk.samtools.util.Interval;
+import java.util.List;
 import java.util.Map;
 import org.junit.After;
 import org.junit.AfterClass;
@@ -98,8 +99,8 @@ public class AnnotatedIntervalTest {
     public void testGetGeneName() {
         System.out.println("getGeneName");
         String expResult = "IFT172";
-        String result = instance.getGeneName();
-        assertEquals(expResult, result);
+        List<String> result = instance.getGeneNames();
+        assertEquals(expResult, result.get(0));
        
     }
 
