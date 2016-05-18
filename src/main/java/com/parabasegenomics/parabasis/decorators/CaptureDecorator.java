@@ -40,7 +40,15 @@ public class CaptureDecorator implements IntervalDecorator {
                 KEY, 
                 decimalFormat
                     .format(
-                        getCapturedCount(annotatedInterval.getInterval())));    
+                        getCount(annotatedInterval.getInterval())));    
+   }
+   
+   /**
+    * 
+    * @return Returns the identifying string for this decorator.
+    */
+   public String getKey() {
+       return KEY;
    }
    
    /**
@@ -49,7 +57,8 @@ public class CaptureDecorator implements IntervalDecorator {
     * @param interval
     * @return 
     */
-   private int getCapturedCount(Interval interval) {
+    @Override
+    public int getCount(Interval interval) {
        
        int overlapCount = 0;
        for (Interval capture : captureIntervals) {

@@ -5,8 +5,6 @@
  */
 package com.parabasegenomics.parabasis.target;
 
-import static com.parabasegenomics.parabasis.decorators.AnnotationKeys.CAPTURE_KEY;
-import static com.parabasegenomics.parabasis.decorators.AnnotationKeys.GC_KEY;
 import static com.parabasegenomics.parabasis.decorators.AnnotationKeys.GENE_KEY;
 import static com.parabasegenomics.parabasis.decorators.AnnotationKeys.HOM_KEY;
 import com.parabasegenomics.parabasis.decorators.CaptureDecorator;
@@ -17,7 +15,9 @@ import com.parabasegenomics.parabasis.gene.Exon;
 import com.parabasegenomics.parabasis.gene.GeneModel;
 import com.parabasegenomics.parabasis.gene.GeneModelCollection;
 import com.parabasegenomics.parabasis.gene.Transcript;
+import com.parabasegenomics.parabasis.reporting.GeneSummaryReport;
 import com.parabasegenomics.parabasis.reporting.Report;
+import com.parabasegenomics.parabasis.reporting.TargetReport;
 import com.parabasegenomics.parabasis.util.Reader;
 import htsjdk.samtools.reference.FastaSequenceIndex;
 import htsjdk.samtools.reference.IndexedFastaSequenceFile;
@@ -36,7 +36,7 @@ import java.util.Set;
  *
  * @author evanmauceli
  */
-public class TargetReport {
+public class ReportOnAssay {
     private final static String TAB = "\t";
     private final static String NEWLINE = "\n";
     private final static String pctHomKey = HOM_KEY;
@@ -56,14 +56,16 @@ public class TargetReport {
     private FastaSequenceIndex referenceIndex;
     
     private final List<AnnotatedInterval> annotatedIntervals;
-    AnnotatedIntervalManager annotatedIntervalManager;
     private final File targetReportFile;
     private final File summaryReportFile;
-    private Report targetReport;
-    private Report summaryReport;
+    private final File codingSummaryReportFile;
+    private TargetReport targetReport;
+    private GeneSummaryReport summaryReport;
+    private GeneSummaryReport codingSummaryReport;
+    private AnnotationSummary annotationSummary;
+    private final int splicingDistance;
     
-    
-    public TargetReport(String fileToWrite) {
+    public ReportOnAssay(String fileToWrite) {
        geneModelCollection = new GeneModelCollection();
        utilityReader = new Reader();
        targetIntervals = new ArrayList<>();
@@ -72,12 +74,13 @@ public class TargetReport {
        targetGenelist = new HashSet<>();
        
        annotatedIntervals = new ArrayList<>();
-       annotatedIntervalManager
-            = new AnnotatedIntervalManager();
        
        targetReportFile = new File(fileToWrite + ".report.bed");
        summaryReportFile = new File(fileToWrite+ ".summary.txt");
+       codingSummaryReportFile = new File(fileToWrite + ".coding.summary.txt");
        referenceSequence = null;
+       
+       splicingDistance = 10;
        
        decimalFormat = new DecimalFormat(formatPattern);
     }
@@ -174,22 +177,19 @@ public class TargetReport {
             captureIntervalFile = args[6];
         }
         
-        TargetReport targetReport = new TargetReport(outputFile);  
-        targetReport.loadGeneModelCollection(refSeqGeneModelFile,gencodeGeneModelFile);
-        targetReport.loadReferenceSequence(humanReferenceFile);
+        ReportOnAssay reportOnAssay = new ReportOnAssay(outputFile);  
+        reportOnAssay.loadGeneModelCollection(refSeqGeneModelFile,gencodeGeneModelFile);
+        reportOnAssay.loadReferenceSequence(humanReferenceFile);
 
-        targetReport.loadTargetFile(targetIntervalFile);
+        reportOnAssay.loadTargetFile(targetIntervalFile);
         if (captureIntervalFile != null) {
-            targetReport.loadCaptureFile(captureIntervalFile);
+            reportOnAssay.loadCaptureFile(captureIntervalFile);
         }
         
-        targetReport.loadTargetGenelist(targetGenelistFile);
-
-        targetReport.decorateTargets();        
-        targetReport.report();
-        targetReport.codingSummary();
-        targetReport.summary();
-        
+        reportOnAssay.loadTargetGenelist(targetGenelistFile);
+        reportOnAssay.decorateTargets();        
+        reportOnAssay.report();
+       
     }
     
     /**
@@ -212,19 +212,15 @@ public class TargetReport {
            captureDecorator = new CaptureDecorator(captureIntervals);
        }
        
-        for (Interval interval : targetIntervals) {
-            AnnotatedInterval annotatedTarget = new AnnotatedInterval(interval);
-            if (gcPctDecorator != null) {
-                gcPctDecorator.annotate(annotatedTarget);
-            } 
-            if (captureDecorator != null) { 
-                captureDecorator.annotate(annotatedTarget);
-            } 
-
-            geneModelDecorator.annotate(annotatedTarget);
-                       
-            annotatedIntervals.add(annotatedTarget);
-        }
+       annotationSummary = new AnnotationSummary();
+       annotationSummary.addDecorator(geneModelDecorator);
+       
+       if (captureDecorator != null) {
+           annotationSummary.addDecorator(captureDecorator);
+       }
+       if (gcPctDecorator != null) {
+           annotationSummary.addDecorator(gcPctDecorator);
+       }    
     }
 
     /**
@@ -232,46 +228,36 @@ public class TargetReport {
      * @throws java.io.IOException
      */
     public void report() 
-    throws IOException {
-       
-        targetReport = new Report(targetReportFile);
-       
-        for (AnnotatedInterval interval : annotatedIntervals) {
-            
-            Interval genomicInterval = interval.getInterval();
-            String direction = "+";
-            if (genomicInterval.isNegativeStrand()) {
-                direction = "-";
-            }
-            
-            Double gcPct = interval.getPercentOfIntervalForAnnotation(GC_KEY);
-            Double capPct = interval.getPercentOfIntervalForAnnotation(CAPTURE_KEY);
-            
-            StringBuilder reportLine = new StringBuilder();
-            reportLine.append(genomicInterval.getContig());
-            reportLine.append(TAB);
-            reportLine.append(genomicInterval.getStart());
-            reportLine.append(TAB);
-            reportLine.append(genomicInterval.getEnd());
-            reportLine.append(TAB);
-            reportLine.append(direction);
-            reportLine.append(TAB);
-            reportLine.append(interval.getAnnotation(geneKey));
-            reportLine.append(TAB);
-            reportLine.append(interval.length());
-            reportLine.append(TAB);
-            if (capPct != null) {
-                reportLine.append(decimalFormat.format(capPct));
-                reportLine.append(TAB);
-            }
-            if (gcPct != null ) {
-                reportLine.append(decimalFormat.format(gcPct));   
-            }
-            //reportLine.append(NEWLINE);
-            targetReport.write(reportLine.toString());
-            
-        }
+    throws IOException {      
+        targetReport = new TargetReport(targetReportFile);
+        targetReport.setAnnotationSummary(annotationSummary);
+        targetReport.reportOn(targetIntervals);
         targetReport.close();
+        
+        summaryReport = new GeneSummaryReport(summaryReportFile);
+        summaryReport.setAnnotationSummary(annotationSummary);
+        
+        for (String gene : targetGenelist) {
+            Set<String> geneToTarget = new HashSet<>();
+            geneToTarget.add(gene);
+            List<Interval> intervals 
+                = geneModelCollection
+                    .createTargets(geneToTarget, splicingDistance);
+            summaryReport.reportOn(intervals, gene);
+        }
+        summaryReport.close();
+       
+        codingSummaryReport = new GeneSummaryReport(codingSummaryReportFile);
+        codingSummaryReport.setAnnotationSummary(annotationSummary);
+        for (String gene : targetGenelist) {
+            Set<String> geneToTarget = new HashSet<>();
+            geneToTarget.add(gene);
+            List<Interval> intervals 
+                = geneModelCollection
+                    .createCodingTargets(geneToTarget, splicingDistance);
+            codingSummaryReport.reportOn(intervals, gene);
+        }
+        codingSummaryReport.close();     
     }
     
     /**
@@ -280,7 +266,7 @@ public class TargetReport {
      */
     public void codingSummary() 
     throws IOException {
-        summaryReport = new Report(summaryReportFile);
+        summaryReport = new GeneSummaryReport(summaryReportFile);
         
         List<GeneModel> genes = geneModelCollection.selectGeneModels(targetGenelist);
         for (GeneModel gene : genes) {            
@@ -300,6 +286,7 @@ public class TargetReport {
               
             int startBase = 0;
             int endBase = 0;
+            int splicing = 10;
             
             if (collapsedTranscript.isNonCoding()) {
                 startBase = exon.getStart();
@@ -379,11 +366,14 @@ public class TargetReport {
     }
                
     
-    
+    /**
+     * Print a transcript-level summary report.
+     * @throws IOException 
+     */
     public void summary() 
     throws IOException {
         File fullTranscriptReportFile = new File(summaryReportFile.getAbsoluteFile() + ".full");
-        Report fullTranscriptReport = new Report(fullTranscriptReportFile);
+        Report fullTranscriptReport = new GeneSummaryReport(fullTranscriptReportFile);
         
         List<GeneModel> genes = geneModelCollection.selectGeneModels(targetGenelist);
         for (GeneModel gene : genes) {            

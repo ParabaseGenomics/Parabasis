@@ -50,19 +50,30 @@ public class GCCountDecorator implements IntervalDecorator {
                 KEY, 
                 decimalFormat
                     .format(
-                        getGCCount(annotatedInterval.getInterval())));
+                        getCount(annotatedInterval.getInterval())));
     } 
+    
+    /**
+     * 
+     * @return Returns the identifying string for this decorator.
+     */
+    @Override
+    public String getKey() {
+       return KEY;
+   }
     
     /**
      * Returns the %GC of the given interval.
      * @param interval
      * @return 
      */
-    private int getGCCount(Interval interval) {
+    @Override
+    public int getCount(Interval interval) {
         
         String chromosome = interval.getContig();
         int startPosition = interval.getStart();
         int endPosition = interval.getEnd();
+
         ReferenceSequence seq 
             = referenceSequence.getSubsequenceAt(chromosome, startPosition, endPosition-1);
         

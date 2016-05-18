@@ -5,89 +5,59 @@
  */
 package com.parabasegenomics.parabasis.reporting;
 
-import com.parabasegenomics.parabasis.decorators.GeneModelDecorator;
-import com.parabasegenomics.parabasis.decorators.IntervalDecorator;
-import com.parabasegenomics.parabasis.gene.GeneModelCollection;
 import com.parabasegenomics.parabasis.target.AnnotationSummary;
 import com.parabasegenomics.parabasis.util.Reader;
 import htsjdk.samtools.util.Interval;
 import java.io.File;
 import java.io.IOException;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 import org.junit.Test;
 
 /**
  *
  * @author evanmauceli
  */
-public class TargetReportTest {
+public class GeneSummaryReportTest {
     
     private static File intervalsFile;
     private static File reportFile;
     private final AnnotationSummary summary;
     List<Interval> intervals;
-    IntervalDecorator decorator;
     Reader reader;
-    private final String file;
-    private final GeneModelCollection geneModelCollectionInstance;
     
-    public TargetReportTest() 
+    public GeneSummaryReportTest() 
     throws IOException {
         reader = new Reader();
         intervalsFile = new File("src/main/resources/targetIntervalFileOrig.bed");
-        reportFile = new File("src/main/resources/tmp.txt");
+        reportFile = new File("src/main/resources/tmpg.txt");
         summary = new AnnotationSummary();
         intervals = reader.readBEDFile(intervalsFile.getAbsolutePath());
-        file = "src/main/resources/refseq_genemodel.txt";
-        geneModelCollectionInstance = new GeneModelCollection();
-        geneModelCollectionInstance.readGeneModelCollection(file);
-        geneModelCollectionInstance.aggregateTranscriptsByGenes();
+ 
     }
     
    
     /**
      * Test of setAnnotationSummary method, of class GeneSummaryReport.
-     * @throws java.lang.Exception
      */
     @Test
     public void testSetAnnotationSummary() throws Exception {
         System.out.println("setAnnotationSummary");
-        TargetReport instance = new TargetReport(reportFile);
-        Set<String> genesToTarget = new HashSet<>();
-        genesToTarget.add("ESPN");
-        
-        GeneModelDecorator decorator 
-            = new GeneModelDecorator(geneModelCollectionInstance,genesToTarget);
-        
-        summary.addDecorator(decorator);
-         
+        GeneSummaryReport instance = new GeneSummaryReport(reportFile);
         instance.setAnnotationSummary(summary);
     }
 
     /**
      * Test of reportOn method, of class GeneSummaryReport.
-     * @throws java.lang.Exception
      */
     @Test
     public void testReportOn() throws Exception {
         System.out.println("reportOn");
         String name = "ESPN";
-        TargetReport instance = new TargetReport(reportFile);
-        Set<String> genesToTarget = new HashSet<>();
-        genesToTarget.add(name);
-        
-        GeneModelDecorator decorator 
-            = new GeneModelDecorator(geneModelCollectionInstance,genesToTarget);
-        
-        summary.addDecorator(decorator);
-         
+        GeneSummaryReport instance = new GeneSummaryReport(reportFile);
         instance.setAnnotationSummary(summary);
-        instance.reportOn(intervals);
+        instance.reportOn(intervals, name);
         instance.close();
         reportFile.delete();
-        
     }
     
 }

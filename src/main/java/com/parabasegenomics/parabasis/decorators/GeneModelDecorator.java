@@ -27,7 +27,6 @@ public class GeneModelDecorator implements IntervalDecorator {
     private final GeneModelCollection geneModelCollection;
     private final Set<String> targetGenelist;
     private final List<GeneModel> genes;
-    
 
     public GeneModelDecorator(
         GeneModelCollection geneModel,
@@ -66,6 +65,14 @@ public class GeneModelDecorator implements IntervalDecorator {
     }
     
     /**
+    * 
+    * @return Returns the identifying string for this decorator.
+    */
+    public String getKey() {
+       return KEY;
+    }
+    
+    /**
      * Returns a string of the gene-transcript-exon# for each overlap this interval
      * has with the gene models.  If no overlap, returns an empty string.
      * @param interval
@@ -82,6 +89,16 @@ public class GeneModelDecorator implements IntervalDecorator {
             }
         } 
         return overlaps;
+    }
+
+    /**
+     * Not appropriate for this decorator. 
+     * @param interval
+     * @return Returns zero always.
+     */
+    @Override
+    public int getCount(Interval interval) {
+        return 0;
     }
 
 }

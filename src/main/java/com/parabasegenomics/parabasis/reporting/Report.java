@@ -6,7 +6,6 @@
 package com.parabasegenomics.parabasis.reporting;
 
 
-import static com.parabasegenomics.parabasis.decorators.FormatPatterns.percentPattern;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
@@ -16,7 +15,11 @@ import java.io.IOException;
  *
  * @author evanmauceli
  */
-public class Report {
+public abstract class Report {
+    
+    static final String TAB = "\t";
+    static final String NEWLINE = "\n";
+    
     
     BufferedWriter bufferedWriter;
     File reportFile;
@@ -24,7 +27,17 @@ public class Report {
     public Report(File file) 
     throws IOException {      
         reportFile=file;
-        bufferedWriter = new BufferedWriter(new FileWriter(file));       
+        bufferedWriter = new BufferedWriter(new FileWriter(file));  
+    }
+    
+    /**
+     * Write method.
+     * @param toWrite
+     * @throws java.io.IOException
+     */
+    public void write(String toWrite) 
+    throws IOException {
+        bufferedWriter.write(toWrite);
     }
     
     /**
@@ -44,17 +57,6 @@ public class Report {
     }
     
     /**
-     * Writes the given string to the output file.
-     * @param toWrite The string to write to the file.
-     * @throws java.io.IOException
-     */
-    public void write(String toWrite) 
-    throws IOException {      
-        bufferedWriter.write(toWrite);
-        bufferedWriter.newLine();
-    }
-    
-    /**
      * Closes the writer.
      * @throws java.io.IOException
      */
@@ -62,4 +64,6 @@ public class Report {
     throws IOException {
         bufferedWriter.close();
     }
+
+    
 }

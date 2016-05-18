@@ -7,6 +7,7 @@ package com.parabasegenomics.parabasis.decorators;
 
     
 import com.parabasegenomics.parabasis.target.AnnotatedInterval; 
+import htsjdk.samtools.util.Interval;
 
 /**
  *
@@ -15,7 +16,9 @@ import com.parabasegenomics.parabasis.target.AnnotatedInterval;
 public interface IntervalDecorator {
     
     void annotate(AnnotatedInterval annotatedInterval);
-   
+    String getKey();
+    int getCount(Interval interval);
+    
 }
 
 
