@@ -12,7 +12,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 
 /**
- *
+ * A thin wrapper around the BufferedWriter class.
  * @author evanmauceli
  */
 public abstract class Report {

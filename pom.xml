@@ -5,8 +5,7 @@
     <artifactId>Parabasis</artifactId>
     <version>1.0</version>
     <packaging>jar</packaging>
-    
-    
+      
     <dependencies>
         <dependency>
             <groupId>com.github.samtools</groupId>
@@ -19,12 +18,18 @@
             <version>4.10</version>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-math3</artifactId>
+            <version>3.6.1</version>
+        </dependency>
     </dependencies>
     
     
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <mainClass>com.parabasegenomics.parabasis.coverage.GapsTranslator</mainClass>
+       <!--  <mainClass>com.parabasegenomics.parabasis.util.TargetMaker</mainClass> -->
+        <mainClass>com.parabasegenomics.parabasis.target.ReportOnAssay</mainClass> 
     </properties>
     
      <organization>
