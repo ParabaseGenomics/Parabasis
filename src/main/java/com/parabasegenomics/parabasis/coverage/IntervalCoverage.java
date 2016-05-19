@@ -94,8 +94,6 @@ public class IntervalCoverage {
             coefficientOfVariation
                 = (1+(1/(4*count)))
                 * (standardDeviation.getResult()/mean.getResult());
-            
-            System.out.println(" adf " + count+" "+mean.getResult()+ " "+standardDeviation.getResult() +" "+coefficientOfVariation);
         }       
         return this;    
     }
