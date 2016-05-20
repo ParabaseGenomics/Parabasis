@@ -18,6 +18,7 @@ import com.parabasegenomics.parabasis.gene.Transcript;
 import com.parabasegenomics.parabasis.reporting.GeneSummaryReport;
 import com.parabasegenomics.parabasis.reporting.Report;
 import com.parabasegenomics.parabasis.reporting.TargetReport;
+import com.parabasegenomics.parabasis.reporting.AssayReport;
 import com.parabasegenomics.parabasis.util.Reader;
 import htsjdk.samtools.reference.FastaSequenceIndex;
 import htsjdk.samtools.reference.IndexedFastaSequenceFile;
@@ -57,15 +58,21 @@ public class ReportOnAssay {
     
     private final List<AnnotatedInterval> annotatedIntervals;
     private final File targetReportFile;
+    private final File codingTargetReportFile;
+    private final File assayReportFile;
     private final File summaryReportFile;
     private final File codingSummaryReportFile;
+    private final File codingAssayReportFile;
     private TargetReport targetReport;
+    private TargetReport codingTargetReport;
+    private AssayReport assayReport;
     private GeneSummaryReport summaryReport;
     private GeneSummaryReport codingSummaryReport;
     private AnnotationSummary annotationSummary;
     private final int splicingDistance;
+    private final String assayName;
     
-    public ReportOnAssay(String fileToWrite) {
+    public ReportOnAssay(String fileToWrite, String name) {
        geneModelCollection = new GeneModelCollection();
        utilityReader = new Reader();
        targetIntervals = new ArrayList<>();
@@ -75,13 +82,16 @@ public class ReportOnAssay {
        
        annotatedIntervals = new ArrayList<>();
        
+       assayReportFile = new File(fileToWrite + ".assay.report.txt");
        targetReportFile = new File(fileToWrite + ".report.bed");
+       codingTargetReportFile = new File(fileToWrite + ".coding.report.bed");
        summaryReportFile = new File(fileToWrite+ ".summary.txt");
        codingSummaryReportFile = new File(fileToWrite + ".coding.summary.txt");
-       referenceSequence = null;
+       codingAssayReportFile = new File(fileToWrite + ".coding.assay.report.txt");
        
+       referenceSequence = null;      
        splicingDistance = 10;
-       
+       assayName = name;      
        decimalFormat = new DecimalFormat(formatPattern);
     }
     
@@ -172,12 +182,13 @@ public class ReportOnAssay {
         String gencodeGeneModelFile = args[3];
         String outputFile = args[4];
         String targetGenelistFile = args[5];
+        String assayName = args[6];
         String captureIntervalFile = null;
-        if (args.length == 7) {
-            captureIntervalFile = args[6];
+        if (args.length == 8) {
+            captureIntervalFile = args[7];
         }
         
-        ReportOnAssay reportOnAssay = new ReportOnAssay(outputFile);  
+        ReportOnAssay reportOnAssay = new ReportOnAssay(outputFile,assayName);  
         reportOnAssay.loadGeneModelCollection(refSeqGeneModelFile,gencodeGeneModelFile);
         reportOnAssay.loadReferenceSequence(humanReferenceFile);
 
@@ -234,9 +245,27 @@ public class ReportOnAssay {
         targetReport.reportOn(targetIntervals);
         targetReport.close();
         
-        summaryReport = new GeneSummaryReport(summaryReportFile);
-        summaryReport.setAnnotationSummary(annotationSummary);
+        assayReport = new AssayReport(targetReportFile,assayName);
+        assayReport.setAnnotationSummary(annotationSummary);
+        assayReport.reportOn(targetIntervals);
+        assayReport.close();
         
+        codingTargetReport = new TargetReport(codingTargetReportFile);
+        codingTargetReport.setAnnotationSummary(annotationSummary);
+        List<Interval> codingIntervals
+            = geneModelCollection
+                .createCodingTargets(targetGenelist,splicingDistance);
+        codingTargetReport.reportOn(codingIntervals);
+        codingTargetReport.close();
+          
+        AssayReport codingAssayReport = new AssayReport(codingAssayReportFile,assayName);
+        codingAssayReport.setAnnotationSummary(annotationSummary);
+        codingAssayReport.reportOn(codingIntervals);
+        codingAssayReport.close();
+   
+        
+        summaryReport = new GeneSummaryReport(summaryReportFile);
+        summaryReport.setAnnotationSummary(annotationSummary);      
         for (String gene : targetGenelist) {
             Set<String> geneToTarget = new HashSet<>();
             geneToTarget.add(gene);

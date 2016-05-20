@@ -10,8 +10,8 @@ import org.apache.commons.math3.stat.descriptive.moment.Mean;
 import org.apache.commons.math3.stat.descriptive.moment.StandardDeviation;
 
 /**
- * The IntervalCoverage class keeps coverage statistics on intervals in an assay,
- * for example, and provides them for use in CNV detection and sequencing 
+ * The IntervalCoverage class keeps coverage statistics on intervals in an assay
+ * and provides them for use in CNV detection and sequencing 
  * stability assessments.
  * @author evanmauceli
  */
