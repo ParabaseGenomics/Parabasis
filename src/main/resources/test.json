@@ -1,0 +1,4 @@
+{
+    "BAM" : [ "src/main/resources/test.bam" ],
+    "TARGETS" : "src/main/resources/targetIntervalFileOrig.bed"    
+}

@@ -5,10 +5,20 @@
  */
 package com.parabasegenomics.parabasis.coverage;
 
+import com.parabasegenomics.parabasis.util.Reader;
+import htsjdk.samtools.util.Interval;
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import javax.json.Json;
+import javax.json.JsonArray;
 import javax.json.JsonObject;
+import javax.json.JsonReader;
 
 /**
  *
@@ -16,30 +26,73 @@ import javax.json.JsonObject;
  */
 public class AssayCoverageModel {
     
+    private static final String BAM = "BAM";
+    private static final String TARGETS = "TARGETS";
+    
     private final String assayName;
     private final List<IntervalCoverage> intervalCoverages;
+    private final Reader utilityReader;
+    private final Map<String,Integer> modelIntervalIndexMap;
+    private Double zscoreThreshold;
     
     public AssayCoverageModel(String name) {
         assayName=name;
         intervalCoverages=new ArrayList<>();
+        utilityReader = new Reader();
+        modelIntervalIndexMap = new HashMap<>();
+        zscoreThreshold=null;
     }
     
     
     // TODO: we'll want a decorator for coverage - how does that 
     // work???
     
+    /**
+     * Set the boundary on the z-score. Outliers get special handling.
+     * @param threshold 
+     */
+    public void setThreshold(Double threshold) {
+        zscoreThreshold=threshold;
+    }
     
     /**
      * Is the provided coverage an outlier given the current state of the model?
      * @param intervalCoverage The coverage value to compare to the model.
      * @return Returns true if the provided coverage is outside of the 
-     * current model distribution, false otherwise.
-     * 
-     * TODO: define "outside".
+     * current model distribution, false otherwise. Returns false if the 
+     * provided interval is not held by the model.
      * 
      */
     public boolean isOutlier(IntervalCoverage intervalCoverage) {
-        return false;
+       Double zscore = getZscore(intervalCoverage);
+       if (zscore == null) {
+           return false;
+       }
+       return (Math.abs(zscore)>zscoreThreshold);
+    }
+    
+    /**
+     * Returns the z-score of the provided interval coverage given the current
+     * state of the model. Returns null if the interval is not held by the model.
+     * 
+     * A naive interpretation: 
+     *  negative zscore = deletion 
+     *  positive zscore = gain
+     * 
+     * @param intervalCoverage
+     * @return 
+     */
+    public Double getZscore(IntervalCoverage intervalCoverage) {
+        Integer index = hasIntervalAt(intervalCoverage);
+        if (index != null) {
+            IntervalCoverage coverageModel = intervalCoverages.get(index);
+            Double mean = coverageModel.getMean();
+            Double std = coverageModel.getStandardDeviation();
+            Double zscore 
+                = (intervalCoverage.getMean()-mean)/std;
+            return (zscore);
+        }
+        return null;
     }
     
     /**
@@ -70,36 +123,91 @@ public class AssayCoverageModel {
         
     }
     
-    public void update(IntervalCoverage intervalCoverage) {
-        
+    private String stringifyInterval(Interval interval) {
+        StringBuilder builder = new StringBuilder();
+        builder.append(interval.getContig());
+        builder.append(":");
+        builder.append(interval.getStart());
+        builder.append("-");
+        builder.append(interval.getEnd());
+        return (builder.toString());
     }
     
-    public void initialize(JsonObject jsonObject) {
-        
-        // parse json to get a list of BAM files 
-        //  util:Reader:readJson - key "BAM"
-        
-        // parse json to get a list of targets
-        //  util:Reader:readJson key "TARGETS"
+    /**
+     * Update the held model with the provided IntervalCoverage object. If
+     * the provided interval is not in the model, do nothing.
+     * 
+     * TODO: check for outlier coverage before updating the model.
+     * 
+     * @param intervalCoverage 
+     */
+    public void update(IntervalCoverage intervalCoverage) {
+        Integer index = hasIntervalAt(intervalCoverage);
+        if (index != null) {
+            intervalCoverages.get(index).update(intervalCoverage.getMean());
+        }
+    }
     
+    /**
+     * If the provided IntervalCoverage object is in the list held by the model,
+     * returns the index into the list or null if not found.
+     * @param intervalCoverageToFind
+     * @return 
+     */
+    private Integer hasIntervalAt(IntervalCoverage intervalCoverageToFind) {
+        Interval interval = intervalCoverageToFind.getInterval();
+        String keyString = stringifyInterval(interval);
+        return modelIntervalIndexMap.get(keyString); 
+    }
+    
+    /**
+     * Initialize the current model from a JSON file containing a list of BAM
+     * files (with the json key "BAM") and a file containing a list of genomic 
+     * targets (with the json key "TARGETS"
+     * @param file Input json file defining the necessary resources.
+     * @throws FileNotFoundException
+     * @throws IOException 
+     */
+    public void initialize(File file) 
+    throws FileNotFoundException, IOException {
+       
+        JsonReader reader 
+            = Json.createReader(new FileReader(file.getAbsolutePath()));
+        JsonObject jsonObject = reader.readObject();
+             
+        JsonArray bamArray = jsonObject.getJsonArray(BAM);
+              
+        String targetsFilepath=null;
+        if (jsonObject.containsKey(TARGETS)) {
+           targetsFilepath = jsonObject.getString(TARGETS);
+        }
+        List<Interval> intervals = utilityReader.readBEDFile(targetsFilepath);
+
         // create a new IntervalCoverage object for each target in the assay
-        //  parse json for TARGETS
-        //  util:Reader:readBEDFile
-        //  loop over TARGETS
-        //      new IC(target)
-        //      add to member list
-        //  done
-  
-        
+        // set the mapping of interval to index in list
+        Integer index=0;
+        for (Interval interval : intervals) {
+            intervalCoverages.add(new IntervalCoverage(interval));
+            modelIntervalIndexMap.put(stringifyInterval(interval), index);
+            index++;
+        }
+
         // loop over IC objects in member list
         //      loop over BAMs
         //          calculate average coverage over IC's interval
-        //              BamReader:getMeanCoverage(target) ???
-        //          update IC object with new coverage
-        //      done
-        // done
-        
-
+        for (index=0; index<bamArray.size(); index++) {    
+            String bamFilepath = bamArray.getString(index);
+            BamCoverage bamCoverage 
+                = new BamCoverage(bamFilepath);
+            for (IntervalCoverage intervalCoverage : intervalCoverages) {
+                intervalCoverage
+                    .update(
+                        bamCoverage
+                            .getCoverage(
+                                intervalCoverage
+                                    .getInterval()));
+            }  
+        }
+     
     }
-
 }

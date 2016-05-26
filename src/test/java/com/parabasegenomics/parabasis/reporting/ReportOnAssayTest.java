@@ -52,6 +52,7 @@ public class ReportOnAssayTest {
         args[3] = refSeqGeneModelFile;
         args[4] = null;
         args[5] = targetGenelistFile;
+        args[6] = "testAssay";
                
         ReportOnAssay.main(args);
         
@@ -64,7 +65,7 @@ public class ReportOnAssayTest {
     @Test
     public void testGetGCPercentage() {
         System.out.println("getGCPercentage");
-        ReportOnAssay targetReport = new ReportOnAssay(reportFile);
+        ReportOnAssay targetReport = new ReportOnAssay(reportFile,"testAssay");
         targetReport.loadReferenceSequence(humanReferenceFile);
         Interval interval = new Interval("chr1",0,472);
         double result = targetReport.getGCPercentage(interval);
@@ -80,7 +81,7 @@ public class ReportOnAssayTest {
     public void testReport() 
     throws IOException {
         System.out.println("report");
-        ReportOnAssay targetReport = new ReportOnAssay(reportFile);
+        ReportOnAssay targetReport = new ReportOnAssay(reportFile,"testAssay");
         targetReport.loadGeneModelCollection(refSeqGeneModelFile,refSeqGeneModelFile);
         targetReport.loadTargetFile(origTargetIntervalFile);
         targetReport.decorateTargets();

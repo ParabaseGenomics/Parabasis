@@ -80,17 +80,17 @@ public class IntervalCoverage {
      * @param coverage
      * @return Returns the current IntervalCoverage object.
      */
-    public IntervalCoverage update(Integer coverage) {
+    public IntervalCoverage update(Double coverage) {
         if (count == 0) {
   
-            mean.increment((double) coverage);
-            standardDeviation.increment((double) coverage);
+            mean.increment(coverage);
+            standardDeviation.increment(coverage);
             coefficientOfVariation = 0.0;
             count=1;
         } else {
             count++;
-            mean.increment((double) coverage);
-            standardDeviation.increment((double) coverage);
+            mean.increment(coverage);
+            standardDeviation.increment(coverage);
             coefficientOfVariation
                 = (1+(1/(4*count)))
                 * (standardDeviation.getResult()/mean.getResult());

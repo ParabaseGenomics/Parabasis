@@ -21,7 +21,7 @@ public class IntervalCoverageTest {
     public IntervalCoverageTest() {
         interval = new Interval("chr1",1,100);
         instance = new IntervalCoverage(interval);
-        instance.update(12);
+        instance.update(12.0);
     }
     
     /**
@@ -88,7 +88,7 @@ public class IntervalCoverageTest {
     @Test
     public void testUpdate() {
         System.out.println("update");
-        Integer coverage = 10;
+        Double coverage = 10.0;
         IntervalCoverage result = instance.update(coverage);
         Double observedMean = result.getMean();
         Double observedStd = result.getStandardDeviation();

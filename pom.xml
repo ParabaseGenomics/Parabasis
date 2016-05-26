@@ -23,13 +23,18 @@
             <artifactId>commons-math3</artifactId>
             <version>3.6.1</version>
         </dependency>
+        <dependency>
+            <groupId>org.glassfish</groupId>
+            <artifactId>javax.json</artifactId>
+            <version>1.0.4</version>
+        </dependency>
     </dependencies>
     
     
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-       <!--  <mainClass>com.parabasegenomics.parabasis.util.TargetMaker</mainClass> -->
-        <mainClass>com.parabasegenomics.parabasis.target.ReportOnAssay</mainClass> 
+        <mainClass>com.parabasegenomics.parabasis.util.TargetMaker</mainClass>
+        <!-- <mainClass>com.parabasegenomics.parabasis.target.ReportOnAssay</mainClass>  -->
     </properties>
     
      <organization>
