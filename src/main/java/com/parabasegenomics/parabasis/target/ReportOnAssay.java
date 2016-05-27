@@ -245,7 +245,7 @@ public class ReportOnAssay {
         targetReport.reportOn(targetIntervals);
         targetReport.close();
         
-        assayReport = new AssayReport(targetReportFile,assayName);
+        assayReport = new AssayReport(assayReportFile,assayName);
         assayReport.setAnnotationSummary(annotationSummary);
         assayReport.reportOn(targetIntervals);
         assayReport.close();
