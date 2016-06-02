@@ -49,6 +49,8 @@ public class AssayReport extends Report {
         
         requiredKeys = new ArrayList<>();
         
+        this.openForWriting();
+        
         bufferedWriter.write(HEADER);     
         //equiredKeys.add(CAPTURE_KEY);
         annotationSummary = null;

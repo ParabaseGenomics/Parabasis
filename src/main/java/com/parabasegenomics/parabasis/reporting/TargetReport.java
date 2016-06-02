@@ -49,6 +49,8 @@ public class TargetReport extends Report {
         
         requiredKeys = new ArrayList<>();
         
+        this.openForWriting();
+        
         bufferedWriter.write(HEADER);     
         requiredKeys.add(GENE_KEY);
         annotationSummary = null;

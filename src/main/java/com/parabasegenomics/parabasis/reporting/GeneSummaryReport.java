@@ -50,6 +50,8 @@ public class GeneSummaryReport extends Report {
         
         requiredKeys = new ArrayList<>();
         
+        this.openForWriting();
+        
         bufferedWriter.write(HEADER);     
         //requiredKeys.add(GC_KEY);
         annotationSummary = null;

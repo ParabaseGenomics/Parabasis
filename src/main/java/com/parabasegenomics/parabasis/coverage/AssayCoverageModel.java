@@ -5,6 +5,7 @@
  */
 package com.parabasegenomics.parabasis.coverage;
 
+import com.parabasegenomics.parabasis.reporting.CoverageModelReport;
 import com.parabasegenomics.parabasis.util.Reader;
 import htsjdk.samtools.util.Interval;
 import java.io.File;
@@ -34,6 +35,8 @@ public class AssayCoverageModel {
     private final Reader utilityReader;
     private final Map<String,Integer> modelIntervalIndexMap;
     private Double zscoreThreshold;
+    
+    private CoverageModelReport report;
     
     public AssayCoverageModel(String name) {
         assayName=name;
@@ -99,12 +102,15 @@ public class AssayCoverageModel {
      * Does the current model show signs of wildly varying coverage for any
      * of the held intervals?
      * @return Returns a list of outliers.  If none, returns an empty list.
-     * 
-     * TODO: define what it means to be an outlier.
-     * 
      */
     public List<IntervalCoverage> findOutliers() {
-        return new ArrayList<>();
+        List<IntervalCoverage> outliers = new ArrayList<>();
+        for (IntervalCoverage intervalCoverage : intervalCoverages) {
+            if (isOutlier(intervalCoverage)) {
+                outliers.add(intervalCoverage);
+            }
+        }
+        return outliers;
     }
     
     /**
@@ -115,12 +121,18 @@ public class AssayCoverageModel {
         return assayName;
     }
     
-    public void readFromFile(File file) {
-        
+    public void readFromFile(File file) 
+    throws IOException {
+        report = new CoverageModelReport(file,null);
+        report.readModel();
+        report.close();
     }
     
-    public void writeToFile(File file) {
-        
+    public void writeToFile(File file) 
+    throws IOException {
+        report = new CoverageModelReport(file,assayName);
+        report.writeModel(intervalCoverages);
+        report.close();
     }
     
     private String stringifyInterval(Interval interval) {
@@ -146,6 +158,22 @@ public class AssayCoverageModel {
         if (index != null) {
             intervalCoverages.get(index).update(intervalCoverage.getMean());
         }
+    }
+    
+    /**
+     * Returns the average coverage for the given interval, or null
+     * if the given interval is not in the model.
+     * @param interval
+     * @return 
+     */
+    public Double getMeanCoverageAt(Interval interval) {
+        String keyString = stringifyInterval(interval);
+        Integer index = modelIntervalIndexMap.get(keyString); 
+        if (index == null) {
+            return null;
+        } else {
+            return intervalCoverages.get(index).getMean();
+        }   
     }
     
     /**

@@ -108,7 +108,8 @@ public class AssayCoverageModelTest {
      * Test of readFromFile method, of class AssayCoverageModel.
      */
     //@Test
-    public void testReadFromFile() {
+    public void testReadFromFile() 
+    throws IOException {
         System.out.println("readFromFile");
         File file = null;
         instance.readFromFile(file);
@@ -119,13 +120,13 @@ public class AssayCoverageModelTest {
      * Test of writeToFile method, of class AssayCoverageModel.
      */
     //@Test
-    public void testWriteToFile() {
+    public void testWriteToFile() 
+    throws IOException {
         System.out.println("writeToFile");
         File file = null;
         AssayCoverageModel instance = null;
         instance.writeToFile(file);
-        // TODO review the generated test code and remove the default call to fail.
-        fail("The test case is a prototype.");
+        
     }
 
     /**

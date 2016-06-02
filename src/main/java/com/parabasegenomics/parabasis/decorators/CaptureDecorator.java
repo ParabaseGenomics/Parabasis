@@ -47,6 +47,7 @@ public class CaptureDecorator implements IntervalDecorator {
     * 
     * @return Returns the identifying string for this decorator.
     */
+    @Override
    public String getKey() {
        return KEY;
    }

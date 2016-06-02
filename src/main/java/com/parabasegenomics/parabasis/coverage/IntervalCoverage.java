@@ -36,6 +36,27 @@ public class IntervalCoverage {
     }
     
     /**
+     * Construct from given quantities.
+     * @param val Interval
+     * @param c count (int)
+     * @param m Mean 
+     * @param s StandardDeviation
+     * @param cv coefficient of variation (double)
+     */
+    public IntervalCoverage(
+        Interval val, 
+        int c, 
+        Mean m, 
+        StandardDeviation s,
+        double cv) {       
+            interval=val;
+            count=c;
+            mean=m;
+            standardDeviation=s;
+            coefficientOfVariation=cv;
+    }
+    
+    /**
      * Returns the number of datapoints that are currently held by the object.
      * @return 
      */

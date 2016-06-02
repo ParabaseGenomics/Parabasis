@@ -8,6 +8,7 @@ package com.parabasegenomics.parabasis.target;
 import static com.parabasegenomics.parabasis.decorators.AnnotationKeys.GENE_KEY;
 import static com.parabasegenomics.parabasis.decorators.AnnotationKeys.HOM_KEY;
 import com.parabasegenomics.parabasis.decorators.CaptureDecorator;
+import com.parabasegenomics.parabasis.decorators.CoverageDecorator;
 import static com.parabasegenomics.parabasis.decorators.FormatPatterns.percentPattern;
 import com.parabasegenomics.parabasis.decorators.GCCountDecorator;
 import com.parabasegenomics.parabasis.decorators.GeneModelDecorator;
@@ -71,6 +72,7 @@ public class ReportOnAssay {
     private AnnotationSummary annotationSummary;
     private final int splicingDistance;
     private final String assayName;
+    private String coverageResourceFile;
     
     public ReportOnAssay(String fileToWrite, String name) {
        geneModelCollection = new GeneModelCollection();
@@ -93,6 +95,8 @@ public class ReportOnAssay {
        splicingDistance = 10;
        assayName = name;      
        decimalFormat = new DecimalFormat(formatPattern);
+       coverageResourceFile  = null;
+
     }
     
     
@@ -110,6 +114,10 @@ public class ReportOnAssay {
      */
     public void setTargetIntervals(List<Interval> intervals) {
         targetIntervals = intervals;
+    }
+    
+    public void setResourceFile(String resourceFile) {
+        coverageResourceFile = resourceFile;
     }
     
     /**
@@ -187,6 +195,10 @@ public class ReportOnAssay {
         if (args.length == 8) {
             captureIntervalFile = args[7];
         }
+        String coverageResourceFile = null;
+        if (args.length == 9) {
+            coverageResourceFile = args[8];
+        }
         
         ReportOnAssay reportOnAssay = new ReportOnAssay(outputFile,assayName);  
         reportOnAssay.loadGeneModelCollection(refSeqGeneModelFile,gencodeGeneModelFile);
@@ -195,6 +207,9 @@ public class ReportOnAssay {
         reportOnAssay.loadTargetFile(targetIntervalFile);
         if (captureIntervalFile != null) {
             reportOnAssay.loadCaptureFile(captureIntervalFile);
+        }
+        if (coverageResourceFile != null) {
+            reportOnAssay.setResourceFile(coverageResourceFile);
         }
         
         reportOnAssay.loadTargetGenelist(targetGenelistFile);
@@ -232,6 +247,11 @@ public class ReportOnAssay {
        if (gcPctDecorator != null) {
            annotationSummary.addDecorator(gcPctDecorator);
        }    
+       
+       CoverageDecorator coverageDecorator = null;
+       if (coverageResourceFile != null) {
+           annotationSummary.addDecorator(coverageDecorator);
+       }
     }
 
     /**
