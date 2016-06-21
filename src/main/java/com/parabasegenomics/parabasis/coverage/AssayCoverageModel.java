@@ -59,6 +59,14 @@ public class AssayCoverageModel {
     }
     
     /**
+     * Access the interval coverages, mostly for the intervals themselves.
+     * @return 
+     */
+    public List<IntervalCoverage> getIntervals() {
+        return intervalCoverages;
+    }
+    
+    /**
      * Is the provided coverage an outlier given the current state of the model?
      * @param intervalCoverage The coverage value to compare to the model.
      * @return Returns true if the provided coverage is outside of the 
@@ -157,6 +165,11 @@ public class AssayCoverageModel {
         Integer index = hasIntervalAt(intervalCoverage);
         if (index != null) {
             intervalCoverages.get(index).update(intervalCoverage.getMean());
+        } else {
+            intervalCoverages.add(intervalCoverage);
+            modelIntervalIndexMap.put(
+                stringifyInterval(intervalCoverage.getInterval()), intervalCoverages.size()-1);
+            intervalCoverages.get(intervalCoverages.size()-1).update(intervalCoverage.getMean());
         }
     }
     
@@ -234,8 +247,10 @@ public class AssayCoverageModel {
                             .getCoverage(
                                 intervalCoverage
                                     .getInterval()));
-            }  
+            }
+            bamCoverage.closeBamFile();
         }
      
     }
+   
 }

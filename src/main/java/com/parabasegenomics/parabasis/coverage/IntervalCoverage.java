@@ -103,7 +103,6 @@ public class IntervalCoverage {
      */
     public IntervalCoverage update(Double coverage) {
         if (count == 0) {
-  
             mean.increment(coverage);
             standardDeviation.increment(coverage);
             coefficientOfVariation = 0.0;

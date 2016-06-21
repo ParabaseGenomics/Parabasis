@@ -63,7 +63,7 @@ public class GCCountDecorator implements IntervalDecorator {
    }
     
     /**
-     * Returns the %GC of the given interval.
+     * Returns the GC count in the given interval.
      * @param interval
      * @return 
      */

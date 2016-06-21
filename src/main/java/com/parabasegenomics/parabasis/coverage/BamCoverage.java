@@ -22,22 +22,20 @@ import java.util.List;
  */
 public class BamCoverage {
 
-    File bamFile;
-    SAMFileHeader samFileHeader;
+    private final File bamFile;
+    private final SAMFileHeader samFileHeader;
     
-    final SamReaderFactory samReaderFactory 
+    private final SamReaderFactory samReaderFactory 
         = SamReaderFactory.makeDefault()
             .validationStringency(ValidationStringency.SILENT);
     
-    final SamReader samReader;
-
-  
+    private final SamReader samReader;
+    
     public BamCoverage(String bamFilePath) {
         bamFile = new File(bamFilePath);
         samFileHeader = samReaderFactory.open(bamFile).getFileHeader();
        
-        samReader = samReaderFactory.open(bamFile);
-        
+        samReader = samReaderFactory.open(bamFile); 
     }
     
     /**
@@ -52,10 +50,9 @@ public class BamCoverage {
 
         IntervalList intervalList = new IntervalList(samFileHeader);
         intervalList.add(interval);
-        
         SamLocusIterator locusIterator 
             = new SamLocusIterator(samReader,intervalList);
-         
+             
         while (locusIterator.hasNext()) {
             SamLocusIterator.LocusInfo locusInfo 
                 = locusIterator.next();
@@ -65,6 +62,7 @@ public class BamCoverage {
             coverage += list.size();
             
         }
+        locusIterator.close();
         return coverage;
     }
     

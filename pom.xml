@@ -85,6 +85,25 @@
                                 <goal>single</goal>
                             </goals>
                         </execution>
+                        <execution>
+                            <id>Build CNV Detector</id>
+                            <configuration>
+                                <appendAssemblyId>false</appendAssemblyId>
+                                <archive>
+                                    <manifest>
+                                        <mainClass>com.parabasegenomics.parabasis.coverage.FindCnvCandidates</mainClass>
+                                    </manifest>
+                                </archive>
+                                <descriptorRefs>
+                                    <descriptorRef>jar-with-dependencies</descriptorRef>
+                                </descriptorRefs>
+                                <finalName>CNVDetector</finalName>
+                            </configuration>
+                            <phase>package</phase>
+                            <goals>
+                                <goal>single</goal>
+                            </goals>
+                        </execution>
                 </executions>
             </plugin>
             
