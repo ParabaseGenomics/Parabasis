@@ -48,16 +48,24 @@ public class FindCnvCandidates {
         
         BamCoverage bamCoverage = new BamCoverage(bamFilepath);
         
-        List<IntervalCoverage> intervals = coverageModel.getIntervals();
-        for (IntervalCoverage modelIntervalCoverage : intervals) {
+        List<IntervalCoverage> modelIntervals = coverageModel.getIntervals();
+        for (IntervalCoverage modelIntervalCoverage : modelIntervals) {
             Interval interval = modelIntervalCoverage.getInterval();
-            System.out.print("checking interval:\t" + interval.toString());
+            System.out.print("checking interval:\t" 
+                + interval.getContig()
+                +"\t"
+                + interval.getStart()
+                +"\t"
+                + interval.getEnd());
             
             // coverage from the BAM file
             IntervalCoverage intervalCoverage = new IntervalCoverage(interval);
             intervalCoverage.update(bamCoverage.getCoverage(interval));
             System.out.print("\t" + bamCoverage.getCoverage(interval));
-            System.out.println("\t" + coverageModel.getZscore(intervalCoverage));
+            System.out.print("\t"+intervalCoverage.getMean());
+            System.out.print("\t" + coverageModel.getZscore(intervalCoverage));
+            System.out.println(TAB+coverageModel.getMeanCoverageAt(interval));
+
             
             if (coverageModel.isOutlier(intervalCoverage)) {
                  System.out.println("outlier: " 

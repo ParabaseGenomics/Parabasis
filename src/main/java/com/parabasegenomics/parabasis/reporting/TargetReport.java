@@ -9,6 +9,7 @@ import static com.parabasegenomics.parabasis.decorators.AnnotationKeys.CAPTURE_K
 import static com.parabasegenomics.parabasis.decorators.AnnotationKeys.COVERAGE_KEY;
 import static com.parabasegenomics.parabasis.decorators.AnnotationKeys.GC_KEY;
 import static com.parabasegenomics.parabasis.decorators.AnnotationKeys.GENE_KEY;
+import static com.parabasegenomics.parabasis.decorators.AnnotationKeys.HOM_KEY;
 import static com.parabasegenomics.parabasis.decorators.FormatPatterns.percentPattern;
 import com.parabasegenomics.parabasis.target.AnnotatedInterval;
 import com.parabasegenomics.parabasis.target.AnnotationSummary;
@@ -26,7 +27,7 @@ import java.util.List;
 public class TargetReport extends Report {
 
     private final static String HEADER 
-        = "chr\tstart\tend\tdirection\tgenic\t%capture\t%coverage\t%gc\n";
+        = "chr\tstart\tend\tdirection\tgenic\t%capture\t%uniq\t%coverage\t%gc\n";
     private final DecimalFormat decimalFormat;
     
     private AnnotationSummary annotationSummary;
@@ -57,6 +58,7 @@ public class TargetReport extends Report {
         
         orderedKeys = new ArrayList<>();
         orderedKeys.add(CAPTURE_KEY);
+        orderedKeys.add(HOM_KEY);
         orderedKeys.add(COVERAGE_KEY);
         orderedKeys.add(GC_KEY);
         

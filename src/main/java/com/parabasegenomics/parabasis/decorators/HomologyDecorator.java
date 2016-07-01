@@ -9,8 +9,8 @@ import static com.parabasegenomics.parabasis.decorators.AnnotationKeys.HOM_KEY;
 import static com.parabasegenomics.parabasis.decorators.FormatPatterns.percentPattern;
 import com.parabasegenomics.parabasis.target.AnnotatedInterval;
 import htsjdk.samtools.util.Interval;
-import java.io.File;
 import java.text.DecimalFormat;
+import java.util.List;
 
 /**
  *
@@ -20,11 +20,11 @@ public class HomologyDecorator implements IntervalDecorator {
     private static final String KEY = HOM_KEY;
     private final static String formatPattern = percentPattern;
     private final DecimalFormat decimalFormat;
-    private final File inputFile;
+    private final List<Interval> uniqKmerIntervals;
     
-    public HomologyDecorator(String file) {
-        decimalFormat = new DecimalFormat(formatPattern); 
-        inputFile = new File(file);
+    public HomologyDecorator(List<Interval> intervals) {
+        decimalFormat = new DecimalFormat(formatPattern);       
+        uniqKmerIntervals = intervals;
     }
     
     /**
@@ -53,7 +53,27 @@ public class HomologyDecorator implements IntervalDecorator {
     
      @Override
     public int getCount(Interval interval) {
-        return -1;
+        
+        int overlapCount = 0;
+        for (Interval uniqKmerInterval : uniqKmerIntervals) {
+            if (!uniqKmerInterval.intersects(interval)) {
+                continue;
+            }
+            
+            // TODO. This ugly hack is implemented to deal with the fact that
+           // we're using 0-based, open intervals, but htsjdk Interval methods
+           // are expecting 1-based, closed intervals.  Therefore, abutting
+           // intervals are counted as overlapping, when that should not be the case.
+           if (uniqKmerInterval
+                .intersect(interval)
+                .length()<=1) {
+               continue;
+           } 
+           
+           overlapCount += (uniqKmerInterval.getIntersectionLength(interval)-1);          
+       }
+       
+       return overlapCount; 
     }
     
 }

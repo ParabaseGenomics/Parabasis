@@ -155,7 +155,7 @@ public class AssayCoverageModel {
     
     /**
      * Update the held model with the provided IntervalCoverage object. If
-     * the provided interval is not in the model, do nothing.
+     * the provided interval is not in the model, add it in.
      * 
      * TODO: check for outlier coverage before updating the model.
      * 

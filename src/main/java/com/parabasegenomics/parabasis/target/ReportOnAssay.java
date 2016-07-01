@@ -12,6 +12,7 @@ import com.parabasegenomics.parabasis.decorators.CoverageDecorator;
 import static com.parabasegenomics.parabasis.decorators.FormatPatterns.percentPattern;
 import com.parabasegenomics.parabasis.decorators.GCCountDecorator;
 import com.parabasegenomics.parabasis.decorators.GeneModelDecorator;
+import com.parabasegenomics.parabasis.decorators.HomologyDecorator;
 import com.parabasegenomics.parabasis.gene.Exon;
 import com.parabasegenomics.parabasis.gene.GeneModel;
 import com.parabasegenomics.parabasis.gene.GeneModelCollection;
@@ -51,6 +52,7 @@ public class ReportOnAssay {
     
     private List<Interval> targetIntervals;
     private List<Interval> captureIntervals;
+    private List<Interval> uniqKmerIntervals;
     private Set<String> targetGenelist;
     
     private final GeneModelCollection geneModelCollection;
@@ -79,6 +81,7 @@ public class ReportOnAssay {
        utilityReader = new Reader();
        targetIntervals = new ArrayList<>();
        captureIntervals = new ArrayList<>();
+       uniqKmerIntervals = new ArrayList<>();
        
        targetGenelist = new HashSet<>();
        
@@ -176,6 +179,11 @@ public class ReportOnAssay {
         captureIntervals = utilityReader.readBEDFile(captureIntervalFile);
     }
     
+    public void loadUniqKmerFile(String uniqKmerIntervalFile) 
+    throws IOException {
+        uniqKmerIntervals = utilityReader.readBEDFile(uniqKmerIntervalFile);
+    }
+    
     public void loadTargetGenelist(String targetGenelistFile) 
     throws IOException {
         targetGenelist = utilityReader.readHashSet(targetGenelistFile);
@@ -192,12 +200,16 @@ public class ReportOnAssay {
         String targetGenelistFile = args[5];
         String assayName = args[6];
         String captureIntervalFile = null;
-        if (args.length == 8) {
+        String uniqKmerIntervalFile = null;
+        if (args.length >= 8) {
             captureIntervalFile = args[7];
         }
         String coverageResourceFile = null;
-        if (args.length == 9) {
-            coverageResourceFile = args[8];
+        if (args.length >= 9) {
+            uniqKmerIntervalFile = args[8];
+        }
+        if (args.length == 10) {
+            coverageResourceFile = args[9];
         }
         
         ReportOnAssay reportOnAssay = new ReportOnAssay(outputFile,assayName);  
@@ -210,6 +222,9 @@ public class ReportOnAssay {
         }
         if (coverageResourceFile != null) {
             reportOnAssay.setResourceFile(coverageResourceFile);
+        }
+        if (uniqKmerIntervalFile != null) {
+            reportOnAssay.loadUniqKmerFile(uniqKmerIntervalFile);
         }
         
         reportOnAssay.loadTargetGenelist(targetGenelistFile);
@@ -238,6 +253,11 @@ public class ReportOnAssay {
            captureDecorator = new CaptureDecorator(captureIntervals);
        }
        
+       HomologyDecorator homologyDecorator = null;
+       if (!uniqKmerIntervals.isEmpty()) {
+           homologyDecorator = new HomologyDecorator(uniqKmerIntervals);
+       }
+       
        annotationSummary = new AnnotationSummary();
        annotationSummary.addDecorator(geneModelDecorator);
        
@@ -247,6 +267,9 @@ public class ReportOnAssay {
        if (gcPctDecorator != null) {
            annotationSummary.addDecorator(gcPctDecorator);
        }    
+       if (homologyDecorator != null) {
+           annotationSummary.addDecorator(homologyDecorator);
+       }
        
        CoverageDecorator coverageDecorator = null;
        if (coverageResourceFile != null) {
