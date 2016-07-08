@@ -59,6 +59,7 @@ public class BamCoverage {
 
             List<SamLocusIterator.RecordAndOffset> list
                 = locusInfo.getRecordAndPositions();
+
             coverage += list.size();
             
         }

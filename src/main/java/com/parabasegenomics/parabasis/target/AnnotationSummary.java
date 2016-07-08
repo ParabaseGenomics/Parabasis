@@ -82,6 +82,20 @@ public class AnnotationSummary {
     }
 
     /**
+     * Replace an existing decorator. If a decorator with the provided key is 
+     * not currently held, do nothing.
+     * @param key
+     * @param replacementDecorator 
+     */
+    public void replaceDecorator(String key, IntervalDecorator replacementDecorator) {
+        for (int i=0; i<decorators.size(); i++) {
+            if (decorators.get(i).getKey().equals(key)) {
+                decorators.set(i,replacementDecorator);
+            }
+        }
+    }
+    
+    /**
      * Add some flair to the list of intervals with the given decorators and
      * show it off.
      * @param intervals

@@ -124,6 +124,9 @@ public class GeneSummaryReport extends Report {
             
             double pct 
                 = 100.0*(double) annotatedLength/(double) length;
+            if (key.equals(COVERAGE_KEY)) {
+                pct = (double) annotatedLength/(double) length;
+            }
             reportLine.append(TAB);
             reportLine.append(decimalFormat.format(pct));
         }

@@ -5,6 +5,8 @@
  */
 package com.parabasegenomics.parabasis.target;
 
+import com.parabasegenomics.parabasis.coverage.AssayCoverageModel;
+import static com.parabasegenomics.parabasis.decorators.AnnotationKeys.COVERAGE_KEY;
 import static com.parabasegenomics.parabasis.decorators.AnnotationKeys.GENE_KEY;
 import static com.parabasegenomics.parabasis.decorators.AnnotationKeys.HOM_KEY;
 import com.parabasegenomics.parabasis.decorators.CaptureDecorator;
@@ -52,6 +54,7 @@ public class ReportOnAssay {
     
     private List<Interval> targetIntervals;
     private List<Interval> captureIntervals;
+    private List<Interval> codingIntervals;
     private List<Interval> uniqKmerIntervals;
     private Set<String> targetGenelist;
     
@@ -72,33 +75,34 @@ public class ReportOnAssay {
     private GeneSummaryReport summaryReport;
     private GeneSummaryReport codingSummaryReport;
     private AnnotationSummary annotationSummary;
+    private AssayCoverageModel assayCoverageModel;
     private final int splicingDistance;
     private final String assayName;
-    private String coverageResourceFile;
+    private File coverageResourceFile;
     
     public ReportOnAssay(String fileToWrite, String name) {
-       geneModelCollection = new GeneModelCollection();
-       utilityReader = new Reader();
-       targetIntervals = new ArrayList<>();
-       captureIntervals = new ArrayList<>();
-       uniqKmerIntervals = new ArrayList<>();
+        geneModelCollection = new GeneModelCollection();
+        utilityReader = new Reader();
+        targetIntervals = new ArrayList<>();
+        captureIntervals = new ArrayList<>();
+        uniqKmerIntervals = new ArrayList<>();
+        targetGenelist = new HashSet<>();
        
-       targetGenelist = new HashSet<>();
+        annotatedIntervals = new ArrayList<>();
        
-       annotatedIntervals = new ArrayList<>();
+        assayReportFile = new File(fileToWrite + ".assay.report.txt");
+        targetReportFile = new File(fileToWrite + ".report.bed");
+        codingTargetReportFile = new File(fileToWrite + ".coding.report.bed");
+        summaryReportFile = new File(fileToWrite+ ".summary.txt");
+        codingSummaryReportFile = new File(fileToWrite + ".coding.summary.txt");
+        codingAssayReportFile = new File(fileToWrite + ".coding.assay.report.txt");
        
-       assayReportFile = new File(fileToWrite + ".assay.report.txt");
-       targetReportFile = new File(fileToWrite + ".report.bed");
-       codingTargetReportFile = new File(fileToWrite + ".coding.report.bed");
-       summaryReportFile = new File(fileToWrite+ ".summary.txt");
-       codingSummaryReportFile = new File(fileToWrite + ".coding.summary.txt");
-       codingAssayReportFile = new File(fileToWrite + ".coding.assay.report.txt");
-       
-       referenceSequence = null;      
-       splicingDistance = 10;
-       assayName = name;      
-       decimalFormat = new DecimalFormat(formatPattern);
-       coverageResourceFile  = null;
+        assayCoverageModel = null;
+        referenceSequence = null;      
+        splicingDistance = 10;
+        assayName = name;      
+        decimalFormat = new DecimalFormat(formatPattern);
+        coverageResourceFile  = null;
 
     }
     
@@ -119,8 +123,28 @@ public class ReportOnAssay {
         targetIntervals = intervals;
     }
     
-    public void setResourceFile(String resourceFile) {
-        coverageResourceFile = resourceFile;
+    /**
+     * Method to set up the AssayCoverageModel from the given resources json 
+     * file.
+     * @param resourceFilepath
+     * @throws IOException 
+     */
+    public void loadCoverageModel(String resourceFilepath) 
+    throws IOException {
+        assayCoverageModel = new AssayCoverageModel(assayName);
+        coverageResourceFile = new File(resourceFilepath);
+        assayCoverageModel.initialize(coverageResourceFile);  
+    }
+    
+    /**
+     * Re-create the coverage model to accurately report on the coding-only
+     * targets.  Will throw an IOException if the coverage model has not 
+     * already been initialized.
+     * @throws java.io.IOException
+     */
+    public void resetCoverageModel() 
+    throws IOException {
+        assayCoverageModel.initializeFromList(codingIntervals);
     }
     
     /**
@@ -132,7 +156,8 @@ public class ReportOnAssay {
     }
     
     /**
-     * Load a collection of RefSeq and GENCODE genes.
+     * Load a collection of RefSeq and GENCODE genes.  Will also create the list
+     * of coding only intervals within the transcripts.
      * @param refSeqGeneModelFile RefSeq gene models.
      * @param gencodeGeneModelFile GENCODE gene models.
      * @throws IOException 
@@ -145,6 +170,8 @@ public class ReportOnAssay {
         geneModelCollection.readGeneModelCollection(refSeqGeneModelFile);
         geneModelCollection.addGeneModelCollection(gencodeGeneModelFile);
         geneModelCollection.aggregateTranscriptsByGenes();
+        codingIntervals = geneModelCollection
+                .createCodingTargets(targetGenelist,splicingDistance);
     }
     
     /**
@@ -213,22 +240,22 @@ public class ReportOnAssay {
         }
         
         ReportOnAssay reportOnAssay = new ReportOnAssay(outputFile,assayName);  
+        reportOnAssay.loadTargetGenelist(targetGenelistFile);
         reportOnAssay.loadGeneModelCollection(refSeqGeneModelFile,gencodeGeneModelFile);
         reportOnAssay.loadReferenceSequence(humanReferenceFile);
-
+        
         reportOnAssay.loadTargetFile(targetIntervalFile);
         if (captureIntervalFile != null) {
             reportOnAssay.loadCaptureFile(captureIntervalFile);
         }
         if (coverageResourceFile != null) {
-            reportOnAssay.setResourceFile(coverageResourceFile);
+            reportOnAssay.loadCoverageModel(coverageResourceFile);
         }
         if (uniqKmerIntervalFile != null) {
             reportOnAssay.loadUniqKmerFile(uniqKmerIntervalFile);
         }
         
-        reportOnAssay.loadTargetGenelist(targetGenelistFile);
-        reportOnAssay.decorateTargets();        
+        reportOnAssay.decorateTargets();    
         reportOnAssay.report();
        
     }
@@ -258,6 +285,11 @@ public class ReportOnAssay {
            homologyDecorator = new HomologyDecorator(uniqKmerIntervals);
        }
        
+       CoverageDecorator coverageDecorator = null;
+       if (coverageResourceFile != null) {        
+           coverageDecorator = new CoverageDecorator(assayCoverageModel);
+       }
+       
        annotationSummary = new AnnotationSummary();
        annotationSummary.addDecorator(geneModelDecorator);
        
@@ -269,10 +301,8 @@ public class ReportOnAssay {
        }    
        if (homologyDecorator != null) {
            annotationSummary.addDecorator(homologyDecorator);
-       }
-       
-       CoverageDecorator coverageDecorator = null;
-       if (coverageResourceFile != null) {
+       }     
+       if (coverageDecorator != null) {
            annotationSummary.addDecorator(coverageDecorator);
        }
     }
@@ -283,29 +313,12 @@ public class ReportOnAssay {
      */
     public void report() 
     throws IOException {      
+        
+        // full reports first: target-level, gene-level, assay-level
         targetReport = new TargetReport(targetReportFile);
         targetReport.setAnnotationSummary(annotationSummary);
         targetReport.reportOn(targetIntervals);
         targetReport.close();
-        
-        assayReport = new AssayReport(assayReportFile,assayName);
-        assayReport.setAnnotationSummary(annotationSummary);
-        assayReport.reportOn(targetIntervals);
-        assayReport.close();
-        
-        codingTargetReport = new TargetReport(codingTargetReportFile);
-        codingTargetReport.setAnnotationSummary(annotationSummary);
-        List<Interval> codingIntervals
-            = geneModelCollection
-                .createCodingTargets(targetGenelist,splicingDistance);
-        codingTargetReport.reportOn(codingIntervals);
-        codingTargetReport.close();
-          
-        AssayReport codingAssayReport = new AssayReport(codingAssayReportFile,assayName);
-        codingAssayReport.setAnnotationSummary(annotationSummary);
-        codingAssayReport.reportOn(codingIntervals);
-        codingAssayReport.close();
-   
         
         summaryReport = new GeneSummaryReport(summaryReportFile);
         summaryReport.setAnnotationSummary(annotationSummary);      
@@ -318,7 +331,27 @@ public class ReportOnAssay {
             summaryReport.reportOn(intervals, gene);
         }
         summaryReport.close();
-       
+          
+        assayReport = new AssayReport(assayReportFile,assayName);
+        assayReport.setAnnotationSummary(annotationSummary);
+        assayReport.reportOn(targetIntervals);
+        assayReport.close();
+               
+        // coding-only reports. have to reset the coverage if we're reporting
+        // on coverage
+        // TODO: fix this break in the reporting paradigm
+        if (coverageResourceFile != null) {
+            resetCoverageModel();
+            CoverageDecorator codingCoverageDecorator
+                = new CoverageDecorator(assayCoverageModel);
+            annotationSummary.replaceDecorator(COVERAGE_KEY, codingCoverageDecorator);          
+        }
+              
+        codingTargetReport = new TargetReport(codingTargetReportFile);
+        codingTargetReport.setAnnotationSummary(annotationSummary);
+        codingTargetReport.reportOn(codingIntervals);
+        codingTargetReport.close();
+          
         codingSummaryReport = new GeneSummaryReport(codingSummaryReportFile);
         codingSummaryReport.setAnnotationSummary(annotationSummary);
         for (String gene : targetGenelist) {
@@ -329,7 +362,13 @@ public class ReportOnAssay {
                     .createCodingTargets(geneToTarget, splicingDistance);
             codingSummaryReport.reportOn(intervals, gene);
         }
-        codingSummaryReport.close();     
+        codingSummaryReport.close();    
+        
+        AssayReport codingAssayReport = new AssayReport(codingAssayReportFile,assayName);
+        codingAssayReport.setAnnotationSummary(annotationSummary);
+        codingAssayReport.reportOn(codingIntervals);
+        codingAssayReport.close();
+        
     }
     
     /**

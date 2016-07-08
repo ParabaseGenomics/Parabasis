@@ -35,6 +35,7 @@ public class AssayCoverageModel {
     private final Reader utilityReader;
     private final Map<String,Integer> modelIntervalIndexMap;
     private Double zscoreThreshold;
+    private JsonObject jsonObject;
     
     private CoverageModelReport report;
     
@@ -44,6 +45,7 @@ public class AssayCoverageModel {
         utilityReader = new Reader();
         modelIntervalIndexMap = new HashMap<>();
         zscoreThreshold=null;
+        jsonObject=null;
     }
     
     
@@ -214,7 +216,7 @@ public class AssayCoverageModel {
        
         JsonReader reader 
             = Json.createReader(new FileReader(file.getAbsolutePath()));
-        JsonObject jsonObject = reader.readObject();
+        jsonObject = reader.readObject();
              
         JsonArray bamArray = jsonObject.getJsonArray(BAM);
               
@@ -253,4 +255,50 @@ public class AssayCoverageModel {
      
     }
    
+    /**
+     * Re-calculate coverage on the provided list of intervals.  Does not reload
+     * the json resource file and throws an IOException if it is called without
+     * first having called the initialize method.
+     * @param intervals
+     * @throws FileNotFoundException
+     * @throws IOException 
+     */
+    public void initializeFromList(List<Interval> intervals) 
+    throws FileNotFoundException, IOException {
+        
+        if (jsonObject == null) {
+            throw new IOException("Have not read in resources file.");
+        }
+        JsonArray bamArray = jsonObject.getJsonArray(BAM);
+        
+        // clear out the old to make room for the new
+        intervalCoverages.clear();
+        modelIntervalIndexMap.clear();
+        
+        Integer index=0;
+        for (Interval interval : intervals) {
+            intervalCoverages.add(new IntervalCoverage(interval));
+            modelIntervalIndexMap.put(stringifyInterval(interval), index);
+            index++;
+        }
+
+        // loop over IC objects in member list
+        //      loop over BAMs
+        //          calculate average coverage over IC's interval
+        for (index=0; index<bamArray.size(); index++) {    
+            String bamFilepath = bamArray.getString(index);
+            BamCoverage bamCoverage 
+                = new BamCoverage(bamFilepath);
+            for (IntervalCoverage intervalCoverage : intervalCoverages) {
+                intervalCoverage
+                    .update(
+                        bamCoverage
+                            .getCoverage(
+                                intervalCoverage
+                                    .getInterval()));
+            }
+            bamCoverage.closeBamFile();
+        }
+    }
+    
 }

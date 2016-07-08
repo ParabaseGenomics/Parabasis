@@ -10,7 +10,6 @@ import static com.parabasegenomics.parabasis.decorators.AnnotationKeys.COVERAGE_
 import static com.parabasegenomics.parabasis.decorators.FormatPatterns.percentPattern;
 import com.parabasegenomics.parabasis.target.AnnotatedInterval;
 import htsjdk.samtools.util.Interval;
-import java.io.File;
 import java.io.IOException;
 import java.text.DecimalFormat;
 
@@ -25,20 +24,15 @@ public class CoverageDecorator implements IntervalDecorator {
     private final DecimalFormat decimalFormat;
     private final AssayCoverageModel coverageModel;
     
-    private final File resourceFile;
-    
     /**
-     * Constructor.  Initializes a new CoverageModel from the given resource
-     * file.
-     * @param resourceFilepath
+     * Constructor.  
+     * @param assayCoverageModel
      * @throws IOException 
      */
-    public CoverageDecorator(String resourceFilepath) 
+    public CoverageDecorator(AssayCoverageModel assayCoverageModel) 
     throws IOException {
-        resourceFile = new File(resourceFilepath);
         decimalFormat = new DecimalFormat(formatPattern);
-        coverageModel = new AssayCoverageModel("Decorator");
-        coverageModel.initialize(resourceFile);      
+        coverageModel = assayCoverageModel; 
     }
     
     /**
