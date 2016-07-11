@@ -14,6 +14,7 @@ import htsjdk.samtools.util.Interval;
 import htsjdk.samtools.util.IntervalList;
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -66,6 +67,59 @@ public class BamCoverage {
         locusIterator.close();
         return coverage;
     }
+    
+    /**
+     * Returns a list of sub-intervals of the provided interval with coverage 
+     * less than the provided threshold.
+     * @param interval
+     * @param threshold
+     * @return 
+     */
+    public List<Interval> getLowCoverage(Interval interval, Integer threshold) {
+        List<Interval> lowCoverageIntervals = new ArrayList<>();
+        
+        IntervalList intervalList = new IntervalList(samFileHeader);
+        intervalList.add(interval);
+        SamLocusIterator locusIterator 
+            = new SamLocusIterator(samReader,intervalList);
+             
+        String chr = interval.getContig();
+        int start = interval.getStart();
+        int end = 0;
+        boolean inGap = false;
+        
+        while (locusIterator.hasNext()) {
+            SamLocusIterator.LocusInfo locusInfo 
+                = locusIterator.next();
+
+            List<SamLocusIterator.RecordAndOffset> list
+                = locusInfo.getRecordAndPositions();
+
+            if (list.size()<threshold) {
+                //add to low coverage intervals
+                if (!inGap) {
+                    start = locusInfo.getPosition();
+                    end = start+1;
+                    inGap=true;
+                } else {
+                    ++end;
+                }
+            } else {
+                if (inGap) {
+                    lowCoverageIntervals.add(
+                        new Interval(chr,start,end));
+                    start=0;
+                    end=0;
+                }
+                inGap=false;
+            }
+            
+        }
+        locusIterator.close();
+        
+        return lowCoverageIntervals;
+    }
+    
     
     /**
      * Close the held SamReader.

@@ -13,6 +13,7 @@ import com.parabasegenomics.parabasis.decorators.CaptureDecorator;
 import com.parabasegenomics.parabasis.decorators.CoverageDecorator;
 import static com.parabasegenomics.parabasis.decorators.FormatPatterns.percentPattern;
 import com.parabasegenomics.parabasis.decorators.GCCountDecorator;
+import com.parabasegenomics.parabasis.decorators.GapsDecorator;
 import com.parabasegenomics.parabasis.decorators.GeneModelDecorator;
 import com.parabasegenomics.parabasis.decorators.HomologyDecorator;
 import com.parabasegenomics.parabasis.gene.Exon;
@@ -29,6 +30,7 @@ import htsjdk.samtools.reference.IndexedFastaSequenceFile;
 import htsjdk.samtools.reference.ReferenceSequence;
 import htsjdk.samtools.util.Interval;
 import java.io.File;
+import java.io.FileReader;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.text.DecimalFormat;
@@ -36,6 +38,10 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import javax.json.Json;
+import javax.json.JsonArray;
+import javax.json.JsonObject;
+import javax.json.JsonReader;
 
 /**
  *
@@ -47,6 +53,19 @@ public class ReportOnAssay {
     private final static String pctHomKey = HOM_KEY;
     private final static String geneKey = GENE_KEY;
   
+    //to parse from json file specifying the resources for main
+    private static final String BAM = "BAM";
+    private static final String TARGETS = "TARGETS";
+    private static final String CAPTURE = "CAPTURE";
+    private static final String ASSAY = "ASSAY";
+    private static final String HUMAN_REFERENCE = "REFERENCE";
+    private static final String REFSEQ = "REFSEQ";
+    private static final String GENCODE = "GENCODE";
+    private static final String UNIQUE_KMERS = "UNIQMERS";
+    private static final String GENELIST = "GENELIST";
+    private static final String OUTPUT = "OUTPUT";
+    private static final String COVERAGE_THRESHOLD = "THRESHOLD";
+    
     private final static String formatPattern = percentPattern;
     private final DecimalFormat decimalFormat;
     
@@ -79,6 +98,8 @@ public class ReportOnAssay {
     private final int splicingDistance;
     private final String assayName;
     private File coverageResourceFile;
+    private static Integer coverageThreshold;
+    
     
     public ReportOnAssay(String fileToWrite, String name) {
         geneModelCollection = new GeneModelCollection();
@@ -103,6 +124,8 @@ public class ReportOnAssay {
         assayName = name;      
         decimalFormat = new DecimalFormat(formatPattern);
         coverageResourceFile  = null;
+        coverageThreshold=null;
+        
 
     }
     
@@ -219,25 +242,71 @@ public class ReportOnAssay {
     public static void main(String[] args) 
     throws IOException {
         
-        String targetIntervalFile = args[0];
-        String humanReferenceFile = args[1];
-        String refSeqGeneModelFile = args[2];
-        String gencodeGeneModelFile = args[3];
-        String outputFile = args[4];
-        String targetGenelistFile = args[5];
-        String assayName = args[6];
+        File resourceFile = new File(args[0]);
+        JsonReader reader 
+            = Json.createReader(new FileReader(resourceFile.getAbsolutePath()));
+        JsonObject jsonObject = reader.readObject();
+           
+        String targetIntervalFile = null;
+        if (jsonObject.containsKey(TARGETS)) {
+           targetIntervalFile = jsonObject.getString(TARGETS);
+        } else {
+            throw new IOException(
+                "Must specify a targets file in the json resource");
+        }
+        
+        String targetGenelistFile = null;
+        if (jsonObject.containsKey(GENELIST)) {
+            targetGenelistFile = jsonObject.getString(GENELIST);
+        } else {
+            throw new IOException(
+                "Must specify a genelist file in the json resource");
+        }
+        
+        String assayName = "genericAssay";
+        if (jsonObject.containsKey(ASSAY)) {
+            assayName = jsonObject.getString(ASSAY);
+        }
+        
+        String humanReferenceFile = null;
+        if (jsonObject.containsKey(HUMAN_REFERENCE)) {
+            humanReferenceFile = jsonObject.getString(HUMAN_REFERENCE);
+        }
+        
+        String refSeqGeneModelFile = null;
+        if (jsonObject.containsKey(REFSEQ)) {
+            refSeqGeneModelFile=jsonObject.getString(REFSEQ);
+        }
+        
+        String gencodeGeneModelFile = null;
+        if (jsonObject.containsKey(GENCODE)) {
+           gencodeGeneModelFile=jsonObject.getString(GENCODE);
+        }
+        String outputFile = "./default";
+        if (jsonObject.containsKey(OUTPUT)) {
+            outputFile = jsonObject.getString(OUTPUT);
+        }
+        
         String captureIntervalFile = null;
+        if (jsonObject.containsKey(CAPTURE)) {
+            captureIntervalFile = jsonObject.getString(CAPTURE);
+        }
+        
         String uniqKmerIntervalFile = null;
-        if (args.length >= 8) {
-            captureIntervalFile = args[7];
+        if (jsonObject.containsKey(UNIQUE_KMERS)) {
+            uniqKmerIntervalFile = jsonObject.getString(UNIQUE_KMERS);
         }
+        
+        // TODO: fix anachronism
         String coverageResourceFile = null;
-        if (args.length >= 9) {
-            uniqKmerIntervalFile = args[8];
+        if (jsonObject.containsKey(BAM)) {
+            coverageResourceFile = resourceFile.getAbsolutePath();
         }
-        if (args.length == 10) {
-            coverageResourceFile = args[9];
+        
+        if (jsonObject.containsKey(COVERAGE_THRESHOLD)) {
+            coverageThreshold = jsonObject.getInt(COVERAGE_THRESHOLD);
         }
+        
         
         ReportOnAssay reportOnAssay = new ReportOnAssay(outputFile,assayName);  
         reportOnAssay.loadTargetGenelist(targetGenelistFile);
@@ -290,6 +359,13 @@ public class ReportOnAssay {
            coverageDecorator = new CoverageDecorator(assayCoverageModel);
        }
        
+       GapsDecorator gapsDecorator = null;
+       if (coverageResourceFile != null) {          
+           gapsDecorator = new GapsDecorator(
+               "/ugh/ugh.bam",
+               coverageThreshold);
+       }
+       
        annotationSummary = new AnnotationSummary();
        annotationSummary.addDecorator(geneModelDecorator);
        
@@ -304,6 +380,9 @@ public class ReportOnAssay {
        }     
        if (coverageDecorator != null) {
            annotationSummary.addDecorator(coverageDecorator);
+       }
+       if (gapsDecorator != null) {
+           annotationSummary.addDecorator(gapsDecorator);
        }
     }
 
@@ -369,243 +448,5 @@ public class ReportOnAssay {
         codingAssayReport.reportOn(codingIntervals);
         codingAssayReport.close();
         
-    }
-    
-    /**
-     * Print a gene-level report summary based on coding regions.
-     * @throws IOException 
-     */
-    public void codingSummary() 
-    throws IOException {
-        summaryReport = new GeneSummaryReport(summaryReportFile);
-        
-        List<GeneModel> genes = geneModelCollection.selectGeneModels(targetGenelist);
-        for (GeneModel gene : genes) {            
-            Transcript collapsedTranscript = gene.getCollapsedTranscript();
-            int [] markupArray;
-            int offset = 0;
-            
-            if (collapsedTranscript.isNonCoding()) {
-               markupArray = new int [collapsedTranscript.getTranscriptInterval().length()]; 
-               offset = collapsedTranscript.getTranscriptStart();
-            } else {
-                markupArray = new int [collapsedTranscript.getCodingInterval().length()];
-                offset = collapsedTranscript.getCodingStart();
-            }
-          
-            Exon exon = collapsedTranscript.get5primeExon();
-              
-            int startBase = 0;
-            int endBase = 0;
-            int splicing = 10;
-            
-            if (collapsedTranscript.isNonCoding()) {
-                startBase = exon.getStart();
-                endBase = exon.getEnd();
-            } else if (exon.getCodingExon() != null) {
-                startBase = exon.getCodingStart();
-                endBase = exon.getCodingEnd();
-            }
-
-            for (int base = startBase; base<endBase;base++) {
-                int index = base-offset;
-                markupArray[index] = 1;
-            }
-            while (collapsedTranscript.hasNextExon()) {
-                exon = collapsedTranscript.getNextExon();
-                if (exon.getCodingInterval()==null) {
-                    continue;
-                }
-                for (int base = exon.getCodingStart(); base<exon.getCodingEnd();base++) {
-                int index = base-offset;
-                markupArray[index] = 1;
-                }
-            }
-            
-            for (Interval capture : captureIntervals) {
-                if (!capture.intersects(collapsedTranscript.getTranscriptInterval())) {
-                    continue;
-                }
-                
-                if (capture
-                        .intersect(
-                            collapsedTranscript.getTranscriptInterval())
-                            .length()<=1) {
-                    continue;
-                }
-              
-                
-                for (int base=capture.getStart(); base<capture.getEnd(); base++) {
-                    int index = base-offset;
-                    if (index<0 ||index>=markupArray.length) {
-                        continue;
-                    }
-                    if (markupArray[index]<1) {
-                        continue;
-                    } 
-                    markupArray[index]=2;
-                }
-            }
-                
-            int numberBasesCaptured = 0;
-            int numberBasesInGene = 0;
-            for (int index=0; index<markupArray.length; index++) {
-                if (markupArray[index]>=1) {
-                    numberBasesInGene++;
-                }
-                if (markupArray[index]==2) {
-                    numberBasesCaptured++;
-                }
-            }
-            
-            double capturePercent 
-                = 100.0*(double) numberBasesCaptured/(double) numberBasesInGene;
-            
-            StringBuilder reportLine = new StringBuilder();
-            reportLine.append(gene.getGeneName());
-            reportLine.append(TAB);
-            reportLine.append(numberBasesInGene);
-            reportLine.append(TAB);
-            reportLine.append(numberBasesCaptured);
-            reportLine.append(TAB);
-            reportLine.append(decimalFormat.format(capturePercent));
-            //reportLine.append(NEWLINE);
-            summaryReport.write(reportLine.toString());
-            
-        }
-        summaryReport.close();
-    }
-               
-    
-    /**
-     * Print a transcript-level summary report.
-     * @throws IOException 
-     */
-    public void summary() 
-    throws IOException {
-        File fullTranscriptReportFile = new File(summaryReportFile.getAbsoluteFile() + ".full");
-        Report fullTranscriptReport = new GeneSummaryReport(fullTranscriptReportFile);
-        
-        List<GeneModel> genes = geneModelCollection.selectGeneModels(targetGenelist);
-        for (GeneModel gene : genes) {            
-            Transcript collapsedTranscript = gene.getCollapsedTranscript();
-            int [] markupArray;
-            int offset = 0;
-
-            markupArray = new int [collapsedTranscript.getTranscriptInterval().length()]; 
-            offset = collapsedTranscript.getTranscriptStart();
-            
-          
-            Exon exon = collapsedTranscript.get5primeExon();
-              
-            int startBase = 0;
-            int endBase = 0;
-  
-            startBase = exon.getStart();
-            endBase = exon.getEnd();
-            
-            for (int base = startBase; base<endBase;base++) {
-                int index = base-offset;
-                markupArray[index] = 1;
-            }
-            while (collapsedTranscript.hasNextExon()) {
-                exon = collapsedTranscript.getNextExon();
-                if (exon.getInterval()==null) {
-                    continue;
-                }
-                for (int base = exon.getStart(); base<exon.getEnd();base++) {
-                int index = base-offset;
-                markupArray[index] = 1;
-                }
-            }
-            
-            for (Interval capture : captureIntervals) {
-                if (!capture.intersects(collapsedTranscript.getTranscriptInterval())) {
-                    continue;
-                }
-                
-                if (capture
-                        .intersect(
-                            collapsedTranscript.getTranscriptInterval())
-                            .length()<=1) {
-                    continue;
-                }
-              
-                
-                for (int base=capture.getStart(); base<capture.getEnd(); base++) {
-                    int index = base-offset;
-                    if (index<0 ||index>=markupArray.length) {
-                        continue;
-                    }
-                    if (markupArray[index]<1) {
-                        continue;
-                    } 
-                    markupArray[index]=2;
-                }
-            }
-                
-            int numberBasesCaptured = 0;
-            int numberBasesInGene = 0;
-            for (int index=0; index<markupArray.length; index++) {
-                if (markupArray[index]>=1) {
-                    numberBasesInGene++;
-                }
-                if (markupArray[index]==2) {
-                    numberBasesCaptured++;
-                }
-            }
-            
-            double capturePercent 
-                = 100.0*(double) numberBasesCaptured/(double) numberBasesInGene;
-            
-            StringBuilder reportLine = new StringBuilder();
-            reportLine.append(gene.getGeneName());
-            reportLine.append(TAB);
-            reportLine.append(numberBasesInGene);
-            reportLine.append(TAB);
-            reportLine.append(numberBasesCaptured);
-            reportLine.append(TAB);
-            reportLine.append(decimalFormat.format(capturePercent));
-            //reportLine.append(NEWLINE);
-            fullTranscriptReport.write(reportLine.toString());
-            
-        }
-        fullTranscriptReport.close();
-    }
-                        
-            
-        
-        
-            
-    
-     /**
-     * Returns the percentage of bases in the interval that are "G" or "C".
-     * @param interval Interval in which to calculate GC content.
-     * @return 
-     */
-    public double getGCPercentage(Interval interval) {
-        
-        String chromosome = interval.getContig();
-        int startPosition = interval.getStart();
-        int endPosition = interval.getEnd();
-        ReferenceSequence seq 
-            = referenceSequence.getSubsequenceAt(chromosome, startPosition, endPosition);
-        
-        int gcCount = 0;
-        
-        byte [] bases = seq.getBases();
-        String basesString = new String(bases,Charset.defaultCharset());
-        String upperCaseBases = basesString.toUpperCase();
-        
-        for (int i=0 ; i<upperCaseBases.length(); i++) {
-            if (upperCaseBases.charAt(i) == 'C' 
-                || upperCaseBases.charAt(i) == 'G') {
-                gcCount++;
-            }
-        }
-        
-        return (100.0* (double) gcCount/(double)interval.length());       
-    }
-    
-    
+    }   
 }

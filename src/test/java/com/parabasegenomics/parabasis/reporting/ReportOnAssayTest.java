@@ -58,22 +58,6 @@ public class ReportOnAssayTest {
         
     }
 
-
-    /**
-     * Test of getGCPercentage method, of class TargetReport.
-     */
-    @Test
-    public void testGetGCPercentage() {
-        System.out.println("getGCPercentage");
-        ReportOnAssay targetReport = new ReportOnAssay(reportFile,"testAssay");
-        targetReport.loadReferenceSequence(humanReferenceFile);
-        Interval interval = new Interval("chr1",0,472);
-        double result = targetReport.getGCPercentage(interval);
-        double expResult = 77.2;
-        assertEquals(expResult, result, 0.1);
-        
-    }
-
     /**
      * Test of report method, of class TargetReport.
      */

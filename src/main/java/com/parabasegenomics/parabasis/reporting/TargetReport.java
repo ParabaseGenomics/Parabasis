@@ -7,6 +7,7 @@ package com.parabasegenomics.parabasis.reporting;
 
 import static com.parabasegenomics.parabasis.decorators.AnnotationKeys.CAPTURE_KEY;
 import static com.parabasegenomics.parabasis.decorators.AnnotationKeys.COVERAGE_KEY;
+import static com.parabasegenomics.parabasis.decorators.AnnotationKeys.GAPS_KEY;
 import static com.parabasegenomics.parabasis.decorators.AnnotationKeys.GC_KEY;
 import static com.parabasegenomics.parabasis.decorators.AnnotationKeys.GENE_KEY;
 import static com.parabasegenomics.parabasis.decorators.AnnotationKeys.HOM_KEY;
@@ -27,7 +28,7 @@ import java.util.List;
 public class TargetReport extends Report {
 
     private final static String HEADER 
-        = "chr\tstart\tend\tdirection\tgenic\t%capture\t%uniq\t%coverage\t%gc\n";
+        = "chr\tstart\tend\tdirection\tgenic\t%capture\t%uniq\t%gc\tcoverage\t%gaps\n";
     private final DecimalFormat decimalFormat;
     
     private AnnotationSummary annotationSummary;
@@ -59,8 +60,10 @@ public class TargetReport extends Report {
         orderedKeys = new ArrayList<>();
         orderedKeys.add(CAPTURE_KEY);
         orderedKeys.add(HOM_KEY);
-        orderedKeys.add(COVERAGE_KEY);
         orderedKeys.add(GC_KEY);
+        orderedKeys.add(COVERAGE_KEY);
+        orderedKeys.add(GAPS_KEY);
+        
         
         decimalFormat = new DecimalFormat(percentPattern);
         

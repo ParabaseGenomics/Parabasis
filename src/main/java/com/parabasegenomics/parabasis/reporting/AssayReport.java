@@ -7,6 +7,7 @@ package com.parabasegenomics.parabasis.reporting;
 
 import static com.parabasegenomics.parabasis.decorators.AnnotationKeys.CAPTURE_KEY;
 import static com.parabasegenomics.parabasis.decorators.AnnotationKeys.COVERAGE_KEY;
+import static com.parabasegenomics.parabasis.decorators.AnnotationKeys.GAPS_KEY;
 import static com.parabasegenomics.parabasis.decorators.FormatPatterns.percentPattern;
 import static com.parabasegenomics.parabasis.reporting.Report.TAB;
 import com.parabasegenomics.parabasis.target.AnnotatedInterval;
@@ -24,7 +25,7 @@ import java.util.List;
  */
 public class AssayReport extends Report {
      private final static String HEADER 
-        = "Assay\t%capture\t%coverage\n";
+        = "Assay\t%capture\t%coverage\t%gaps\n";
     private final DecimalFormat decimalFormat;
     
     private AnnotationSummary annotationSummary;
@@ -58,6 +59,7 @@ public class AssayReport extends Report {
         orderedKeys = new ArrayList<>();
         orderedKeys.add(CAPTURE_KEY);
         orderedKeys.add(COVERAGE_KEY);
+        orderedKeys.add(GAPS_KEY);
         
         decimalFormat = new DecimalFormat(percentPattern);
         assayName=name;

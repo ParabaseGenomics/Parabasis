@@ -103,8 +103,7 @@ public class CoverageModelReport extends Report {
             StandardDeviation std = new StandardDeviation();
             std.increment(Double.valueOf(tokens[5]));
             double cv = Double.valueOf(tokens[6]);
-            
-            System.out.println("readin: " + interval.toString() +"\t"+tokens[4]+"\t"+tokens[5]+"\t"+tokens[6]);
+           
             model.update(
                 new IntervalCoverage(
                     interval,
