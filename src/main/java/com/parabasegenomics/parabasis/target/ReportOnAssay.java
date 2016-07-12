@@ -16,30 +16,23 @@ import com.parabasegenomics.parabasis.decorators.GCCountDecorator;
 import com.parabasegenomics.parabasis.decorators.GapsDecorator;
 import com.parabasegenomics.parabasis.decorators.GeneModelDecorator;
 import com.parabasegenomics.parabasis.decorators.HomologyDecorator;
-import com.parabasegenomics.parabasis.gene.Exon;
-import com.parabasegenomics.parabasis.gene.GeneModel;
 import com.parabasegenomics.parabasis.gene.GeneModelCollection;
-import com.parabasegenomics.parabasis.gene.Transcript;
 import com.parabasegenomics.parabasis.reporting.GeneSummaryReport;
-import com.parabasegenomics.parabasis.reporting.Report;
 import com.parabasegenomics.parabasis.reporting.TargetReport;
 import com.parabasegenomics.parabasis.reporting.AssayReport;
 import com.parabasegenomics.parabasis.util.Reader;
 import htsjdk.samtools.reference.FastaSequenceIndex;
 import htsjdk.samtools.reference.IndexedFastaSequenceFile;
-import htsjdk.samtools.reference.ReferenceSequence;
 import htsjdk.samtools.util.Interval;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
-import java.nio.charset.Charset;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import javax.json.Json;
-import javax.json.JsonArray;
 import javax.json.JsonObject;
 import javax.json.JsonReader;
 
@@ -98,7 +91,7 @@ public class ReportOnAssay {
     private final int splicingDistance;
     private final String assayName;
     private File coverageResourceFile;
-    private static Integer coverageThreshold;
+    private Double coverageThreshold;
     
     
     public ReportOnAssay(String fileToWrite, String name) {
@@ -124,7 +117,7 @@ public class ReportOnAssay {
         assayName = name;      
         decimalFormat = new DecimalFormat(formatPattern);
         coverageResourceFile  = null;
-        coverageThreshold=null;
+        coverageThreshold=20.0;
         
 
     }
@@ -156,6 +149,7 @@ public class ReportOnAssay {
     throws IOException {
         assayCoverageModel = new AssayCoverageModel(assayName);
         coverageResourceFile = new File(resourceFilepath);
+        assayCoverageModel.setLowCoverageThreshold(coverageThreshold);
         assayCoverageModel.initialize(coverageResourceFile);  
     }
     
@@ -239,6 +233,10 @@ public class ReportOnAssay {
         targetGenelist = utilityReader.readHashSet(targetGenelistFile);
     }
     
+    public void setLowCoverageThreshold(Double threshold) {
+        coverageThreshold=threshold;
+    }
+    
     public static void main(String[] args) 
     throws IOException {
         
@@ -302,12 +300,7 @@ public class ReportOnAssay {
         if (jsonObject.containsKey(BAM)) {
             coverageResourceFile = resourceFile.getAbsolutePath();
         }
-        
-        if (jsonObject.containsKey(COVERAGE_THRESHOLD)) {
-            coverageThreshold = jsonObject.getInt(COVERAGE_THRESHOLD);
-        }
-        
-        
+
         ReportOnAssay reportOnAssay = new ReportOnAssay(outputFile,assayName);  
         reportOnAssay.loadTargetGenelist(targetGenelistFile);
         reportOnAssay.loadGeneModelCollection(refSeqGeneModelFile,gencodeGeneModelFile);
@@ -318,6 +311,10 @@ public class ReportOnAssay {
             reportOnAssay.loadCaptureFile(captureIntervalFile);
         }
         if (coverageResourceFile != null) {
+            if (jsonObject.containsKey(COVERAGE_THRESHOLD)) {          
+                Integer T = jsonObject.getInt(COVERAGE_THRESHOLD);
+                reportOnAssay.setLowCoverageThreshold(T.doubleValue());
+            }
             reportOnAssay.loadCoverageModel(coverageResourceFile);
         }
         if (uniqKmerIntervalFile != null) {
@@ -361,9 +358,7 @@ public class ReportOnAssay {
        
        GapsDecorator gapsDecorator = null;
        if (coverageResourceFile != null) {          
-           gapsDecorator = new GapsDecorator(
-               "/ugh/ugh.bam",
-               coverageThreshold);
+           gapsDecorator = new GapsDecorator(assayCoverageModel);
        }
        
        annotationSummary = new AnnotationSummary();

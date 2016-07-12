@@ -5,14 +5,13 @@
  */
 package com.parabasegenomics.parabasis.decorators;
 
-import com.parabasegenomics.parabasis.coverage.BamCoverage;
+import com.parabasegenomics.parabasis.coverage.AssayCoverageModel;
 import static com.parabasegenomics.parabasis.decorators.AnnotationKeys.GAPS_KEY;
 import static com.parabasegenomics.parabasis.decorators.FormatPatterns.percentPattern;
 import com.parabasegenomics.parabasis.target.AnnotatedInterval;
 import htsjdk.samtools.util.Interval;
 import java.io.IOException;
 import java.text.DecimalFormat;
-import java.util.List;
 
 /**
  *
@@ -22,21 +21,18 @@ public class GapsDecorator implements IntervalDecorator {
     private static final String KEY = GAPS_KEY;
     private final static String formatPattern = percentPattern;
     private final DecimalFormat decimalFormat;
-    private final BamCoverage bamCoverage;
-    private final Integer coverageThreshold;
+
+    private final AssayCoverageModel coverageModel;
     
     /**
      * Constructor.  
-     * @param bamFilepath
-     * @param threshold
+     * @param assayCoverageModel
      * @throws IOException 
      */
-    public GapsDecorator(String bamFilepath,Integer threshold) 
+    public GapsDecorator(AssayCoverageModel assayCoverageModel) 
     throws IOException {
         decimalFormat = new DecimalFormat(formatPattern);
-        bamCoverage 
-                = new BamCoverage(bamFilepath);
-        coverageThreshold=threshold;
+        coverageModel = assayCoverageModel; 
     }
     
     /**
@@ -56,20 +52,20 @@ public class GapsDecorator implements IntervalDecorator {
     
    
     /**
-     * Returns the count of bases in the provided interval with coverage less 
-     * than the given threshold.
+     * Returns the count of bases with coverage below threshold in the provided 
+     * interval.
      * @param interval
      * @return 
      */
     @Override
     public int getCount(Interval interval) {
         int count = 0;
-        List<Interval> lowCoverageIntervals
-            = bamCoverage.getLowCoverage(interval,coverageThreshold);
-        for (Interval lowCoverageInterval : lowCoverageIntervals) {
-            count += lowCoverageInterval.length();
+        Double coverage = coverageModel.getLowCoverageCountAt(interval);
+        if (coverage != null) {
+            return coverage.intValue();
+        } else {
+            return -1;
         }
-        return count;
     }
     
     /**

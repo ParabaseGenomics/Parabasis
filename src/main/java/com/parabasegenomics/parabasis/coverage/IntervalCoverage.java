@@ -19,6 +19,7 @@ public class IntervalCoverage {
     
     private final Interval interval;
     private int count;
+    private final Mean lowCoverageMean;
     private final Mean mean;
     private final StandardDeviation standardDeviation;
     private double coefficientOfVariation;
@@ -32,6 +33,7 @@ public class IntervalCoverage {
         count=0;
         standardDeviation = new StandardDeviation();
         mean = new Mean();       
+        lowCoverageMean = new Mean();
         coefficientOfVariation=0.0;
     }
     
@@ -39,7 +41,7 @@ public class IntervalCoverage {
      * Construct from given quantities.
      * @param val Interval
      * @param c count (int)
-     * @param m Mean 
+     * @param m Mean coverage
      * @param s StandardDeviation
      * @param cv coefficient of variation (double)
      */
@@ -53,11 +55,12 @@ public class IntervalCoverage {
             count=c;
             mean=m;
             standardDeviation=s;
-            coefficientOfVariation=cv;
+            coefficientOfVariation=cv;  
+            lowCoverageMean=new Mean();
     }
     
     /**
-     * Returns the number of datapoints that are currently held by the object.
+     * Returns the number of data points that are currently held by the object.
      * @return 
      */
     public int count() {
@@ -70,6 +73,14 @@ public class IntervalCoverage {
      */
     public Interval getInterval() {
         return interval;
+    }
+    
+    /**
+     * Returns the current mean count of low coverage bases for this interval.
+     * @return 
+     */
+    public double getLowCoverageMean() {
+        return lowCoverageMean.getResult();
     }
     
     /**
@@ -96,7 +107,7 @@ public class IntervalCoverage {
         return coefficientOfVariation;
     }
     
-    /**
+     /**
      * Updates the current statistics with new data.
      * @param coverage
      * @return Returns the current IntervalCoverage object.
@@ -118,5 +129,15 @@ public class IntervalCoverage {
         return this;    
     }
     
+    /**
+     * Updates the current mean count of low coverage bases.
+     * @param lowCoverageCount
+     * @return 
+     */
+    public IntervalCoverage updateLowCoverage(Double lowCoverageCount) {
+        lowCoverageMean.increment(lowCoverageCount);
+        
+        return this;
+    }
     
 }

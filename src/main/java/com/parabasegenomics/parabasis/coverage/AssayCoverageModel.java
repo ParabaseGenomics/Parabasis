@@ -22,7 +22,9 @@ import javax.json.JsonObject;
 import javax.json.JsonReader;
 
 /**
- *
+ * The AssayCoverageModel class is used to calculate the coverage mean, std, 
+ * and CV for a set of intervals and provide basic tools for interacting with 
+ * the coverage statistics.
  * @author evanmauceli
  */
 public class AssayCoverageModel {
@@ -36,6 +38,7 @@ public class AssayCoverageModel {
     private final Map<String,Integer> modelIntervalIndexMap;
     private Double zscoreThreshold;
     private JsonObject jsonObject;
+    private Double lowCoverageThreshold;
     
     private CoverageModelReport report;
     
@@ -46,11 +49,8 @@ public class AssayCoverageModel {
         modelIntervalIndexMap = new HashMap<>();
         zscoreThreshold=null;
         jsonObject=null;
+        lowCoverageThreshold=null;
     }
-    
-    
-    // TODO: we'll want a decorator for coverage - how does that 
-    // work???
     
     /**
      * Set the boundary on the z-score. Outliers get special handling.
@@ -58,6 +58,15 @@ public class AssayCoverageModel {
      */
     public void setThreshold(Double threshold) {
         zscoreThreshold=threshold;
+    }
+    
+    /**
+     * Sets the minimum value for acceptable sequencing coverage.  Regions
+     * with coverage below this are to be reported.
+     * @param threshold 
+     */
+    public void setLowCoverageThreshold(Double threshold) {
+        lowCoverageThreshold=threshold;
     }
     
     /**
@@ -130,7 +139,7 @@ public class AssayCoverageModel {
     public String getAssayName() {
         return assayName;
     }
-    
+      
     public void readFromFile(File file) 
     throws IOException {
         report = new CoverageModelReport(file,null);
@@ -192,6 +201,26 @@ public class AssayCoverageModel {
     }
     
     /**
+     * Returns the average count of low coverage bases for the given interval, 
+     * or null if the given interval is not in the model.
+     * @param interval
+     * @return 
+     */
+    public Double getLowCoverageCountAt(Interval interval) {
+        String keyString = stringifyInterval(interval);
+        Integer index = modelIntervalIndexMap.get(keyString); 
+        if (index == null) {
+            return null;
+        } else {
+            if (lowCoverageThreshold != null) {
+                return intervalCoverages.get(index).getLowCoverageMean();
+            } else {
+                return null;
+            }
+        }   
+    }
+    
+    /**
      * If the provided IntervalCoverage object is in the list held by the model,
      * returns the index into the list or null if not found.
      * @param intervalCoverageToFind
@@ -249,6 +278,19 @@ public class AssayCoverageModel {
                             .getCoverage(
                                 intervalCoverage
                                     .getInterval()));
+                
+                if (lowCoverageThreshold != null) {
+                    List<Interval> lowCoverageBases 
+                        = bamCoverage.
+                            getLowCoverage(
+                                intervalCoverage.getInterval(),
+                                lowCoverageThreshold.intValue());
+                    Double lowCoverageBasesCount=0.0;
+                    for (Interval lowCoverageInterval : lowCoverageBases) {
+                        lowCoverageBasesCount+=lowCoverageInterval.length();
+                    }
+                    intervalCoverage.updateLowCoverage(lowCoverageBasesCount);
+                }
             }
             bamCoverage.closeBamFile();
         }
@@ -296,6 +338,19 @@ public class AssayCoverageModel {
                             .getCoverage(
                                 intervalCoverage
                                     .getInterval()));
+                if (lowCoverageThreshold != null) {
+                    List<Interval> lowCoverageBases 
+                        = bamCoverage.
+                            getLowCoverage(
+                                intervalCoverage.getInterval(),
+                                lowCoverageThreshold.intValue());
+                    
+                    Double lowCoverageBasesCount=0.0;
+                    for (Interval lowCoverageInterval : lowCoverageBases) {
+                        lowCoverageBasesCount+=(lowCoverageInterval.length()-1);
+                    }
+                    intervalCoverage.updateLowCoverage(lowCoverageBasesCount);
+                }
             }
             bamCoverage.closeBamFile();
         }

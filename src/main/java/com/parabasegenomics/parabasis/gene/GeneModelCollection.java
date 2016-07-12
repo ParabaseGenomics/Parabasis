@@ -218,7 +218,8 @@ public class GeneModelCollection {
                     geneModel.Collapse();
                     transcript = geneModel.getCollapsedTranscript();
                 }
-                    
+                 
+                /**
                 // non-coding transcripts need to be included
                 if (transcript.isNonCoding()) {
                     String name=gene;
@@ -235,12 +236,16 @@ public class GeneModelCollection {
                             name));
                     continue;
                 }
+                */
                 
                 String chromosome = transcript.getChromosome();
                 Exon exon 
                     = transcript
                         .get5primeExon()
                         .getCodingExon();
+                if (transcript.isNonCoding()) {
+                    exon = transcript.get5primeExon();
+                }
                 
                 if (exon != null) {
                     String name = realGeneName + "_" + exon.getName();
@@ -262,7 +267,11 @@ public class GeneModelCollection {
                 }
                 
                 while (transcript.hasNextExon()) {
-                    exon = transcript.getNextExon().getCodingExon();
+                    if (!transcript.isNonCoding()) {
+                        exon = transcript.getNextExon().getCodingExon();
+                    } else {
+                        exon = transcript.getNextExon();
+                    }
                     if (exon == null) {
                         continue;
                     }

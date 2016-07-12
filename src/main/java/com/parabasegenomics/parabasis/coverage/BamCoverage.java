@@ -18,7 +18,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- *
+ * The BamCoverage class is a wrapper around the SamReader class to provide
+ * coverage over intervals as well as low coverage regions within intervals.
  * @author evanmauceli
  */
 public class BamCoverage {
@@ -35,7 +36,6 @@ public class BamCoverage {
     public BamCoverage(String bamFilePath) {
         bamFile = new File(bamFilePath);
         samFileHeader = samReaderFactory.open(bamFile).getFileHeader();
-       
         samReader = samReaderFactory.open(bamFile); 
     }
     
@@ -114,6 +114,9 @@ public class BamCoverage {
                 inGap=false;
             }
             
+        }
+        if (inGap) {
+            lowCoverageIntervals.add(new Interval(chr,start,end));  
         }
         locusIterator.close();
         

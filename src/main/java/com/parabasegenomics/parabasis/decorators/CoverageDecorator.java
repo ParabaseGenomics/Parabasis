@@ -14,7 +14,8 @@ import java.io.IOException;
 import java.text.DecimalFormat;
 
 /**
- *
+ * Annotate an interval with the mean coverage of that interval.  Mean coverage 
+ * is held by the AssayCoverageModel. This class provides the annotation framework.
  * @author evanmauceli
  */
 public class CoverageDecorator implements IntervalDecorator {
