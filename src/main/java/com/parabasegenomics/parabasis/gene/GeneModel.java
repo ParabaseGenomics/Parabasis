@@ -129,7 +129,7 @@ public class GeneModel implements Comparable<GeneModel> {
                 throw new IOException("no 5prime exon.");
             }
             for (int i=exon.getStart(); i<exon.getEnd(); i++) {
-                if (i<codingStart || i>codingEnd) {
+                if (i<codingStart || i>=codingEnd) {
                     sequenceArray[i-offset] 
                         = Math.max(sequenceArray[i-offset],1);
                 } else {
@@ -148,7 +148,7 @@ public class GeneModel implements Comparable<GeneModel> {
                     throw new IOException("no exon, but one expected.");
                 }
                 for (int i=exon.getStart(); i<exon.getEnd(); i++) {
-                   if (i<codingStart || i>codingEnd) {
+                   if (i<codingStart || i>=codingEnd) {
                         sequenceArray[i-offset] 
                             = Math.max(sequenceArray[i-offset],1);
                     } else {
@@ -217,7 +217,7 @@ public class GeneModel implements Comparable<GeneModel> {
                 // look for coding portions of this exon
                 int codingExonStart=0;
                 int codingExonEnd=0;
-                for (int exonBase=start-offset; exonBase<end-offset; exonBase++) {
+                for (int exonBase=start-offset; exonBase<=end-offset; exonBase++) {
                     if (codingExonStart==0 && sequenceArray[exonBase]==2) {
                         codingExonStart=exonBase+offset;
                     }
@@ -229,7 +229,7 @@ public class GeneModel implements Comparable<GeneModel> {
                 if (codingExonStart != codingExonEnd) {
                     exon.addCodingInterval(
                         new Interval(
-                            chromosome,codingExonStart,codingExonEnd,isRC,exonName));
+                            chromosome,codingExonStart,codingExonEnd+1,isRC,exonName));
                 }
                 collapsedExons.add(exon);
                 exonIndex++;
@@ -239,7 +239,7 @@ public class GeneModel implements Comparable<GeneModel> {
         }
         
         Interval codingInterval 
-            = new Interval(chromosome,codingStart,codingEnd,isRC,"coding");
+            = new Interval(chromosome,codingStart,codingEnd+1,isRC,"coding");
         Interval transcriptInterval 
             = new Interval(
                 chromosome, 

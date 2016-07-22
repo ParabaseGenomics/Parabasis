@@ -28,7 +28,7 @@ public class AssayCoverageModelTest {
         jsonFile = "src/main/resources/test.json";
         
     }
-    
+
     @Before
     public void setUp() 
     throws IOException {
@@ -76,7 +76,7 @@ public class AssayCoverageModelTest {
             = new IntervalCoverage(new Interval("chr1",6484847,6485319));
         intervalCoverage.update(2500.0);
         
-        Double expResult = -15.4;
+        Double expResult = -14.9;
         Double result = instance.getZscore(intervalCoverage);
         assertEquals(expResult, result, 0.1);
         
@@ -144,4 +144,5 @@ public class AssayCoverageModelTest {
        
     }
 
+  
 }

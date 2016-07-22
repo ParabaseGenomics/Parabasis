@@ -21,7 +21,6 @@ public class BamCoverageTest {
     public BamCoverageTest() {
         instance = new BamCoverage(path);
     }
-    
 
     /**
      * Test of getCoverage method, of class BamCoverage.
@@ -30,7 +29,7 @@ public class BamCoverageTest {
     public void testGetCoverage() {
         System.out.println("getCoverage");
         Interval interval = new Interval("chr1",6484847,6485319);
-        Integer expResult = 3504;
+        Integer expResult = 3500;
         Integer result = instance.getCoverage(interval).intValue();
         assertEquals(expResult, result);
         
@@ -38,6 +37,7 @@ public class BamCoverageTest {
 
     /**
      * Test of closeBamFile method, of class BamCoverage.
+     * @throws java.lang.Exception
      */
     @Test
     public void testCloseBamFile() 
@@ -46,5 +46,6 @@ public class BamCoverageTest {
         instance.closeBamFile();
         
     }
-    
+
+   
 }

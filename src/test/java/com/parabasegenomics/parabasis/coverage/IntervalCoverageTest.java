@@ -6,8 +6,12 @@
 package com.parabasegenomics.parabasis.coverage;
 
 import htsjdk.samtools.util.Interval;
+import org.junit.After;
+import org.junit.AfterClass;
 import org.junit.Test;
 import static org.junit.Assert.*;
+import org.junit.Before;
+import org.junit.BeforeClass;
 
 /**
  *
@@ -22,6 +26,22 @@ public class IntervalCoverageTest {
         interval = new Interval("chr1",1,100);
         instance = new IntervalCoverage(interval);
         instance.update(12.0);
+    }
+
+    @BeforeClass
+    public static void setUpClass() throws Exception {
+    }
+
+    @AfterClass
+    public static void tearDownClass() throws Exception {
+    }
+
+    @Before
+    public void setUp() throws Exception {
+    }
+
+    @After
+    public void tearDown() throws Exception {
     }
     
     /**
@@ -103,5 +123,6 @@ public class IntervalCoverageTest {
         assertEquals(expectedCV, observedCV,0.05);
        
     }
-    
+
+  
 }

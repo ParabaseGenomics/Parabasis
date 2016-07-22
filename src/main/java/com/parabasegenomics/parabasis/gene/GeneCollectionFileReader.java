@@ -28,6 +28,9 @@ import java.util.List;
  * coordinate order.
  * 1       NM_018090       chr1    +       16767166        16786584        16767256        16785385        8       16767166,16770126,16774364,16774554,16775587,16778332,16782312,16785336,        16767348,16770227,16774469,16774636,16775696,16778510,16782388,16786584,        0       NECAP2  cmpl    cmpl    0,2,1,1,2,0,1,2,
  * 
+ * See the following for an explanation of the coordinate system [0-based, open end).
+ * https://genome.ucsc.edu/FAQ/FAQtracks#tracks1
+ * 
  * @author evanmauceli
  */
 public class GeneCollectionFileReader {
@@ -249,7 +252,7 @@ public class GeneCollectionFileReader {
                         overlapInterval.getEnd(),
                         isRC,
                         exonName);
-              
+
                 newExon.addCodingInterval(codingExonInterval);
  
             }

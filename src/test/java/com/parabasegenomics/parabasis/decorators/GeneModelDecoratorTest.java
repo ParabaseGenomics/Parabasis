@@ -5,7 +5,6 @@
  */
 package com.parabasegenomics.parabasis.decorators;
 
-import static com.parabasegenomics.parabasis.decorators.AnnotationKeys.CAPTURE_KEY;
 import static com.parabasegenomics.parabasis.decorators.AnnotationKeys.GENE_KEY;
 import com.parabasegenomics.parabasis.gene.GeneModelCollection;
 import com.parabasegenomics.parabasis.target.AnnotatedInterval;
@@ -16,8 +15,12 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import org.junit.After;
+import org.junit.AfterClass;
 import org.junit.Test;
 import static org.junit.Assert.*;
+import org.junit.Before;
+import org.junit.BeforeClass;
 
 /**
  *
@@ -55,6 +58,22 @@ public class GeneModelDecoratorTest {
         
         instance 
             = new GeneModelDecorator(geneModelCollectionInstance,genesToTarget);
+    }
+
+    @BeforeClass
+    public static void setUpClass() throws Exception {
+    }
+
+    @AfterClass
+    public static void tearDownClass() throws Exception {
+    }
+
+    @Before
+    public void setUp() throws Exception {
+    }
+
+    @After
+    public void tearDown() throws Exception {
     }
     
     /**

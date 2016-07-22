@@ -29,10 +29,10 @@ public class GeneModelCollectionTest {
     private final Interval codingInterval = new Interval("chr1",67000041,67000051);
     private final String file = "src/main/resources/refseq_genemodel.txt";
     
-    private List<Exon> exons;
+    private final List<Exon> exons;
     private List<Exon> secondExonList;
-    private Transcript transcript;
-    private Transcript transcript2;
+    private final Transcript transcript;
+    private final Transcript transcript2;
     
     private final String name = "NM_032291";
     private final String gene = "SGIP1";
@@ -65,15 +65,6 @@ public class GeneModelCollectionTest {
                 new Interval("chr1",16767166,16786584),
                 new Interval("chr1",16767256,16785491),
                 exons2);
-    }
-    
-    
-    @Before
-    public void setUp() {
-    }
-    
-    @After
-    public void tearDown() {
     }
 
     /**
@@ -205,5 +196,6 @@ public class GeneModelCollectionTest {
         List<GeneModel> models = instance.getGeneModels();
         assertEquals(2,models.size());
     }
+
     
 }

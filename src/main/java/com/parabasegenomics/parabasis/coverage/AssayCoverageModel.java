@@ -287,7 +287,7 @@ public class AssayCoverageModel {
                                 lowCoverageThreshold.intValue());
                     Double lowCoverageBasesCount=0.0;
                     for (Interval lowCoverageInterval : lowCoverageBases) {
-                        lowCoverageBasesCount+=lowCoverageInterval.length();
+                        lowCoverageBasesCount+=(lowCoverageInterval.length()-1);
                     }
                     intervalCoverage.updateLowCoverage(lowCoverageBasesCount);
                 }

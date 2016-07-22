@@ -3,11 +3,8 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package com.parabasegenomics.parabasis.reporting;
+package com.parabasegenomics.parabasis.coverage;
 
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.File;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -19,11 +16,19 @@ import static org.junit.Assert.*;
  *
  * @author evanmauceli
  */
-public class ReportTest {
+public class FindCnvCandidatesTest {
     
-    public ReportTest() {
+    public FindCnvCandidatesTest() {
     }
-
+    
+    @BeforeClass
+    public static void setUpClass() {
+    }
+    
+    @AfterClass
+    public static void tearDownClass() {
+    }
+    
     @Before
     public void setUp() {
     }
@@ -32,12 +37,5 @@ public class ReportTest {
     public void tearDown() {
     }
 
-    //@Test
-    public void testSomeMethod() {
-        // TODO review the generated test code and remove the default call to fail.
-        //fail("The test case is a prototype.");
-    }
-
-   
     
 }

@@ -5,13 +5,11 @@
  */
 package com.parabasegenomics.parabasis.reporting;
 
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.File;
+import com.parabasegenomics.parabasis.target.AnnotationSummary;
+import htsjdk.samtools.util.Interval;
+import java.util.List;
 import org.junit.After;
-import org.junit.AfterClass;
 import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Test;
 import static org.junit.Assert.*;
 
@@ -19,11 +17,11 @@ import static org.junit.Assert.*;
  *
  * @author evanmauceli
  */
-public class ReportTest {
+public class AssayReportTest {
     
-    public ReportTest() {
+    public AssayReportTest() {
     }
-
+    
     @Before
     public void setUp() {
     }
@@ -32,12 +30,5 @@ public class ReportTest {
     public void tearDown() {
     }
 
-    //@Test
-    public void testSomeMethod() {
-        // TODO review the generated test code and remove the default call to fail.
-        //fail("The test case is a prototype.");
-    }
 
-   
-    
 }

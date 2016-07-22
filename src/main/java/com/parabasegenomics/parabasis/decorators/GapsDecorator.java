@@ -62,7 +62,8 @@ public class GapsDecorator implements IntervalDecorator {
         int count = 0;
         Double coverage = coverageModel.getLowCoverageCountAt(interval);
         if (coverage != null) {
-            return coverage.intValue();
+            Double betterEstimate = coverage + 0.5;
+            return (betterEstimate.intValue());
         } else {
             return -1;
         }

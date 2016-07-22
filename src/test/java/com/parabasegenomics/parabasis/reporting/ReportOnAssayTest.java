@@ -6,12 +6,8 @@
 package com.parabasegenomics.parabasis.reporting;
 
 import com.parabasegenomics.parabasis.target.ReportOnAssay;
-import htsjdk.samtools.util.Interval;
 import java.io.IOException;
-import org.junit.After;
-import org.junit.Before;
 import org.junit.Test;
-import static org.junit.Assert.*;
 
 /**
  *

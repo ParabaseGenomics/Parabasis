@@ -12,7 +12,9 @@ import java.util.ArrayList;
 import java.util.List;
 import junit.framework.Assert;
 import org.junit.After;
+import org.junit.AfterClass;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 /**
@@ -43,6 +45,14 @@ public class GeneModelTest {
 
     
     public GeneModelTest() {
+    }
+
+    @BeforeClass
+    public static void setUpClass() throws Exception {
+    }
+
+    @AfterClass
+    public static void tearDownClass() throws Exception {
     }
     
     @Before
@@ -82,7 +92,7 @@ public class GeneModelTest {
        List<Exon> collapsedExons = new ArrayList<>();
        collapsedExons.add(new Exon(new Interval("chr1",66999824,67000051,FALSE,"1")));
        collapsedExons.add(new Exon(new Interval("chr1",67091529,67091593,FALSE,"3")));
-        collapsedTranscript 
+       collapsedTranscript 
             = new Transcript(
                 name,
                 gene,
@@ -138,7 +148,7 @@ public class GeneModelTest {
        
         Transcript actual = instance.getCollapsedTranscript();
         Transcript expected = collapsedTranscript;
-        
+
         Assert.assertEquals(expected.getTranscriptStart(), actual.getTranscriptStart());
         Assert.assertEquals(expected.getTranscriptEnd(), actual.getTranscriptEnd());
         Assert.assertEquals(expected.getCodingStart(), actual.getCodingStart());
@@ -181,5 +191,6 @@ public class GeneModelTest {
         Assert.assertEquals(expected,actual);
         
     }   
-    
+
+   
 }

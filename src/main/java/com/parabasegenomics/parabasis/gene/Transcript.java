@@ -142,7 +142,7 @@ public class Transcript implements Comparable<Transcript> {
      * @return 
      */
     public int getLength() {
-        return (transcriptInterval.length());
+        return (transcriptInterval.length()-1);
     }
     
     /**
@@ -150,7 +150,7 @@ public class Transcript implements Comparable<Transcript> {
      * @return 
      */
     public int getCodingLength() {
-        return (codingInterval.length());
+        return (codingInterval.length()-1);
     }
     
     /**

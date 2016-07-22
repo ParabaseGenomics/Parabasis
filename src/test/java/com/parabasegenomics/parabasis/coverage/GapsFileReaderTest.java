@@ -25,6 +25,14 @@ public class GapsFileReaderTest {
     
     public GapsFileReaderTest() {
     }
+
+    @BeforeClass
+    public static void setUpClass() throws Exception {
+    }
+
+    @AfterClass
+    public static void tearDownClass() throws Exception {
+    }
     
     @Before
     public void setUp() {

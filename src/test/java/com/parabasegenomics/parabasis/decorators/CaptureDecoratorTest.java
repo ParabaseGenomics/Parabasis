@@ -11,9 +11,11 @@ import htsjdk.samtools.util.Interval;
 import java.util.ArrayList;
 import java.util.List;
 import org.junit.After;
+import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.Test;
 import static org.junit.Assert.*;
+import org.junit.BeforeClass;
 
 /**
  *
@@ -37,6 +39,14 @@ public class CaptureDecoratorTest {
         annotatedInterval.addAnnotation(CAPTURE_KEY,annotation);
         
         instance = new CaptureDecorator(intervals);
+    }
+
+    @BeforeClass
+    public static void setUpClass() throws Exception {
+    }
+
+    @AfterClass
+    public static void tearDownClass() throws Exception {
     }
     
     @Before

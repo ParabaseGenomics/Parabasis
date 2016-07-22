@@ -16,6 +16,10 @@ import java.io.IOException;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import org.junit.After;
+import org.junit.AfterClass;
+import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 /**
@@ -44,6 +48,22 @@ public class TargetReportTest {
         geneModelCollectionInstance = new GeneModelCollection();
         geneModelCollectionInstance.readGeneModelCollection(file);
         geneModelCollectionInstance.aggregateTranscriptsByGenes();
+    }
+
+    @BeforeClass
+    public static void setUpClass() throws Exception {
+    }
+
+    @AfterClass
+    public static void tearDownClass() throws Exception {
+    }
+
+    @Before
+    public void setUp() throws Exception {
+    }
+
+    @After
+    public void tearDown() throws Exception {
     }
     
    

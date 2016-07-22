@@ -34,8 +34,7 @@ public class GeneSummaryReportTest {
         intervals = reader.readBEDFile(intervalsFile.getAbsolutePath());
  
     }
-    
-   
+
     /**
      * Test of setAnnotationSummary method, of class GeneSummaryReport.
      */

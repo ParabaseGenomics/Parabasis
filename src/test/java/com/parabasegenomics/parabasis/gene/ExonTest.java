@@ -9,6 +9,7 @@ import htsjdk.samtools.util.Interval;
 import static java.lang.Boolean.FALSE;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -31,7 +32,7 @@ public class ExonTest {
     
     public ExonTest() {
     }
-    
+
     @Before
     public void setUp() {
         exons = new ArrayList<>();
@@ -137,6 +138,7 @@ public class ExonTest {
         Exon result = exon1.getCodingExon();
         assertEquals(null,result);
     }
-    
+
+ 
 }
 

@@ -5,7 +5,6 @@
  */
 package com.parabasegenomics.parabasis.gene;
 
-import com.parabasegenomics.parabasis.gene.GeneCollectionFileReader;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -31,8 +30,7 @@ public class GeneCollectionFileReaderTest {
     public GeneCollectionFileReaderTest() {
    
     }
-    
-    
+
     @Before
     public void setUp() 
     throws FileNotFoundException {

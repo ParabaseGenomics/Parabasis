@@ -3,11 +3,11 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package com.parabasegenomics.parabasis.reporting;
+package com.parabasegenomics.parabasis.target;
 
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.File;
+import htsjdk.samtools.util.Interval;
+import java.util.List;
+import java.util.Map;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -19,9 +19,9 @@ import static org.junit.Assert.*;
  *
  * @author evanmauceli
  */
-public class ReportTest {
+public class AnnotatedIntervalTest {
     
-    public ReportTest() {
+    public AnnotatedIntervalTest() {
     }
 
     @Before
@@ -32,12 +32,4 @@ public class ReportTest {
     public void tearDown() {
     }
 
-    //@Test
-    public void testSomeMethod() {
-        // TODO review the generated test code and remove the default call to fail.
-        //fail("The test case is a prototype.");
-    }
-
-   
-    
 }

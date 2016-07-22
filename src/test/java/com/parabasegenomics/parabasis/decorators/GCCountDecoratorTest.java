@@ -13,8 +13,12 @@ import htsjdk.samtools.util.Interval;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
+import org.junit.After;
+import org.junit.AfterClass;
 import org.junit.Test;
 import static org.junit.Assert.*;
+import org.junit.Before;
+import org.junit.BeforeClass;
 
 /**
  *
@@ -46,6 +50,22 @@ public class GCCountDecoratorTest {
             = new IndexedFastaSequenceFile(humanReference,referenceIndex);
         
         instance = new GCCountDecorator(referenceSequence,referenceIndex);
+    }
+
+    @BeforeClass
+    public static void setUpClass() throws Exception {
+    }
+
+    @AfterClass
+    public static void tearDownClass() throws Exception {
+    }
+
+    @Before
+    public void setUp() throws Exception {
+    }
+
+    @After
+    public void tearDown() throws Exception {
     }
    
     /**

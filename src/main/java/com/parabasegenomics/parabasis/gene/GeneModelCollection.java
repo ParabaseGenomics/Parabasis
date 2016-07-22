@@ -219,6 +219,9 @@ public class GeneModelCollection {
                     transcript = geneModel.getCollapsedTranscript();
                 }
                  
+                //if (transcript.isNonCoding()) {
+                //    continue;
+                //}
                 /**
                 // non-coding transcripts need to be included
                 if (transcript.isNonCoding()) {
@@ -247,6 +250,8 @@ public class GeneModelCollection {
                     exon = transcript.get5primeExon();
                 }
                 
+                
+                
                 if (exon != null) {
                     String name = realGeneName + "_" + exon.getName();
 
@@ -259,8 +264,6 @@ public class GeneModelCollection {
                             end += splicingDistance;
                         }
                     }
-
-                    //System.out.println("adding 5ptarget " + chromosome +" "+start+" "+end);
                     targets
                         .add(
                             new Interval(chromosome,start,end,transcript.isRC(),name));

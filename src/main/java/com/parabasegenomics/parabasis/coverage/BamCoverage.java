@@ -50,7 +50,14 @@ public class BamCoverage {
         Double coverage = 0.0;
 
         IntervalList intervalList = new IntervalList(samFileHeader);
-        intervalList.add(interval);
+        Interval htsjdkInterval;
+            htsjdkInterval = new Interval(
+                interval.getContig(),
+                interval.getStart()+1,
+                interval.getEnd());
+        intervalList.add(htsjdkInterval);
+        
+        //intervalList.add(interval);
         SamLocusIterator locusIterator 
             = new SamLocusIterator(samReader,intervalList);
              
@@ -79,12 +86,18 @@ public class BamCoverage {
         List<Interval> lowCoverageIntervals = new ArrayList<>();
         
         IntervalList intervalList = new IntervalList(samFileHeader);
-        intervalList.add(interval);
+        Interval htsjdkInterval 
+            = new Interval(
+                interval.getContig(),
+                interval.getStart()+1,
+                interval.getEnd());       
+        intervalList.add(htsjdkInterval);
+        
         SamLocusIterator locusIterator 
             = new SamLocusIterator(samReader,intervalList);
              
-        String chr = interval.getContig();
-        int start = interval.getStart();
+        String chr = htsjdkInterval.getContig();
+        int start = 0;
         int end = 0;
         boolean inGap = false;
         
@@ -99,15 +112,15 @@ public class BamCoverage {
                 //add to low coverage intervals
                 if (!inGap) {
                     start = locusInfo.getPosition();
-                    end = start+1;
+                    end = start;
                     inGap=true;
                 } else {
                     ++end;
                 }
             } else {
                 if (inGap) {
-                    lowCoverageIntervals.add(
-                        new Interval(chr,start,end));
+                    Interval gapInterval = new Interval(chr,start-1,end);
+                    lowCoverageIntervals.add(gapInterval);
                     start=0;
                     end=0;
                 }
@@ -116,7 +129,8 @@ public class BamCoverage {
             
         }
         if (inGap) {
-            lowCoverageIntervals.add(new Interval(chr,start,end));  
+            Interval gapInterval = new Interval(chr,start-1,end);           
+            lowCoverageIntervals.add(gapInterval);  
         }
         locusIterator.close();
         

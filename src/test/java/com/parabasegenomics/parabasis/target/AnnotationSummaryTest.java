@@ -30,8 +30,8 @@ public class AnnotationSummaryTest {
     
     private final String file;
     private final GeneModelCollection geneModelCollectionInstance;
-    private AnnotationSummary instance;
-    private GeneModelDecorator decorator;
+    private final AnnotationSummary instance;
+    private final GeneModelDecorator decorator;
     
     public AnnotationSummaryTest() 
     throws IOException {
@@ -48,6 +48,14 @@ public class AnnotationSummaryTest {
             = new GeneModelDecorator(geneModelCollectionInstance,genesToTarget);        
         instance.addDecorator(decorator);
         
+    }
+
+    @BeforeClass
+    public static void setUpClass() throws Exception {
+    }
+
+    @AfterClass
+    public static void tearDownClass() throws Exception {
     }
     
     @Before
@@ -138,5 +146,7 @@ public class AnnotationSummaryTest {
         assertEquals(expResult, result.getAnnotation(GENE_KEY));
         
     }
+
+   
     
 }

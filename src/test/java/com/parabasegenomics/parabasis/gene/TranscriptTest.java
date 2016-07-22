@@ -5,8 +5,6 @@
  */
 package com.parabasegenomics.parabasis.gene;
 
-import com.parabasegenomics.parabasis.gene.Transcript;
-import com.parabasegenomics.parabasis.gene.Exon;
 import htsjdk.samtools.util.Interval;
 import java.io.IOException;
 import static java.lang.Boolean.FALSE;
@@ -15,9 +13,11 @@ import java.util.Collections;
 import java.util.List;
 import junit.framework.Assert;
 import org.junit.After;
+import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.Test;
 import static org.junit.Assert.*;
+import org.junit.BeforeClass;
 
 /**
  *
@@ -37,6 +37,14 @@ public class TranscriptTest {
     
     public TranscriptTest() {
          
+    }
+
+    @BeforeClass
+    public static void setUpClass() throws Exception {
+    }
+
+    @AfterClass
+    public static void tearDownClass() throws Exception {
     }
     
     @Before
@@ -171,5 +179,7 @@ public class TranscriptTest {
             t.getGeneName());
         
     }
+
+   
     
 }
