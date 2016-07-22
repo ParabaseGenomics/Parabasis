@@ -23,6 +23,7 @@ import java.util.logging.Logger;
 public class GeneModelDecorator implements IntervalDecorator {
     
     private static final String KEY = GENE_KEY;
+    private static final String LOCUS_TARGET = "locus-target";
     
     private final GeneModelCollection geneModelCollection;
     private final Set<String> targetGenelist;
@@ -53,12 +54,13 @@ public class GeneModelDecorator implements IntervalDecorator {
         try {
             String overlap 
                 = getGeneModelOverlap(annotatedInterval.getInterval());
-            if (!overlap.isEmpty()) {
-                annotatedInterval
+            if (overlap.isEmpty()) {
+                overlap = LOCUS_TARGET;
+            }
+            annotatedInterval
                     .addAnnotation(
                         KEY,
                         overlap);
-            }
         } catch (IOException ex) {
             Logger.getLogger(GeneModelDecorator.class.getName()).log(Level.SEVERE, null, ex);
         }

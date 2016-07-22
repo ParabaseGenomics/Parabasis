@@ -74,7 +74,8 @@ public class Transcript implements Comparable<Transcript> {
             }
             
             isNonCoding=false;
-            if (codingSpan.getStart()==codingSpan.getEnd()) {
+            //if (codingSpan.getStart()==codingSpan.getEnd()) {
+            if (codingSpan.getEnd()-codingSpan.getStart()<=1) {
                 isNonCoding=true;
             }
             haveGotten5primeExon=false;

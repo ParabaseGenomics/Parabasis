@@ -218,7 +218,7 @@ public class GeneModelCollection {
                     geneModel.Collapse();
                     transcript = geneModel.getCollapsedTranscript();
                 }
-                 
+                
                 //if (transcript.isNonCoding()) {
                 //    continue;
                 //}

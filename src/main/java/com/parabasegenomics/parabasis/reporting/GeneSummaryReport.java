@@ -104,7 +104,7 @@ public class GeneSummaryReport extends Report {
         
         StringBuilder reportLine = new StringBuilder();
         reportLine.append(name);
-     
+        
         List<AnnotatedInterval> annotatedIntervals
             = annotationSummary.annotate(intervals);
 
@@ -118,7 +118,6 @@ public class GeneSummaryReport extends Report {
                 continue;
             }
             for (AnnotatedInterval annotatedInterval : annotatedIntervals) {
-              
                 annotatedLength 
                     += Integer.valueOf(annotatedInterval.getAnnotation(key));
                 length += annotatedInterval.length();
