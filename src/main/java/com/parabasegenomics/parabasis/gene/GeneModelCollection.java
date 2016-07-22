@@ -222,8 +222,9 @@ public class GeneModelCollection {
                 //if (transcript.isNonCoding()) {
                 //    continue;
                 //}
-                /**
-                // non-coding transcripts need to be included
+               
+                // non-coding transcripts need to be included in coding tables
+                // because the coding tables are what the GCs see.
                 if (transcript.isNonCoding()) {
                     String name=gene;
                     
@@ -239,7 +240,6 @@ public class GeneModelCollection {
                             name));
                     continue;
                 }
-                */
                 
                 String chromosome = transcript.getChromosome();
                 Exon exon 
