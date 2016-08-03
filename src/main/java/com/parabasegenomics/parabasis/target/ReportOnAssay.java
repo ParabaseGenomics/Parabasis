@@ -105,10 +105,10 @@ public class ReportOnAssay {
         annotatedIntervals = new ArrayList<>();
        
         assayReportFile = new File(fileToWrite + ".assay.report.txt");
-        targetReportFile = new File(fileToWrite + ".report.bed");
-        codingTargetReportFile = new File(fileToWrite + ".coding.report.bed");
-        summaryReportFile = new File(fileToWrite+ ".summary.txt");
-        codingSummaryReportFile = new File(fileToWrite + ".coding.summary.txt");
+        targetReportFile = new File(fileToWrite + ".target.report.bed");
+        codingTargetReportFile = new File(fileToWrite + ".coding.target.report.bed");
+        summaryReportFile = new File(fileToWrite+ ".gene.summary.txt");
+        codingSummaryReportFile = new File(fileToWrite + ".coding.gene.summary.txt");
         codingAssayReportFile = new File(fileToWrite + ".coding.assay.report.txt");
        
         assayCoverageModel = null;
