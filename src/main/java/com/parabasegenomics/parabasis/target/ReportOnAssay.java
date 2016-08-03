@@ -107,8 +107,8 @@ public class ReportOnAssay {
         assayReportFile = new File(fileToWrite + ".assay.report.txt");
         targetReportFile = new File(fileToWrite + ".target.report.bed");
         codingTargetReportFile = new File(fileToWrite + ".coding.target.report.bed");
-        summaryReportFile = new File(fileToWrite+ ".gene.summary.txt");
-        codingSummaryReportFile = new File(fileToWrite + ".coding.gene.summary.txt");
+        summaryReportFile = new File(fileToWrite+ ".gene.report.txt");
+        codingSummaryReportFile = new File(fileToWrite + ".coding.gene.report.txt");
         codingAssayReportFile = new File(fileToWrite + ".coding.assay.report.txt");
        
         assayCoverageModel = null;
