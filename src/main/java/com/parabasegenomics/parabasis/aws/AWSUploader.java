@@ -201,7 +201,7 @@ public class AWSUploader extends Application {
      * @return A String with the AWS KMS key ID
      * @throws java.io.FileNotFoundException
      */
-    public String readFromCredentialsFile() 
+    private String readFromCredentialsFile() 
     throws FileNotFoundException, IOException {
         String key;
         BufferedReader reader 
