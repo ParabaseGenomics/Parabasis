@@ -153,6 +153,25 @@
                                 <goal>single</goal>
                             </goals>
                         </execution>
+                        <execution>
+                            <id>Build AWSDownload</id>
+                            <configuration>
+                                <appendAssemblyId>false</appendAssemblyId>
+                                <archive>
+                                    <manifest>
+                                        <mainClass>com.parabasegenomics.parabasis.aws.AWSDownloader</mainClass>
+                                    </manifest>
+                                </archive>
+                                <descriptorRefs>
+                                    <descriptorRef>jar-with-dependencies</descriptorRef>
+                                </descriptorRefs>
+                                <finalName>AWSDownload</finalName>
+                            </configuration>
+                            <phase>package</phase>
+                            <goals>
+                                <goal>single</goal>
+                            </goals>
+                        </execution>
                 </executions>
             </plugin>
             

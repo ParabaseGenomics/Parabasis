@@ -117,7 +117,7 @@ public class AWSDownloader {
      * @param destinationDirectory The downloaded files go into this directory.
      * @throws InterruptedException 
      */
-    public void downloadS3Bucket(
+    public void downloadS3BucketDirectory(
             String bucket,
             String keyPrefix,
             File destinationDirectory) 
@@ -170,5 +170,33 @@ public class AWSDownloader {
                 exception);
         }
     }
+    
+    /**
+     * Main method lets you download a file from S3 or a full directory.
+     * @param args
+     *      [0] == S3 bucket
+     *      [1] == key to file or directory
+     *      [2] == local file or directory to download to
+     *      [3] == file/directory switch: "S" for file, "D" for directory.
+     * @throws InterruptedException 
+     */
+    public static void main(String[] args) 
+    throws InterruptedException {
+        AWSDownloader awsDownloader = new AWSDownloader();
+        File file = new File(args[2]);
+        
+        System.out.println(args[0]);
+        System.out.println(args[1]);
+        System.out.println(args[2]);
+        System.out.println(args[3]);
+        if (args[3].equals("S")) {     
+            awsDownloader.downloadFileFromS3Bucket(args[0], args[1], file);
+        } else {
+            awsDownloader.downloadS3BucketDirectory(args[0],args[1],file);
+        }
+        System.exit(0);
+    }
+
+    
     
 }
