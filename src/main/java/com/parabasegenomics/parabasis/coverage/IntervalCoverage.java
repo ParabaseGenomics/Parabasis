@@ -23,6 +23,7 @@ public class IntervalCoverage {
     private final Mean mean;
     private final StandardDeviation standardDeviation;
     private double coefficientOfVariation;
+    private int [] coverageArray;
     
     /**
      * Construct with an Interval.
@@ -35,6 +36,7 @@ public class IntervalCoverage {
         mean = new Mean();       
         lowCoverageMean = new Mean();
         coefficientOfVariation=0.0;
+        coverageArray = new int [interval.length()];
     }
     
     /**
@@ -57,6 +59,7 @@ public class IntervalCoverage {
             standardDeviation=s;
             coefficientOfVariation=cv;  
             lowCoverageMean=new Mean();
+            coverageArray = new int [interval.length()];
     }
     
     /**
