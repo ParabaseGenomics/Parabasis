@@ -276,8 +276,7 @@ public class AWSUploader extends Application {
                     if (archiveBucket.equals(SANDBOX_CHOICE)) {
                         bucketName = RND_BUCKET;
                     }
-
-                    
+                   
                     List<File> files = getFileList();
                     List<File> compressedFiles = compressFiles(files);
                     File compressedFileDirectory
@@ -356,7 +355,7 @@ public class AWSUploader extends Application {
            @Override
            public void handle(ActionEvent event) {
                transferManager.shutdownNow();
-               System.exit(0);
+               exit();
            }
         });
         
@@ -433,18 +432,16 @@ public class AWSUploader extends Application {
             fullPathToAlignmentDir 
                 = alignmentPathString + alignmentIteration;
         }
-
-        
+     
         String fullPathToCompressedDir
-            = new String(
-            basePathString 
+            = basePathString 
             + "\\"
             + runName
             + "\\"
             + midPathString
             + "\\"
-            + fullPathToAlignmentDir 
-            + "\\Compressed");
+            + fullPathToAlignmentDir
+            + "\\Compressed";
 
         return fullPathToCompressedDir;
     }
@@ -518,6 +515,7 @@ public class AWSUploader extends Application {
            
         File sfs = new File(fullPathToAlignmentDir);
         File [] fileArray = sfs.listFiles(new FilenameFilter() {
+            @Override
             public boolean accept(File dir, String name) {
                 return (name.startsWith(sampleFileIdentifier));  
             }
