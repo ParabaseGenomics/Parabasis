@@ -45,7 +45,7 @@ public class AWSMonitor {
     private final ScheduledExecutorService scheduler =
         Executors.newScheduledThreadPool(5);
             
-    private static Logger logger 
+    private static final Logger logger 
         = Logger.getLogger(AWSMonitor.class.getName());
 
     private static FileHandler fileHandler;
@@ -81,12 +81,16 @@ public class AWSMonitor {
     
     /**
      * Constructor. 
+     * @param assay
+     * @param S3bucket
+     * @throws java.io.IOException
      */           
-    public AWSMonitor() throws IOException {
+    public AWSMonitor(String assay, String S3bucket) 
+    throws IOException {
           
         vcfFileETags = new TreeSet<>();
         downloader = new AWSDownloader();
-        bucket = downloader.getBucket();
+        bucket = S3bucket;
         
         listObjectsRequest = new ListObjectsRequest()
         .withBucketName(bucket)
@@ -235,7 +239,7 @@ public class AWSMonitor {
             + vcfFileSuffix;
         File localCopy = new File(localPathToDownloadedFile);
         
-        downloader.downloadFromAWS(
+        downloader.downloadFileFromS3Bucket(
             bucket,
             key,
             localCopy);           
@@ -305,8 +309,20 @@ public class AWSMonitor {
         }
     }
     
-    public static void main(String[] args) throws IOException {
-        AWSMonitor awsMonitor = new AWSMonitor();
+    /**
+     * Main class: create a new monitor with assay name and s3bucket and start
+     * it up.
+     * @param args: 
+     *      [0] == Name of the assay/test to be monitored.
+     *      [1] == S3 Bucket to monitor.
+     * @throws IOException 
+     */
+    public static void main(String[] args) 
+    throws IOException {
+        String assay = args[0];
+        String s3bucket = args[1];
+        AWSMonitor awsMonitor 
+            = new AWSMonitor(assay,s3bucket);
         awsMonitor.monitor();
     }
     

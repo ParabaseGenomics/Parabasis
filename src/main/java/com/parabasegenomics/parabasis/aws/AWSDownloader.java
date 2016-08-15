@@ -13,6 +13,7 @@ import com.amazonaws.services.s3.AmazonS3EncryptionClient;
 import com.amazonaws.services.s3.model.CryptoConfiguration;
 import com.amazonaws.services.s3.model.KMSEncryptionMaterialsProvider;
 import com.amazonaws.services.s3.transfer.Download;
+import com.amazonaws.services.s3.transfer.MultipleFileDownload;
 import com.amazonaws.services.s3.transfer.TransferManager;
 import java.io.BufferedReader;
 import java.io.File;
@@ -28,41 +29,35 @@ import java.util.logging.Logger;
  *
  * @author evanmauceli
  */
-public class AWSDownloader {
-      private static AmazonS3EncryptionClient encryptionClient;
+public class AWSDownloader {   
+    private static final String KEY_TAG = "[kms]";
+    private static final String EQUALS = "=";
+    
+    //final static String PRODUCTION_BUCKET = "parabase.genomics.production";
+    private static final String DATE_FORMAT = "yyyy-MM-dd-HH:mm:ss";
+    private static final String PROFILE_NAME = "ParabasisAWSDownloader";
     
     private static final File credentialsFile 
         = new File(System.getProperty("user.home")+"/.aws/kms_credentials");
     
-    private static final String KEY_TAG = "[kms]";
-    private final static String EQUALS = "=";
-    
-    final static String PRODUCTION_BUCKET = "parabase.genomics.production";
-    final static String DATE_FORMAT = "yyyy-MM-dd-HH:mm:ss";
-
-    final static String PROFILE_NAME = "ParabaseProdutionDownloader";
-    
-    TransferManager transferManager; 
-    
-    private static FileHandler fileHandler;
-    private String kms_cmk_id;  
-          
-    private static Logger logger 
+    private static final Logger logger 
         = Logger.getLogger(AWSDownloader.class.getName());
-
-    private final static String logFileName = "AWSDownloader.log";
+    private static final String logFileName = "AWSDownloader.log";
     
-        
+    private final TransferManager transferManager; 
+    
+    private static AmazonS3EncryptionClient encryptionClient;
+    private static FileHandler fileHandler;
+    private String kms_cmk_id;      
+          
     public AWSDownloader() {
         System.setProperty(SDKGlobalConfiguration.ENABLE_S3_SIGV4_SYSTEM_PROPERTY, "true");
                 
         try {
             fileHandler = new FileHandler("%h/"+logFileName,true);
         } catch (IOException ex) {
-          ex.printStackTrace();
         }
 
-        logger.setLevel(Level.ALL);
         fileHandler.setLevel(Level.ALL);
         logger.setLevel(Level.ALL);
         logger.setUseParentHandlers(false);
@@ -84,15 +79,14 @@ public class AWSDownloader {
             .withRegion(Region.getRegion(Regions.US_EAST_1));
         
         transferManager 
-                = new TransferManager(encryptionClient);
-                
+                = new TransferManager(encryptionClient);               
     }
 
             /**
      * Method to return the AWS KMS key ID from the credentials file.
      * @return A String with the AWS KMS key ID
      */
-    public String readFromCredentialsFile() 
+    private String readFromCredentialsFile() 
     throws FileNotFoundException, IOException {
         String key;
         BufferedReader reader 
@@ -107,16 +101,7 @@ public class AWSDownloader {
         }
         throw new IOException("Cannot find KMS key in credentials file.");
     }
-    
-    
-    /**
-     * 
-     * @return Returns the bucket we're downloading from
-     */
-    public String getBucket() {
-        return PRODUCTION_BUCKET;
-    }
-    
+     
     /**
      *  
      * @return Returns the AWS S3 encryption client used for download.
@@ -126,26 +111,64 @@ public class AWSDownloader {
     }
     
     /**
-     * Method to download a file from an S3 bucket
-     * @param bucket AWS S3 bucket containing the file.
-     * @param key AWS S3 key to file.
-     * @param file The downloaded file.
+     * Method to download all contents from an S3 bucket to a local directory.
+     * @param bucket AWS S3 bucket.
+     * @param keyPrefix AWS S3 key to the "directory" containing the files.
+     * @param destinationDirectory The downloaded files go into this directory.
      * @throws InterruptedException 
      */
-    public void downloadFromAWS(
+    public void downloadS3Bucket(
+            String bucket,
+            String keyPrefix,
+            File destinationDirectory) 
+    throws InterruptedException {        
+        MultipleFileDownload download 
+                = transferManager
+                    .downloadDirectory(bucket, keyPrefix, destinationDirectory);
+        
+        String logString 
+            = "Downloading: " 
+            + bucket 
+            + "/" 
+            + keyPrefix 
+            + " to " 
+            + destinationDirectory;
+        logger.log(Level.INFO,logString);
+        download.waitForCompletion();
+    }
+    
+    /**
+     * Method to download a single file from an S3 bucket
+     * @param bucket AWS S3 bucket containing the file.
+     * @param key AWS key to the file.
+     * @param destinationFile Where to put the downloaded file.
+     * @throws InterruptedException 
+     */
+    public void downloadFileFromS3Bucket(
             String bucket,
             String key,
-            File file) 
+            File destinationFile) 
     throws InterruptedException {   
         try {
             Download download 
-                = transferManager.download(bucket, key, file);   
-            logger.log(Level.INFO, "Downloading: "  + bucket + "/" + key + " to " + file);
-            download.waitForCompletion();
+                = transferManager
+                    .download(bucket, key, destinationFile);        
+                String logString 
+                    = "Downloading: " 
+                    + bucket 
+                    + "/" 
+                    + key 
+                    + " to " 
+                    + destinationFile;
+                    logger.log(Level.INFO,logString);
+        download.waitForCompletion();
         } catch (InterruptedException exception) {
-            logger.log(Level.SEVERE,
-            "Exception downloading:" + file.getAbsolutePath(),
-            exception);
+            logger
+                .log(Level.SEVERE,
+                "Exception downloading:"
+                + destinationFile.getAbsolutePath(),
+                exception);
         }
     }
+    
 }

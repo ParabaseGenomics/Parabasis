@@ -32,14 +32,14 @@ public class GeneSummaryReportTest {
         reportFile = new File("src/main/resources/tmpg.txt");
         summary = new AnnotationSummary();
         intervals = reader.readBEDFile(intervalsFile.getAbsolutePath());
- 
     }
 
     /**
      * Test of setAnnotationSummary method, of class GeneSummaryReport.
-     */
+     * @throws java.lang.Exception    */
     @Test
-    public void testSetAnnotationSummary() throws Exception {
+    public void testSetAnnotationSummary() 
+    throws Exception {
         System.out.println("setAnnotationSummary");
         GeneSummaryReport instance = new GeneSummaryReport(reportFile);
         instance.setAnnotationSummary(summary);
@@ -47,9 +47,11 @@ public class GeneSummaryReportTest {
 
     /**
      * Test of reportOn method, of class GeneSummaryReport.
+     * @throws java.lang.Exception
      */
     @Test
-    public void testReportOn() throws Exception {
+    public void testReportOn() 
+    throws Exception {
         System.out.println("reportOn");
         String name = "ESPN";
         GeneSummaryReport instance = new GeneSummaryReport(reportFile);
