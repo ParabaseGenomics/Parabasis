@@ -49,7 +49,7 @@ public class FindCnvCandidates {
         File modelFile = new File(initFilepath + ".model");
         
         if (!modelFile.exists()) {    
-            coverageModel.initialize(new File(initFilepath));
+            coverageModel.initializeFromResourceFile(new File(initFilepath));
             coverageModel.writeToFile(modelFile);
         } else {
             CoverageModelReport coverageModelReport 

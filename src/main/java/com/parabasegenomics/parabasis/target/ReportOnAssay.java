@@ -150,7 +150,7 @@ public class ReportOnAssay {
         assayCoverageModel = new AssayCoverageModel(assayName);
         coverageResourceFile = new File(resourceFilepath);
         assayCoverageModel.setLowCoverageThreshold(coverageThreshold);
-        assayCoverageModel.initialize(coverageResourceFile);  
+        assayCoverageModel.initializeFromResourceFile(coverageResourceFile);  
     }
     
     /**
@@ -161,7 +161,10 @@ public class ReportOnAssay {
      */
     public void resetCoverageModel() 
     throws IOException {
-        assayCoverageModel.initializeFromList(codingIntervals);
+        assayCoverageModel
+            .initializeFromResourceFileAndIntervals(
+                coverageResourceFile,
+                codingIntervals);
     }
     
     /**

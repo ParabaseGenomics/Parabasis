@@ -7,12 +7,20 @@ package com.parabasegenomics.parabasis.coverage;
 
 import com.parabasegenomics.parabasis.reporting.CoverageModelReport;
 import com.parabasegenomics.parabasis.util.Reader;
+import htsjdk.samtools.SAMFileHeader;
+import htsjdk.samtools.SAMRecord;
+import htsjdk.samtools.SAMRecordIterator;
+import htsjdk.samtools.SamReader;
+import htsjdk.samtools.SamReaderFactory;
+import htsjdk.samtools.ValidationStringency;
 import htsjdk.samtools.util.Interval;
+import htsjdk.samtools.util.OverlapDetector;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -36,11 +44,15 @@ public class AssayCoverageModel {
     private final List<IntervalCoverage> intervalCoverages;
     private final Reader utilityReader;
     private final Map<String,Integer> modelIntervalIndexMap;
-    private Double zscoreThreshold;
-    private JsonObject jsonObject;
-    private Double lowCoverageThreshold;
+    private final SamReaderFactory samReaderFactory ;
     
-    private CoverageModelReport report;
+    private Double zscoreThreshold;
+    private JsonReader jsonReader;
+    private Double lowCoverageThreshold;  
+    private CoverageModelReport report;  
+    private SAMFileHeader samFileHeader;     
+    private SamReader samReader;
+    
     
     public AssayCoverageModel(String name) {
         assayName=name;
@@ -48,8 +60,13 @@ public class AssayCoverageModel {
         utilityReader = new Reader();
         modelIntervalIndexMap = new HashMap<>();
         zscoreThreshold=null;
-        jsonObject=null;
+        jsonReader=null;
         lowCoverageThreshold=null;
+           
+        samReaderFactory 
+            = SamReaderFactory.makeDefault()
+                .validationStringency(ValidationStringency.SILENT);
+    
     }
     
     /**
@@ -213,7 +230,7 @@ public class AssayCoverageModel {
             return null;
         } else {
             if (lowCoverageThreshold != null) {
-                return intervalCoverages.get(index).getLowCoverageMean();
+                return intervalCoverages.get(index).getLowCoverageCount(lowCoverageThreshold);
             } else {
                 return null;
             }
@@ -240,12 +257,11 @@ public class AssayCoverageModel {
      * @throws FileNotFoundException
      * @throws IOException 
      */
-    public void initialize(File file) 
+    public void initializeFromResourceFile(File file) 
     throws FileNotFoundException, IOException {
        
-        JsonReader reader 
-            = Json.createReader(new FileReader(file.getAbsolutePath()));
-        jsonObject = reader.readObject();
+        jsonReader = Json.createReader(new FileReader(file.getAbsolutePath()));
+        JsonObject jsonObject = jsonReader.readObject();
              
         JsonArray bamArray = jsonObject.getJsonArray(BAM);
               
@@ -254,7 +270,9 @@ public class AssayCoverageModel {
            targetsFilepath = jsonObject.getString(TARGETS);
         }
         List<Interval> intervals = utilityReader.readBEDFile(targetsFilepath);
-
+        OverlapDetector targetOverlapDetector = new OverlapDetector<>(0,0);
+        targetOverlapDetector.addAll(intervals,intervals);
+        
         // create a new IntervalCoverage object for each target in the assay
         // set the mapping of interval to index in list
         Integer index=0;
@@ -264,59 +282,44 @@ public class AssayCoverageModel {
             index++;
         }
 
-        // loop over IC objects in member list
-        //      loop over BAMs
-        //          calculate average coverage over IC's interval
         for (index=0; index<bamArray.size(); index++) {    
             String bamFilepath = bamArray.getString(index);
-            BamCoverage bamCoverage 
-                = new BamCoverage(bamFilepath);
-            for (IntervalCoverage intervalCoverage : intervalCoverages) {
-                intervalCoverage
-                    .update(
-                        bamCoverage
-                            .getCoverage(
-                                intervalCoverage
-                                    .getInterval()));
-                
-                if (lowCoverageThreshold != null) {
-                    List<Interval> lowCoverageBases 
-                        = bamCoverage.
-                            getLowCoverage(
-                                intervalCoverage.getInterval(),
-                                lowCoverageThreshold.intValue());
-                    Double lowCoverageBasesCount=0.0;
-                    for (Interval lowCoverageInterval : lowCoverageBases) {
-                        lowCoverageBasesCount+=(lowCoverageInterval.length()-1);
-                    }
-                    intervalCoverage.updateLowCoverage(lowCoverageBasesCount);
-                }
-            }
-            bamCoverage.closeBamFile();
+            File bamFile = new File(bamFilepath);
+            parseBam(bamFile,targetOverlapDetector);
         }
-     
     }
-   
+    
     /**
-     * Re-calculate coverage on the provided list of intervals.  Does not reload
-     * the json resource file and throws an IOException if it is called without
-     * first having called the initialize method.
+     * Initial the current model from a json resource file and the provided 
+     * list of intervals.  This overrides the intervals specified in the 
+     * json file.
+     * @param file
      * @param intervals
      * @throws FileNotFoundException
      * @throws IOException 
      */
-    public void initializeFromList(List<Interval> intervals) 
+    public void initializeFromResourceFileAndIntervals(
+        File file,
+        List<Interval> intervals) 
     throws FileNotFoundException, IOException {
-        
-        if (jsonObject == null) {
-            throw new IOException("Have not read in resources file.");
-        }
-        JsonArray bamArray = jsonObject.getJsonArray(BAM);
-        
-        // clear out the old to make room for the new
+       
         intervalCoverages.clear();
         modelIntervalIndexMap.clear();
         
+        jsonReader = Json.createReader(new FileReader(file.getAbsolutePath()));
+        JsonObject jsonObject = jsonReader.readObject();
+             
+        JsonArray bamArray = jsonObject.getJsonArray(BAM);
+              
+        String targetsFilepath=null;
+        if (jsonObject.containsKey(TARGETS)) {
+           targetsFilepath = jsonObject.getString(TARGETS);
+        }
+        OverlapDetector targetOverlapDetector = new OverlapDetector<>(0,0);
+        targetOverlapDetector.addAll(intervals,intervals);
+        
+        // create a new IntervalCoverage object for each target in the assay
+        // set the mapping of interval to index in list
         Integer index=0;
         for (Interval interval : intervals) {
             intervalCoverages.add(new IntervalCoverage(interval));
@@ -324,36 +327,85 @@ public class AssayCoverageModel {
             index++;
         }
 
-        // loop over IC objects in member list
-        //      loop over BAMs
-        //          calculate average coverage over IC's interval
         for (index=0; index<bamArray.size(); index++) {    
             String bamFilepath = bamArray.getString(index);
-            BamCoverage bamCoverage 
-                = new BamCoverage(bamFilepath);
-            for (IntervalCoverage intervalCoverage : intervalCoverages) {
-                intervalCoverage
-                    .update(
-                        bamCoverage
-                            .getCoverage(
-                                intervalCoverage
-                                    .getInterval()));
-                if (lowCoverageThreshold != null) {
-                    List<Interval> lowCoverageBases 
-                        = bamCoverage.
-                            getLowCoverage(
-                                intervalCoverage.getInterval(),
-                                lowCoverageThreshold.intValue());
-                    
-                    Double lowCoverageBasesCount=0.0;
-                    for (Interval lowCoverageInterval : lowCoverageBases) {
-                        lowCoverageBasesCount+=(lowCoverageInterval.length()-1);
-                    }
-                    intervalCoverage.updateLowCoverage(lowCoverageBasesCount);
-                }
-            }
-            bamCoverage.closeBamFile();
+            File bamFile = new File(bamFilepath);
+            parseBam(bamFile,targetOverlapDetector);
         }
     }
     
+    /**
+     * Read through a bam file record by record, updating the appropriate IntervalCoverage 
+     * objects as we go.  This method ignores the following reads:
+     *      Fails vendor quality 
+     *      Not primary alignment
+     *      Unmapped read
+     *      Duplicate read
+     * @param bamFile Bam file to parse.
+     * @param overlapDetector
+     * @throws java.io.IOException
+     */
+    public void parseBam(File bamFile,OverlapDetector overlapDetector) 
+    throws IOException {
+        samReader = samReaderFactory.open(bamFile);
+
+        SAMRecordIterator samRecordIterator = samReader.iterator();
+        SAMRecord samRecord;
+        while (samRecordIterator.hasNext()) {
+            samRecord = samRecordIterator.next();
+            if (samRecord.getReadFailsVendorQualityCheckFlag()) {
+                continue;
+            }
+            if (samRecord.getNotPrimaryAlignmentFlag()) {
+                continue;
+            } 
+            if (samRecord.getReadUnmappedFlag()) {
+                continue;
+            }
+            if (samRecord.getDuplicateReadFlag()) {
+                continue;
+            }
+
+            Interval recordInterval 
+                = new Interval(
+                    samRecord.getReferenceName(),
+                    samRecord.getAlignmentStart(),
+                    samRecord.getAlignmentEnd());
+
+            Collection<Interval> overlappingTargets 
+                = overlapDetector.getOverlaps(recordInterval);
+
+            for (Interval overlappingTarget : overlappingTargets) {
+                String overlappingTargetAsString 
+                    = stringifyInterval(overlappingTarget);
+                if (!modelIntervalIndexMap
+                    .containsKey(overlappingTargetAsString)) {
+                    throw new IllegalArgumentException(
+                        "Could not find interval in model: "
+                        + overlappingTargetAsString);
+                }
+                int indexIntoIntervalCoverages 
+                    = modelIntervalIndexMap.get(stringifyInterval(overlappingTarget));
+
+                final IntervalCoverage intervalCoverage 
+                    = intervalCoverages.get(indexIntoIntervalCoverages);
+                for (int position = samRecord.getAlignmentStart(); 
+                         position <= samRecord.getAlignmentEnd();
+                        ++position) {
+                    // the -1 is to convert from htsjdk intervals to ours
+                    intervalCoverage.incrementCoverageCount(position-1);
+                }
+            }              
+        }        
+        samReader.close();
+        // a small hack to fit the new way of interacting with an IntervalCoverage
+        // (per base) with the old way (per target)
+        for (IntervalCoverage intervalCoverage : intervalCoverages) {
+            intervalCoverage.summarize();
+        }
+    }
+     
 }
+   
+
+   

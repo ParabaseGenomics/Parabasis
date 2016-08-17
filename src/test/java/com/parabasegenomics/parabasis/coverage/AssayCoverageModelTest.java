@@ -32,7 +32,8 @@ public class AssayCoverageModelTest {
     @Before
     public void setUp() 
     throws IOException {
-        instance.initialize(new File(jsonFile));
+        instance.initializeFromResourceFile(new File(jsonFile));
+        Interval val = new Interval("chr1",6484847,6485319);
         instance.setThreshold(2.0);
         instance.setLowCoverageThreshold(20.0);
         
@@ -58,7 +59,7 @@ public class AssayCoverageModelTest {
         intervalCoverage.update(20.0);
 
         AssayCoverageModel model = new AssayCoverageModel("Test");      
-        model.initialize(new File(jsonFile));
+        model.initializeFromResourceFile(new File(jsonFile));
         
         boolean expResult = true;
         model.setThreshold(2.0);
@@ -76,7 +77,7 @@ public class AssayCoverageModelTest {
             = new IntervalCoverage(new Interval("chr1",6484847,6485319));
         intervalCoverage.update(2500.0);
         
-        Double expResult = -14.9;
+        Double expResult = -16.8;
         Double result = instance.getZscore(intervalCoverage);
         assertEquals(expResult, result, 0.1);
         
