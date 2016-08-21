@@ -77,7 +77,7 @@ public class AssayCoverageModelTest {
             = new IntervalCoverage(new Interval("chr1",6484847,6485319));
         intervalCoverage.update(2500.0);
         
-        Double expResult = -16.8;
+        Double expResult = -14.9;
         Double result = instance.getZscore(intervalCoverage);
         assertEquals(expResult, result, 0.1);
         

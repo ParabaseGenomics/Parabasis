@@ -230,7 +230,9 @@ public class AssayCoverageModel {
             return null;
         } else {
             if (lowCoverageThreshold != null) {
-                return intervalCoverages.get(index).getLowCoverageCount(lowCoverageThreshold);
+                return intervalCoverages
+                    .get(index)
+                    .getLowCoverageCount(lowCoverageThreshold);
             } else {
                 return null;
             }

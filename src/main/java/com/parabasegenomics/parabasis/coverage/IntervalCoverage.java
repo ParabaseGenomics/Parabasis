@@ -37,7 +37,7 @@ public class IntervalCoverage {
         standardDeviation = new StandardDeviation();
         mean = new Mean();       
         coefficientOfVariation=0.0;
-        coverageArray = new double [interval.length()];
+        coverageArray = new double [interval.length()-1];
         offset = interval.getStart();
     }
     
