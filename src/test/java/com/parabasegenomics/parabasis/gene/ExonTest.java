@@ -102,7 +102,7 @@ public class ExonTest {
             67000041,
             67000051));
         
-        Exon result = exons.get(0).getCodingExon();
+        Exon result = exons.get(0).getCodingExon(0);
         assertEquals(expResult.getChromosome(), result.getChromosome());
         assertEquals(expResult.getStart(),result.getStart());
         assertEquals(expResult.getEnd(),result.getEnd());
@@ -117,7 +117,7 @@ public class ExonTest {
 
         Exon expResult = exons.get(1);
         
-        Exon result = exons.get(1).getCodingExon();
+        Exon result = exons.get(1).getCodingExon(0);
         assertEquals(expResult.getChromosome(), result.getChromosome());
         assertEquals(expResult.getStart(),result.getStart());
         assertEquals(expResult.getEnd(),result.getEnd());
@@ -134,9 +134,8 @@ public class ExonTest {
             = new Interval("chr1",66999824,67000051,FALSE,"1");
         Exon exon1 
             = new Exon(interval1);
-            
-        Exon result = exon1.getCodingExon();
-        assertEquals(null,result);
+
+        assertEquals(0,exon1.getNumberOfCodingIntervals());
     }
 
  

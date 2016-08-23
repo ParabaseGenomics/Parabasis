@@ -105,6 +105,10 @@ public class GeneModel implements Comparable<GeneModel> {
         String chromosome = transcriptSpanInterval.getContig();
         
         // rely on java spec to enforce that ints are initialized to zero
+        //
+        // in this one place we use the htsjdk definition of length as it is one
+        // base longer than we need which ensures we capture the last processed
+        // exon
         int [] sequenceArray = new int[transcriptSpanInterval.length()];
    
         int offset = transcriptSpanInterval.getStart();
@@ -179,8 +183,6 @@ public class GeneModel implements Comparable<GeneModel> {
                 start=i+offset;
             } else if (markup && sequenceArray[i]==0) {
                 markup=false;
-                end=i+offset;
-
                 exonCount++;
             }     
         }
@@ -208,8 +210,7 @@ public class GeneModel implements Comparable<GeneModel> {
                 if (isRC) {
                     exonName = Integer.toString(exonCount-exonIndex+1);
                 }
-                
-                
+     
                 Exon exon = new Exon(
                     new Interval(
                         chromosome,start,end,isRC,exonName));
@@ -217,20 +218,40 @@ public class GeneModel implements Comparable<GeneModel> {
                 // look for coding portions of this exon
                 int codingExonStart=0;
                 int codingExonEnd=0;
+                boolean codingMarkup=false;
                 for (int exonBase=start-offset; exonBase<=end-offset; exonBase++) {
-                    if (codingExonStart==0 && sequenceArray[exonBase]==2) {
+                    if (!codingMarkup && sequenceArray[exonBase]==2) {
                         codingExonStart=exonBase+offset;
+                        codingMarkup=true;
                     }
-                    if (sequenceArray[exonBase]==2) {
+                    if (codingMarkup && sequenceArray[exonBase]<2) {
                         codingExonEnd=exonBase+offset;
+                        
+                        if (codingExonStart != codingExonEnd) {
+                            exon.addCodingInterval(
+                                new Interval(
+                                    chromosome,
+                                    codingExonStart,
+                                    codingExonEnd,
+                                    isRC,
+                                    exonName));
+                        }
+                        codingMarkup=false;
                     }
                 }
-                     
-                if (codingExonStart != codingExonEnd) {
-                    exon.addCodingInterval(
-                        new Interval(
-                            chromosome,codingExonStart,codingExonEnd+1,isRC,exonName));
-                }
+                if (codingMarkup) {
+                    codingExonEnd=end+offset;
+                    if (codingExonStart != codingExonEnd) {
+                        exon.addCodingInterval(
+                            new Interval(
+                                chromosome,
+                                codingExonStart,
+                                codingExonEnd,
+                                isRC,
+                                exonName));
+                    }    
+                }     
+                
                 collapsedExons.add(exon);
                 exonIndex++;
                 codingExonStart=0;
@@ -504,61 +525,6 @@ public class GeneModel implements Comparable<GeneModel> {
             .equals(dash)) {
                 overlapStringBuilder.deleteCharAt(overlapStringBuilder.length()-1);
         }
-        return overlapStringBuilder.toString();
-    }
-    
-    /**
-     * Method to find overlap between the given Interval and the coding
-     * portion of a gene model. 
-     * 
-     * @param interval Takes an Interval.
-     * @return Returns a String with the portions of each transcript overlapping
-     * the given interval. Returns null if there is no overlap.
-     * 
-     * TODO: 5', 3' utr where applicable
-     * TODO: introns, promoter.
-     * TODO: splicing
-     * TODO: remove trailing dash
-     * 
-     * @throws java.io.IOException
-     * 
-     */
-    public String overlapCoding(Interval interval) 
-    throws IOException {
-        String overlapString = null;
-               
-        // fail as early as possible
-        if (!interval.intersects(collapsedTranscript.getCodingInterval())) {
-            return overlapString;
-        }
-        
-        StringBuilder overlapStringBuilder = new StringBuilder();
-        
-        overlapStringBuilder.append(geneName);
-        overlapStringBuilder.append(colon);
-        for (Transcript transcript : transcripts) {
-            if (!transcript.getCodingInterval().intersects(interval)) {
-                continue;
-            }
-            
-            overlapStringBuilder.append(transcript.getTranscriptName());
-            overlapStringBuilder.append(dash);
-            
-            Exon exon = transcript.get5primeExon();
-            if (exon.getCodingExon().getInterval().intersects(interval)) {
-                overlapStringBuilder.append("Exon"+exon.getName());
-                overlapStringBuilder.append(dash);
-            }
-            while (transcript.hasNextExon()) {
-                exon = transcript.getNextExon().getCodingExon();
-                if (!exon.getInterval().intersects(interval)) {
-                    continue;
-                }
-                overlapStringBuilder.append("Exon"+exon.getName());
-                overlapStringBuilder.append(dash);             
-            }         
-        }
-        
         return overlapStringBuilder.toString();
     }
 }

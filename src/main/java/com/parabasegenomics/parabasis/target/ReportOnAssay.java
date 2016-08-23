@@ -438,9 +438,9 @@ public class ReportOnAssay {
                 = geneModelCollection
                     .createCodingTargets(geneToTarget, splicingDistance);
             codingSummaryReport.reportOn(intervals, gene);
-            //for (Interval i : intervals) {
-            //    System.out.println(i.getContig()+"\t"+i.getStart()+"\t"+i.getEnd()+"\t"+i.getName());
-            //}
+            for (Interval i : intervals) {
+                System.out.println(i.getContig()+"\t"+i.getStart()+"\t"+i.getEnd()+"\t"+i.getName());
+            }
         }
         codingSummaryReport.close();    
         

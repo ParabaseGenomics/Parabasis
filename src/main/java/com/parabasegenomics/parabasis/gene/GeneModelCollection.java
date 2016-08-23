@@ -242,64 +242,84 @@ public class GeneModelCollection {
                 }
                 
                 String chromosome = transcript.getChromosome();
-                Exon exon 
+                List<Exon> exons 
                     = transcript
                         .get5primeExon()
-                        .getCodingExon();
+                        .getCodingExons();
                 if (transcript.isNonCoding()) {
-                    exon = transcript.get5primeExon();
+                    exons.clear();
+                    exons.add(transcript.get5primeExon());
                 }
-                
-                
-                
-                if (exon != null) {
-                    String name = realGeneName + "_" + exon.getName();
 
-                    int start = exon.getStart();
-                    int end = exon.getEnd();
-                    if (transcript.getExonCount() > 1) {
-                        if (transcript.isRC()) {
-                            start -= splicingDistance;
-                        } else {
-                            end += splicingDistance;
+                if (!exons.isEmpty()) {
+                    String name = realGeneName + "_" + exons.get(0).getName();
+
+                    for (Exon exon : exons) {
+                        int start = exon.getStart();
+                        int end = exon.getEnd();
+                        if (transcript.getExonCount() > 1) {
+                            if (transcript.isRC()) {
+                                start -= splicingDistance;
+                            } else {
+                                end += splicingDistance;
+                            }
                         }
+                        targets
+                            .add(
+                                new Interval(
+                                    chromosome,
+                                    start,
+                                    end,
+                                    transcript.isRC(),
+                                    name));
                     }
-                    targets
-                        .add(
-                            new Interval(chromosome,start,end,transcript.isRC(),name));
                 }
                 
                 while (transcript.hasNextExon()) {
                     if (!transcript.isNonCoding()) {
-                        exon = transcript.getNextExon().getCodingExon();
+                        exons = transcript.getNextExon().getCodingExons();
                     } else {
-                        exon = transcript.getNextExon();
+                        exons.clear();
+                        exons.add(transcript.getNextExon());
                     }
-                    if (exon == null) {
+                    if (exons.isEmpty()) {
                         continue;
                     }
-                    String name = realGeneName + "_" + exon.getName();
-                    if (!transcript.is3primeExon()) {
-                        int start = exon.getStart() - splicingDistance;
-                        int end = exon.getEnd() + splicingDistance;
-                         //System.out.println("adding target " + chromosome +" "+start+" "+end);
-                        targets
-                            .add(
-                                new Interval(chromosome,start,end,transcript.isRC(),name));
-                    } else {
-                        int start = exon.getStart();
-                        int end = exon.getEnd();
-                        if (transcript.isRC()) {
-                            end += splicingDistance;
+                    String name = realGeneName + "_" + exons.get(0).getName();
+                    
+                    for (Exon exon : exons) {
+                        if (!transcript.is3primeExon()) {
+                            int start = exon.getStart() - splicingDistance;
+                            int end = exon.getEnd() + splicingDistance;
+                             //System.out.println("adding target " + chromosome +" "+start+" "+end);
+                            targets
+                                .add(
+                                    new Interval(
+                                        chromosome,
+                                        start,
+                                        end,
+                                        transcript.isRC(),
+                                        name));
                         } else {
-                            start -= splicingDistance;
-                        }
-                         //System.out.println("adding 3ptarget " + chromosome +" "+start+" "+end);
-                        targets
-                            .add(
-                                new Interval(chromosome,start,end,transcript.isRC(),name)); 
-                    }                   
-                } 
+                            int start = exon.getStart();
+                            int end = exon.getEnd();
+                            if (transcript.isRC()) {
+                                end += splicingDistance;
+                            } else {
+                                start -= splicingDistance;
+                            }
+                             //System.out.println("adding 3ptarget " + chromosome +" "+start+" "+end);
+                            targets
+                                .add(
+                                    new Interval(
+                                        chromosome,
+                                        start,
+                                        end,
+                                        transcript.isRC(),
+                                        name)); 
+                        }                   
+                    } 
+                }
             }
          }
                 

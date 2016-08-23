@@ -6,6 +6,8 @@
 package com.parabasegenomics.parabasis.gene;
 
 import htsjdk.samtools.util.Interval;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
@@ -22,14 +24,11 @@ import java.util.TreeMap;
 public class Exon {
     
     private final Interval interval;
-    private Interval codingInterval;
-    private final Map<String, String> valuesMap;
-    
+    private final List<Interval> codingIntervals;
     
     public Exon(Interval i) {
         interval=i;
-        codingInterval=null;
-        valuesMap = new TreeMap<>();
+        codingIntervals=new ArrayList<>();
     }
     
     /**
@@ -38,12 +37,11 @@ public class Exon {
      */
     public Exon(Exon toCopy) {
         this.interval = toCopy.getInterval();
-        this.codingInterval = toCopy.getCodingInterval();
-        this.valuesMap = toCopy.getValuesMap();
+        this.codingIntervals = toCopy.getCodingIntervals();
     }
     
     public void addCodingInterval(Interval i) {
-        codingInterval=i;
+        codingIntervals.add(i);
     }
     
     /**
@@ -57,12 +55,7 @@ public class Exon {
     public int getEnd() {
         return interval.getEnd();
     }
-    public int getCodingStart() {
-        return codingInterval.getStart();
-    }
-    public int getCodingEnd() {
-        return codingInterval.getEnd();
-    }
+    
     public String getName() {
         return interval.getName();
     }
@@ -72,46 +65,48 @@ public class Exon {
     public Interval getInterval() {
         return interval;
     } 
-    public Interval getCodingInterval() {
-        return codingInterval;
+    
+    public int getNumberOfCodingIntervals() {
+        return codingIntervals.size();
+    }
+    public Interval getCodingInterval(int index) {
+        return codingIntervals.get(index);
+    }
+    
+    public List<Interval> getCodingIntervals() {
+        return codingIntervals;
     }
     public int getLength() {
         return (interval.getEnd()-interval.getStart());
     }
     public int getCodingLength() {
-        return (codingInterval.getEnd()-interval.getStart());
+        int codingLength=0;
+        for (int i=0; i<codingIntervals.size(); i++) {
+            codingLength 
+                += (codingIntervals.get(i).getEnd()-codingIntervals.get(i).getStart());
+        }
+        return codingLength;
     }
-    
-    public String getValue(String key) {
-        return valuesMap.get(key);
-    }
-    public Map<String,String> getValuesMap() {
-        return valuesMap;
-    }
-    
-    /**
-     * Method to add a value to this exon, along with a descriptor(key). This is 
-     * intended to act as a weak but flexible decorator.
-     * @param key A short descriptor of the associated value.
-     * @param value A number associated with this exon.  It might be GC content.
-     * It might be low coverage percentage. It might be something else.
-     */
-    public void addKeyValuePair(String key, String value) {
-        valuesMap.put(key, value);
-    }
-    
+   
     
     /**
-     * Returns the coding-only portion of the exon or null if the exon is 
+     * Returns the coding-only portion of the exon or an empty array if the exon is 
      * completely non-coding.
      * @return 
      */
-    public Exon getCodingExon() {
-        if (codingInterval != null) {
-            return new Exon(codingInterval);
-        } else {
-            return null;
+    public List<Exon> getCodingExons() {
+        List<Exon> codingExons = new ArrayList<>();
+        if (!codingIntervals.isEmpty()) {
+            for (Interval codingInterval : codingIntervals) {
+                codingExons.add(
+                    new Exon(codingInterval));          
+            }
         }
+        return codingExons;
+    }
+    
+    public Exon getCodingExon(int index) {
+        return new Exon(getCodingInterval(index));
     }
     
 }
