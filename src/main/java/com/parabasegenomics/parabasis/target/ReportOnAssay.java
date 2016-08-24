@@ -49,6 +49,7 @@ public class ReportOnAssay {
     //to parse from json file specifying the resources for main
     private static final String BAM = "BAM";
     private static final String TARGETS = "TARGETS";
+    private static final String CODING = "CODINGTARGETS";
     private static final String CAPTURE = "CAPTURE";
     private static final String ASSAY = "ASSAY";
     private static final String HUMAN_REFERENCE = "REFERENCE";
@@ -92,7 +93,6 @@ public class ReportOnAssay {
     private final String assayName;
     private File coverageResourceFile;
     private Double coverageThreshold;
-    private boolean onlyExcludeUTRs;
     
     
     public ReportOnAssay(String fileToWrite, String name) {
@@ -118,8 +118,7 @@ public class ReportOnAssay {
         assayName = name;      
         decimalFormat = new DecimalFormat(formatPattern);
         coverageResourceFile  = null;
-        coverageThreshold=20.0;
-        onlyExcludeUTRs=false;      
+        coverageThreshold=20.0;     
     }
     
     
@@ -217,6 +216,17 @@ public class ReportOnAssay {
     }
     
     /**
+     * Loads the "coding" regions.
+     * @param codingTargetIntervalFile
+     * @throws IOException 
+     */
+    public void loadCodingTargetFile(String codingTargetIntervalFile) 
+    throws IOException {
+        codingIntervals = utilityReader.readBEDFile(codingTargetIntervalFile);
+    }
+    
+    
+    /**
      * Load the capture regions.
      * @param captureIntervalFile BED formatted file of capture intervals.
      * @throws IOException 
@@ -255,6 +265,11 @@ public class ReportOnAssay {
             throw new IOException(
                 "Must specify a targets file in the json resource");
         }
+        
+        String codingTargetIntervalFile = null;
+        if (jsonObject.containsKey(CODING)) {
+            codingTargetIntervalFile = jsonObject.getString(CODING);
+        } 
         
         String targetGenelistFile = null;
         if (jsonObject.containsKey(GENELIST)) {
@@ -310,6 +325,9 @@ public class ReportOnAssay {
         reportOnAssay.loadReferenceSequence(humanReferenceFile);
         
         reportOnAssay.loadTargetFile(targetIntervalFile);
+        if (codingTargetIntervalFile != null) {
+            reportOnAssay.loadCodingTargetFile(codingTargetIntervalFile);
+        }
         if (captureIntervalFile != null) {
             reportOnAssay.loadCaptureFile(captureIntervalFile);
         }
@@ -400,11 +418,9 @@ public class ReportOnAssay {
         summaryReport = new GeneSummaryReport(summaryReportFile);
         summaryReport.setAnnotationSummary(annotationSummary);      
         for (String gene : targetGenelist) {
-            Set<String> geneToTarget = new HashSet<>();
-            geneToTarget.add(gene);
             List<Interval> intervals 
-                = geneModelCollection
-                    .createTargets(geneToTarget, splicingDistance);
+                = selectIntervalsForGene(gene,targetIntervals);
+     
             summaryReport.reportOn(intervals, gene);
         }
         summaryReport.close();
@@ -431,19 +447,10 @@ public class ReportOnAssay {
           
         codingSummaryReport = new GeneSummaryReport(codingSummaryReportFile);
         codingSummaryReport.setAnnotationSummary(annotationSummary);
-        if (onlyExcludeUTRs) {
-            geneModelCollection.onlyExcludeUTRs();
-        }
         for (String gene : targetGenelist) {
-            Set<String> geneToTarget = new HashSet<>();
-            geneToTarget.add(gene);
-            List<Interval> intervals 
-                = geneModelCollection
-                    .createCodingTargets(geneToTarget, splicingDistance);
+            List<Interval> intervals
+                = selectIntervalsForGene(gene,codingIntervals);
             codingSummaryReport.reportOn(intervals, gene);
-            for (Interval i : intervals) {
-                System.out.println(i.getContig()+"\t"+i.getStart()+"\t"+i.getEnd()+"\t"+i.getName());
-            }
         }
         codingSummaryReport.close();    
         
@@ -453,4 +460,27 @@ public class ReportOnAssay {
         codingAssayReport.close();
         
     }   
+
+    /**
+     * Select intervals from the provided list that match a particular name.
+     * @param name
+     * @param intervals
+     * @return 
+     */
+    public List<Interval> selectIntervalsForGene(
+        String name, 
+        List<Interval> intervals) {
+
+        List<Interval> selectedIntervals = new ArrayList<>();
+        for (Interval interval : intervals) {
+            String intervalName = interval.getName();
+            if (intervalName.contains(name)) {
+                selectedIntervals.add(interval);
+            }
+        }
+
+        return selectedIntervals;
+    }
 }
+
+

@@ -24,6 +24,7 @@ public class Reader {
     
     private static final String TAB = "\t";
     private static final String NEG = "-";
+    private static final String POS = "+";
     
     private  BufferedReader reader;   
     private  File fileToRead;
@@ -46,15 +47,19 @@ public class Reader {
            String name = tokens[0];
            int start = Integer.parseInt(tokens[1]);
            int end = Integer.parseInt(tokens[2]);
+           String lineName = "";
            
            boolean negative = false;
            if (tokens.length >= 4) {
                if (tokens[3].equals(NEG)) {
                    negative = true;
+               } else if (tokens[3].equals(POS)) {
+                   negative = false;
+               } else {
+                   lineName = tokens[3];
                }
            }
-           
-           String lineName = "";
+        
            if (tokens.length >=5) {
                lineName = tokens[4];
            }

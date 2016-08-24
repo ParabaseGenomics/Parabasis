@@ -68,7 +68,7 @@ public class GeneModelCollection {
     public boolean isFullLength(String gene) {
         return (gene.contains(FULL_LENGTH));
     }
-    
+       
     /**
      * Turns the given list of genes into a list of sequencing targets.
      * 
