@@ -36,6 +36,7 @@ public class GeneModelCollection {
     
     private GeneCollectionFileReader geneCollectionFileReader;
     private Reader utilityReader;
+    private boolean onlyExcludeUTRs;
     
     /**
      * Constructor
@@ -44,8 +45,18 @@ public class GeneModelCollection {
         transcripts = new ArrayList<>();  
         isSorted = false;    
         genes = new ArrayList<>();
+        onlyExcludeUTRs=false;
     }
     
+    /**
+     * If set, only exclude UTRs when calculating non-coding targets instead
+     * of excluding all non-coding content.  This would be set when calculating
+     * "gaps" in production where you need to see if purely non-coding targets
+     * have sufficient read depth (i.e. KCNQ1OT1). 
+     */
+    public void onlyExcludeUTRs() {
+        onlyExcludeUTRs=true;
+    }
        
     /**
      * Full length genes have "_FL" appended to the end of the gene name
@@ -225,7 +236,7 @@ public class GeneModelCollection {
                
                 // non-coding transcripts need to be included in coding tables
                 // because the coding tables are what the GCs see.
-                if (transcript.isNonCoding()) {
+                if (onlyExcludeUTRs && transcript.isNonCoding()) {
                     String name=gene;
                     
                     int start = transcript.getTranscriptStart();
@@ -246,7 +257,7 @@ public class GeneModelCollection {
                     = transcript
                         .get5primeExon()
                         .getCodingExons();
-                if (transcript.isNonCoding()) {
+                if (onlyExcludeUTRs && transcript.isNonCoding()) {
                     exons.clear();
                     exons.add(transcript.get5primeExon());
                 }
@@ -278,7 +289,7 @@ public class GeneModelCollection {
                 while (transcript.hasNextExon()) {
                     if (!transcript.isNonCoding()) {
                         exons = transcript.getNextExon().getCodingExons();
-                    } else {
+                    } else if (onlyExcludeUTRs) {
                         exons.clear();
                         exons.add(transcript.getNextExon());
                     }

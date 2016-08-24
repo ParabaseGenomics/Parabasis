@@ -92,6 +92,7 @@ public class ReportOnAssay {
     private final String assayName;
     private File coverageResourceFile;
     private Double coverageThreshold;
+    private boolean onlyExcludeUTRs;
     
     
     public ReportOnAssay(String fileToWrite, String name) {
@@ -118,8 +119,7 @@ public class ReportOnAssay {
         decimalFormat = new DecimalFormat(formatPattern);
         coverageResourceFile  = null;
         coverageThreshold=20.0;
-        
-
+        onlyExcludeUTRs=false;      
     }
     
     
@@ -431,6 +431,9 @@ public class ReportOnAssay {
           
         codingSummaryReport = new GeneSummaryReport(codingSummaryReportFile);
         codingSummaryReport.setAnnotationSummary(annotationSummary);
+        if (onlyExcludeUTRs) {
+            geneModelCollection.onlyExcludeUTRs();
+        }
         for (String gene : targetGenelist) {
             Set<String> geneToTarget = new HashSet<>();
             geneToTarget.add(gene);
