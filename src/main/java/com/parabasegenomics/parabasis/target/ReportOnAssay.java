@@ -42,6 +42,7 @@ import javax.json.JsonReader;
  */
 public class ReportOnAssay {
     private final static String TAB = "\t";
+    private final static String UNDERSCORE = "_";
     private final static String NEWLINE = "\n";
     private final static String pctHomKey = HOM_KEY;
     private final static String geneKey = GENE_KEY;
@@ -474,7 +475,15 @@ public class ReportOnAssay {
         List<Interval> selectedIntervals = new ArrayList<>();
         for (Interval interval : intervals) {
             String intervalName = interval.getName();
-            if (intervalName.contains(name)) {
+            String geneName = intervalName;
+            int underscoreIndex = intervalName.indexOf(UNDERSCORE);
+            if (underscoreIndex != -1) {
+                geneName 
+                    = intervalName
+                        .substring(0,underscoreIndex);
+            }
+            
+            if (geneName.equals(name)) {
                 selectedIntervals.add(interval);
             }
         }

@@ -169,7 +169,7 @@ public class IntervalCoverage {
     public double getLowCoverageCount(Double threshold) {
         int lowCount = 0;
         for (int index=0;index<coverageArray.length; ++index) {
-            if (coverageArray[index]<threshold) {
+            if ((double) coverageArray[index]/count < threshold) {
                 //lowCount+=coverageArray[index];
                 ++lowCount;
             }
@@ -189,7 +189,7 @@ public class IntervalCoverage {
         int end = 0;
         boolean inGap=false;
         for (int index=0; index<coverageArray.length; ++index) {
-            if (coverageArray[index]<threshold) {
+            if ((double) coverageArray[index]/count <threshold) {
                 if (!inGap) {
                     start = index;
                     end = start;
