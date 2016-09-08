@@ -46,7 +46,8 @@ public class AnnotationSummary {
      */
     public boolean hasDecorator(String key) {
         for (IntervalDecorator decorator : decorators) {
-            if (decorator.getKey().equals(key)) {
+            if (decorator.getKey().equals(key) 
+                || key.contains(decorator.getKey())) {
                 return true;
             }
         }

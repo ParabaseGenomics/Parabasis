@@ -28,7 +28,7 @@ import java.util.List;
 public class GeneSummaryReport extends Report {
     
     private final static String HEADER
-        = "Gene\t%capture\t%uniq\t%gc\tcoverage\t%gaps\n";
+        = "Gene\t%capture\t%uniq\t%gc\tcoverage\t";
      
     private final DecimalFormat decimalFormat;
     
@@ -53,9 +53,7 @@ public class GeneSummaryReport extends Report {
         requiredKeys = new ArrayList<>();
         
         this.openForWriting();
-        
-        bufferedWriter.write(HEADER);     
-        //requiredKeys.add(GC_KEY);
+
         annotationSummary = null;
         
         orderedKeys = new ArrayList<>();
@@ -63,7 +61,7 @@ public class GeneSummaryReport extends Report {
         orderedKeys.add(HOM_KEY);
         orderedKeys.add(GC_KEY);
         orderedKeys.add(COVERAGE_KEY);
-        orderedKeys.add(GAPS_KEY);
+        //orderedKeys.add(GAPS_KEY);
         
         decimalFormat = new DecimalFormat(percentPattern);
         
@@ -85,6 +83,18 @@ public class GeneSummaryReport extends Report {
                         + key);
             }      
         }
+        // we may be using more than one threshold to calculate the gaps 
+        // percentage, fix the header here
+        String header = HEADER;
+        List<String> decoratorKeylist = annotationSummary.heldKeys();
+        for (String key : decoratorKeylist) {
+            if (key.contains(GAPS_KEY)) {
+                orderedKeys.add(key);
+                header += (key + TAB);
+            }
+        }
+        header+="\n";
+        bufferedWriter.write(header);  
     }
 
     /**
@@ -101,7 +111,7 @@ public class GeneSummaryReport extends Report {
         if (annotationSummary == null) {
             throw new IOException("AnnotationSummary is null.");
         }
-        
+
         StringBuilder reportLine = new StringBuilder();
         reportLine.append(name);
         

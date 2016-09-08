@@ -35,8 +35,6 @@ public class AssayCoverageModelTest {
         instance.initializeFromResourceFile(new File(jsonFile));
         Interval val = new Interval("chr1",6484847,6485319);
         instance.setThreshold(2.0);
-        instance.setLowCoverageThreshold(20.0);
-        
          IntervalCoverage addedCoverage
             = new IntervalCoverage(new Interval("chr1",6484847,6485319));
         addedCoverage.update(3600.0);

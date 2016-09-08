@@ -25,7 +25,7 @@ import java.util.List;
  */
 public class AssayReport extends Report {
      private final static String HEADER 
-        = "Assay\t%capture\t%coverage\t%gaps\n";
+        = "Assay\t%capture\tcoverage\t";
     private final DecimalFormat decimalFormat;
     
     private AnnotationSummary annotationSummary;
@@ -51,15 +51,14 @@ public class AssayReport extends Report {
         requiredKeys = new ArrayList<>();
         
         this.openForWriting();
-        
-        bufferedWriter.write(HEADER);     
+          
         //equiredKeys.add(CAPTURE_KEY);
         annotationSummary = null;
         
         orderedKeys = new ArrayList<>();
         orderedKeys.add(CAPTURE_KEY);
         orderedKeys.add(COVERAGE_KEY);
-        orderedKeys.add(GAPS_KEY);
+        //orderedKeys.add(GAPS_KEY);
         
         decimalFormat = new DecimalFormat(percentPattern);
         assayName=name;
@@ -95,6 +94,19 @@ public class AssayReport extends Report {
         if (annotationSummary == null) {
             throw new IOException("AnnotationSummary is null.");
         }
+        
+        // we may be using more than one threshold to calculate the gaps 
+        // percentage, fix the header here
+        String header = HEADER;
+        List<String> decoratorKeylist = annotationSummary.heldKeys();
+        for (String key : decoratorKeylist) {
+            if (key.contains(GAPS_KEY)) {
+                orderedKeys.add(key);
+                header += (key + TAB);
+            }
+        }
+        header+="\n";
+        bufferedWriter.write(header);  
         
         StringBuilder reportLine = new StringBuilder();
         reportLine.append(assayName);

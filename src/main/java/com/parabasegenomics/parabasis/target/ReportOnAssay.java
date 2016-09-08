@@ -33,6 +33,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import javax.json.Json;
+import javax.json.JsonArray;
 import javax.json.JsonObject;
 import javax.json.JsonReader;
 
@@ -93,7 +94,7 @@ public class ReportOnAssay {
     private final int splicingDistance;
     private final String assayName;
     private File coverageResourceFile;
-    private Double coverageThreshold;
+    private Double [] coverageThresholds;
     
     
     public ReportOnAssay(String fileToWrite, String name) {
@@ -119,7 +120,7 @@ public class ReportOnAssay {
         assayName = name;      
         decimalFormat = new DecimalFormat(formatPattern);
         coverageResourceFile  = null;
-        coverageThreshold=20.0;     
+        coverageThresholds=null;    
     }
     
     
@@ -149,7 +150,6 @@ public class ReportOnAssay {
     throws IOException {
         assayCoverageModel = new AssayCoverageModel(assayName);
         coverageResourceFile = new File(resourceFilepath);
-        assayCoverageModel.setLowCoverageThreshold(coverageThreshold);
         assayCoverageModel.initializeFromResourceFile(coverageResourceFile);  
     }
     
@@ -247,8 +247,8 @@ public class ReportOnAssay {
         targetGenelist = utilityReader.readHashSet(targetGenelistFile);
     }
     
-    public void setLowCoverageThreshold(Double threshold) {
-        coverageThreshold=threshold;
+    public void setLowCoverageThreshold(Double [] thresholdArray) {
+        coverageThresholds=thresholdArray;
     }
     
     public static void main(String[] args) 
@@ -333,9 +333,13 @@ public class ReportOnAssay {
             reportOnAssay.loadCaptureFile(captureIntervalFile);
         }
         if (coverageResourceFile != null) {
-            if (jsonObject.containsKey(COVERAGE_THRESHOLD)) {          
-                Integer T = jsonObject.getInt(COVERAGE_THRESHOLD);
-                reportOnAssay.setLowCoverageThreshold(T.doubleValue());
+            if (jsonObject.containsKey(COVERAGE_THRESHOLD)) {  
+                JsonArray thresholdArray = jsonObject.getJsonArray(COVERAGE_THRESHOLD);
+                Double [] doubleThresholdArray = new Double [thresholdArray.size()];
+                for (int i=0; i<thresholdArray.size(); i++) {
+                    doubleThresholdArray[i]= (double) thresholdArray.getInt(i);
+                }
+                reportOnAssay.setLowCoverageThreshold(doubleThresholdArray);
             }
             reportOnAssay.loadCoverageModel(coverageResourceFile);
         }
@@ -378,11 +382,6 @@ public class ReportOnAssay {
            coverageDecorator = new CoverageDecorator(assayCoverageModel);
        }
        
-       GapsDecorator gapsDecorator = null;
-       if (coverageResourceFile != null) {          
-           gapsDecorator = new GapsDecorator(assayCoverageModel);
-       }
-       
        annotationSummary = new AnnotationSummary();
        annotationSummary.addDecorator(geneModelDecorator);
        
@@ -398,8 +397,12 @@ public class ReportOnAssay {
        if (coverageDecorator != null) {
            annotationSummary.addDecorator(coverageDecorator);
        }
-       if (gapsDecorator != null) {
-           annotationSummary.addDecorator(gapsDecorator);
+       if (coverageResourceFile != null) {
+           for (int i=0; i<coverageThresholds.length; i++) {
+               GapsDecorator gapsDecorator 
+                   = new GapsDecorator(assayCoverageModel,coverageThresholds[i]);
+            annotationSummary.addDecorator(gapsDecorator);
+           }
        }
     }
 

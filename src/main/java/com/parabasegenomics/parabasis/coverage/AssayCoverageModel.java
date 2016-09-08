@@ -47,8 +47,7 @@ public class AssayCoverageModel {
     private final SamReaderFactory samReaderFactory ;
     
     private Double zscoreThreshold;
-    private JsonReader jsonReader;
-    private Double lowCoverageThreshold;  
+    private JsonReader jsonReader; 
     private CoverageModelReport report;  
     private SAMFileHeader samFileHeader;     
     private SamReader samReader;
@@ -61,7 +60,6 @@ public class AssayCoverageModel {
         modelIntervalIndexMap = new HashMap<>();
         zscoreThreshold=null;
         jsonReader=null;
-        lowCoverageThreshold=null;
            
         samReaderFactory 
             = SamReaderFactory.makeDefault()
@@ -78,20 +76,21 @@ public class AssayCoverageModel {
     }
     
     /**
-     * Sets the minimum value for acceptable sequencing coverage.  Regions
-     * with coverage below this are to be reported.
-     * @param threshold 
-     */
-    public void setLowCoverageThreshold(Double threshold) {
-        lowCoverageThreshold=threshold;
-    }
-    
-    /**
      * Access the interval coverages, mostly for the intervals themselves.
      * @return 
      */
     public List<IntervalCoverage> getIntervals() {
         return intervalCoverages;
+    }
+    
+    /**
+     * Return the IntervalCoverage object for the provided interval.
+     * @param interval
+     * @return 
+     */
+    public IntervalCoverage findIntervalCoverage(Interval interval) {
+        String keyString = stringifyInterval(interval);
+        return intervalCoverages.get(modelIntervalIndexMap.get(keyString));     
     }
     
     /**
@@ -221,21 +220,19 @@ public class AssayCoverageModel {
      * Returns the average count of low coverage bases for the given interval, 
      * or null if the given interval is not in the model.
      * @param interval
+     * @param threshold Return if count is less than this number.
      * @return 
      */
-    public Double getLowCoverageCountAt(Interval interval) {
+    public Double getLowCoverageCountAt(Interval interval, Double threshold) {
         String keyString = stringifyInterval(interval);
         Integer index = modelIntervalIndexMap.get(keyString); 
         if (index == null) {
             return null;
         } else {
-            if (lowCoverageThreshold != null) {
-                return intervalCoverages
-                    .get(index)
-                    .getLowCoverageCount(lowCoverageThreshold);
-            } else {
-                return null;
-            }
+            return intervalCoverages
+                .get(index)
+                .getLowCoverageCount(threshold);
+            
         }   
     }
     

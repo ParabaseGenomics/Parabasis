@@ -17,6 +17,7 @@ public class AnnotationKeys {
     public static final String HOM_KEY = "HOM";
     public static final String COVERAGE_KEY = "COV";
     public static final String GAPS_KEY = "GAP";
+    public static final String VCF_KEY = "VCF";
     
     private AnnotationKeys() {
         

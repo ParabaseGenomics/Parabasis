@@ -84,6 +84,12 @@ public class IntervalCoverage {
         return count;
     }
     
+    public double coverageAt(int position) {
+        int index=position-offset;
+        return (double) coverageArray[index]/count;
+    }
+    
+    
     private double coverage() {
         double coverageCount=0.0;
         for (int index=0; index<coverageArray.length; ++index) {

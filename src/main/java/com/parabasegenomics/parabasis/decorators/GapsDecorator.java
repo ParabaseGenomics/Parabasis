@@ -18,21 +18,27 @@ import java.text.DecimalFormat;
  * @author evanmauceli
  */
 public class GapsDecorator implements IntervalDecorator {
-    private static final String KEY = GAPS_KEY;
+    private String KEY = GAPS_KEY;
     private final static String formatPattern = percentPattern;
     private final DecimalFormat decimalFormat;
 
     private final AssayCoverageModel coverageModel;
+    private final Double threshold;
     
     /**
      * Constructor.  
      * @param assayCoverageModel
+     * @param threshold coverage less than this value is a "gap".
      * @throws IOException 
      */
-    public GapsDecorator(AssayCoverageModel assayCoverageModel) 
+    public GapsDecorator(AssayCoverageModel assayCoverageModel, Double threshold) 
     throws IOException {
         decimalFormat = new DecimalFormat(formatPattern);
         coverageModel = assayCoverageModel; 
+        this.threshold=threshold;
+        Integer intThreshold = this.threshold.intValue();
+        KEY += ("_"+intThreshold.toString()+"X");
+        
     }
     
     /**
@@ -60,7 +66,8 @@ public class GapsDecorator implements IntervalDecorator {
     @Override
     public int getCount(Interval interval) {
         int count = 0;
-        Double coverage = coverageModel.getLowCoverageCountAt(interval);
+        Double coverage 
+            = coverageModel.getLowCoverageCountAt(interval,threshold);
         if (coverage != null) {
             Double betterEstimate = coverage + 0.5;
             return (betterEstimate.intValue());
