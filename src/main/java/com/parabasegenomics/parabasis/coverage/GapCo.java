@@ -122,8 +122,13 @@ public class GapCo {
         }
         
         Double lowCoverageThreshold=0.;
-        if (jsonObject.containsKey(COVERAGE_THRESHOLD)) {          
-                lowCoverageThreshold = (double) jsonObject.getInt(COVERAGE_THRESHOLD);
+        if (jsonObject.containsKey(COVERAGE_THRESHOLD)) { 
+            JsonArray thresholdArray = jsonObject.getJsonArray(COVERAGE_THRESHOLD);
+                Double [] doubleThresholdArray = new Double [thresholdArray.size()];
+                for (int i=0; i<thresholdArray.size(); i++) {
+                    doubleThresholdArray[i]= (double) thresholdArray.getInt(i);
+                }
+                lowCoverageThreshold = doubleThresholdArray[0];
         }
 
         Reader utilityReader = new Reader();
@@ -196,7 +201,7 @@ public class GapCo {
                 
             }
             
-            
+            int i=0;
             List<IntervalCoverage> modelIntervals = assayCoverageModel.getIntervals();
             for (IntervalCoverage intervalCoverage : modelIntervals) {
 
@@ -220,13 +225,44 @@ public class GapCo {
 
                 lowCoverageModel.update(ic);
                 
+                int l = interval.length()-1;
+                double meancov = intervalCoverage.getMean()/l;
+                 
+                AnnotatedInterval ai = new AnnotatedInterval(interval);
+                geneModelDecorator.annotate(ai);
+                List<Interval> intervalCoverageLow 
+                = intervalCoverage.getLowCoverageIntervals(lowCoverageThreshold);
+            System.out.print(
+                ai.getInterval().getContig()
+                +"\t"
+                +ai.getInterval().getStart()
+                +"\t"
+                +ai.getInterval().getEnd()
+                +"\t"
+                + l
+                +"\t"
+                +decimalFormat
+                    .format(meancov)
+                +"\t"
+                + decimalFormat
+                    .format(intervalCoverage.getMin())
+                +"\t"
+                );
+            for (Interval lci : intervalCoverageLow) {
+                System.out.print(lci.getContig()+":"+lci.getStart()+"-"+lci.getEnd()+";");
+            }
+            System.out.print(
+                "\t"
+                +ai.getAnnotation(GENE_KEY));         
+            System.out.println("");
+            i++;
             }
         }
-        
+        /**
         int i=0;
         List<IntervalCoverage> coverages = lowCoverageModel.getIntervals();
         for (IntervalCoverage intervalCoverage : coverages) {
-
+            
             Interval interval = intervalCoverage.getInterval();
             int l = interval.length()-1;
 
@@ -247,6 +283,9 @@ public class GapCo {
                 +decimalFormat
                     .format(lowCoverageModel.getIntervals().get(i).getMean())
                 +"\t"
+                + decimalFormat
+                    .format(lowCoverageModel.getIntervals().get(i).getMin())
+                +"\t"
                 +decimalFormat
                     .format(lowCoverageModel.getIntervals().get(i).getStandardDeviation())
                 +"\t"
@@ -262,6 +301,7 @@ public class GapCo {
             System.out.println("");
            ++i;
         }
+        **/
     }
     
     
