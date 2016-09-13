@@ -106,6 +106,16 @@ public class IntervalCoverage {
         return interval;
     }
     
+    public double getMin() {
+        double min=1000000.;
+        for (int index=0; index<coverageArray.length; ++index) {
+            if (coverageArray[index]<min) {
+                min=coverageArray[index];
+            }
+        }
+        return min;
+    }
+    
     /**
      * Returns the current mean coverage for this interval.
      * @return 
@@ -198,7 +208,7 @@ public class IntervalCoverage {
             if ((double) coverageArray[index]/count <threshold) {
                 if (!inGap) {
                     start = index;
-                    end = start;
+                    end = start+1;
                     inGap=true;
                 } else {
                     ++end;
