@@ -323,7 +323,10 @@ public class ReportOnAssay {
         ReportOnAssay reportOnAssay = new ReportOnAssay(outputFile,assayName);  
         reportOnAssay.loadTargetGenelist(targetGenelistFile);
         reportOnAssay.loadGeneModelCollection(refSeqGeneModelFile,gencodeGeneModelFile);
-        reportOnAssay.loadReferenceSequence(humanReferenceFile);
+        
+        if (humanReferenceFile != null) {
+            reportOnAssay.loadReferenceSequence(humanReferenceFile);
+        }
         
         reportOnAssay.loadTargetFile(targetIntervalFile);
         if (codingTargetIntervalFile != null) {
@@ -444,6 +447,7 @@ public class ReportOnAssay {
             annotationSummary.replaceDecorator(COVERAGE_KEY, codingCoverageDecorator);          
         }
               
+
         codingTargetReport = new TargetReport(codingTargetReportFile);
         codingTargetReport.setAnnotationSummary(annotationSummary);
         codingTargetReport.reportOn(codingIntervals);

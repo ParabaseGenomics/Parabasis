@@ -119,6 +119,8 @@ public class AssayReport extends Report {
             int length=0;
             
             if (!annotationSummary.hasDecorator(key)) {
+                reportLine.append(TAB);
+                reportLine.append("NA");
                 continue;
             }
             for (AnnotatedInterval annotatedInterval : annotatedIntervals) {
