@@ -12,8 +12,10 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -106,6 +108,19 @@ public class Reader {
             entries.add(reader.readLine());
         }
         return entries;
+    }
+    
+    public Map<String,String> readHasMap(String file) 
+    throws FileNotFoundException, IOException {
+        Map<String,String> map = new HashMap<>();
+        fileToRead = new File(file);
+        reader = new BufferedReader(new FileReader(fileToRead));  
+        while (reader.ready()) {
+            String line = reader.readLine();
+            String [] tokens = line.split(TAB);
+            map.put(tokens[1], tokens[0]);
+        }
+        return map;
     }
     
 }

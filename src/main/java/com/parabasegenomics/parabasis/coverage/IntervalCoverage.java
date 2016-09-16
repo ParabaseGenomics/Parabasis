@@ -106,6 +106,10 @@ public class IntervalCoverage {
         return interval;
     }
     
+    /**
+     * Returns the minimum coverage value in the interval.
+     * @return 
+     */
     public double getMin() {
         double min=1000000.;
         for (int index=0; index<coverageArray.length; ++index) {
@@ -114,6 +118,20 @@ public class IntervalCoverage {
             }
         }
         return min;
+    }
+    
+    /**
+     * Returns the maximum coverage value in the interval.
+     * @return 
+     */
+    public double getMax() {
+        double max=-1.;
+        for (int index=0; index<coverageArray.length; ++index) {
+            if (coverageArray[index]>max) {
+                max=coverageArray[index];
+            }
+        }
+        return max;
     }
     
     /**
