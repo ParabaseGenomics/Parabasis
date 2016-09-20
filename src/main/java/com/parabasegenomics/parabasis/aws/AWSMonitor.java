@@ -52,12 +52,15 @@ public class AWSMonitor {
     
     // 4409 for ParabaseValidation/NBDxV1.1
     // 3923 for ParabaseProduction/NBDxV1.1
-    private final static String OMICIA_PROJECT_ID = "3923"; 
-    private final static String ASSAY = "NBDxV1.1";
+    // 35877 for NBDxV2
+    private static String OMICIA_PROJECT_ID; 
+    
     private final static String vcfFileSuffix = ".vcf.gz";
     private final static String SLASH = "/";
     
     private final static String PYTHON_PATH = "/usr/bin/python27";
+    
+    final static String PRODUCTION_BUCKET = "parabase.genomics.production";
     
     private final static String omiciaPythonUploadScript
             = "/home/ec2-user/omicia_api_examples/python/upload_genome.py";
@@ -81,20 +84,20 @@ public class AWSMonitor {
     
     /**
      * Constructor. 
-     * @param assay
-     * @param S3bucket
      * @throws java.io.IOException
      */           
-    public AWSMonitor(String assay, String S3bucket) 
+    public AWSMonitor() 
     throws IOException {
           
         vcfFileETags = new TreeSet<>();
         downloader = new AWSDownloader();
-        bucket = S3bucket;
+        bucket = PRODUCTION_BUCKET;
         
         listObjectsRequest = new ListObjectsRequest()
         .withBucketName(bucket)
-        .withPrefix(ASSAY);
+        .withPrefix("NBDxV1.1")
+        .withPrefix("NBDxV2");
+        
 
         referenceGenomeTranslator = new ReferenceGenomeTranslator();
         
@@ -223,6 +226,19 @@ public class AWSMonitor {
         return (key.substring(lastSlashIndex+1, suffixIndex));
     }
 
+    public void parseKeyForOmiciaProjectId(String key) {
+        String [] tokens = key.split("\\/");
+        for (int i=0; i<tokens.length;i++) {
+            if (tokens[i].equals("NBDxV1.1")) {
+                OMICIA_PROJECT_ID="4409";
+                break;
+            } else if (tokens[i].equals("NBDxV2")) {
+                OMICIA_PROJECT_ID="35877";
+                break;
+            }
+        }
+    }
+    
     /**
      * Method to download a vcf file from the AWS S3 production bucket
      * to the local tmp directory.  
@@ -257,6 +273,8 @@ public class AWSMonitor {
     throws InterruptedException {
         // label corresponds to sampleID from upload
         String label = parseKeyForId(objectSummary.getKey());
+        parseKeyForOmiciaProjectId(objectSummary.getKey());
+        
         String localFileName 
             = downloadVcfFileLocally(objectSummary.getKey());
         
@@ -274,7 +292,7 @@ public class AWSMonitor {
         command.add(omiciaPythonUploadGender);
         command.add(omiciaPythonUploadFileFormat);
         command.add(translatedVcfFilename);
-        command.add(id.toString());
+        //command.add(id.toString());
         
         ProcessBuilder processBuilder = new ProcessBuilder(command);
         processBuilder.redirectErrorStream(true);
@@ -319,10 +337,8 @@ public class AWSMonitor {
      */
     public static void main(String[] args) 
     throws IOException {
-        String assay = args[0];
-        String s3bucket = args[1];
         AWSMonitor awsMonitor 
-            = new AWSMonitor(assay,s3bucket);
+            = new AWSMonitor();
         awsMonitor.monitor();
     }
     
