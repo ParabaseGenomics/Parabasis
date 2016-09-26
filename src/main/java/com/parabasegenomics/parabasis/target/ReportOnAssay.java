@@ -437,6 +437,7 @@ public class ReportOnAssay {
         assayReport.reportOn(targetIntervals);
         assayReport.close();
                
+        /**
         // coding-only reports. have to reset the coverage if we're reporting
         // on coverage
         // TODO: fix this break in the reporting paradigm
@@ -466,7 +467,7 @@ public class ReportOnAssay {
         codingAssayReport.setAnnotationSummary(annotationSummary);
         codingAssayReport.reportOn(codingIntervals);
         codingAssayReport.close();
-        
+        **/
     }   
 
     /**

@@ -185,7 +185,7 @@ public class AWSUploader extends Application {
         transferManager 
                 = new TransferManager(encryptionClient);
       
-        assayChoice.getSelectionModel().selectFirst();
+        assayChoice.getSelectionModel().selectLast();
         assayChoice.setTooltip(new Tooltip("Select Assay"));
         
         archiveChoice.getSelectionModel().selectFirst();
