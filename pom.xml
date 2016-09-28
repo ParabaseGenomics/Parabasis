@@ -24,6 +24,11 @@
             <version>3.6.1</version>
         </dependency>
         <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-lang3</artifactId>
+            <version>3.4</version>
+        </dependency>
+        <dependency>
             <groupId>org.glassfish</groupId>
             <artifactId>javax.json</artifactId>
             <version>1.0.4</version>
@@ -195,6 +200,44 @@
                                     <descriptorRef>jar-with-dependencies</descriptorRef>
                                 </descriptorRefs>
                                 <finalName>AWSDownload</finalName>
+                            </configuration>
+                            <phase>package</phase>
+                            <goals>
+                                <goal>single</goal>
+                            </goals>
+                        </execution>
+                        <execution>
+                            <id>Build PushToOmiciaWorker</id>
+                            <configuration>
+                                <appendAssemblyId>false</appendAssemblyId>
+                                <archive>
+                                    <manifest>
+                                        <mainClass>com.parabasegenomics.parabasis.aws.swf.PushToOmiciaWorker</mainClass>
+                                    </manifest>
+                                </archive>
+                                <descriptorRefs>
+                                    <descriptorRef>jar-with-dependencies</descriptorRef>
+                                </descriptorRefs>
+                                <finalName>PushToOmiciaWorker</finalName>
+                            </configuration>
+                            <phase>package</phase>
+                            <goals>
+                                <goal>single</goal>
+                            </goals>
+                        </execution>
+                        <execution>
+                            <id>Build PushToOmiciaTest</id>
+                            <configuration>
+                                <appendAssemblyId>false</appendAssemblyId>
+                                <archive>
+                                    <manifest>
+                                        <mainClass>com.parabasegenomics.parabasis.aws.swf.PushToOmiciaTestMain</mainClass>
+                                    </manifest>
+                                </archive>
+                                <descriptorRefs>
+                                    <descriptorRef>jar-with-dependencies</descriptorRef>
+                                </descriptorRefs>
+                                <finalName>PushToOmiciaTest</finalName>
                             </configuration>
                             <phase>package</phase>
                             <goals>

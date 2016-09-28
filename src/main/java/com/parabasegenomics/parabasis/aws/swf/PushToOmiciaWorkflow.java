@@ -13,12 +13,11 @@ package com.parabasegenomics.parabasis.aws.swf;
 import com.amazonaws.services.simpleworkflow.flow.annotations.Execute;
 import com.amazonaws.services.simpleworkflow.flow.annotations.Workflow;
 import com.amazonaws.services.simpleworkflow.flow.annotations.WorkflowRegistrationOptions;
-import javafx.util.Pair;
 
 @Workflow
 @WorkflowRegistrationOptions(defaultExecutionStartToCloseTimeoutSeconds = 3600)
 
 public interface PushToOmiciaWorkflow {   
     @Execute(version = "1.0")
-    public void push(Pair<String,String> location); 
+    public void push(String file); 
 }

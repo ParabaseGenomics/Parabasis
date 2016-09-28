@@ -15,7 +15,6 @@ import java.util.List;
 import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javafx.util.Pair;
 
 /**
  *
@@ -25,8 +24,8 @@ public class PushToOmiciaActivitiesImpl implements PushToOmiciaActivities {
 
     // 4409 for ParabaseValidation/NBDxV1.1
     // 3923 for ParabaseProduction/NBDxV1.1
-    // NBDxV2 35877
-    private final static String OMICIA_PROJECT_ID = "4409"; 
+    // 35877 for ParabaseProduction/NBDxV2
+    private final static String OMICIA_PROJECT_ID = "35877"; 
     private final static String vcfFileSuffix = ".vcf.gz";
     private final static String SLASH = "/";
     
@@ -42,19 +41,20 @@ public class PushToOmiciaActivitiesImpl implements PushToOmiciaActivities {
         = "/home/ec2-user/tmp/";
     
     private final static String homeDirectory = "/home/ec2-user";
-    private final static String logFileName = "AWSMonitor.log";
+    private final static String logFileName = "Pusher.log";
     
     private static final Logger logger 
         = Logger.getLogger(AWSMonitor.class.getName());
     
     // full S3 "path" to vcf file
     @Override
-    public Pair<String,String> isValidS3Location(
-        Pair<String,String> location)
+    public String isValidS3Location(
+        String bucket,String key)
     throws IOException {
+        String location = bucket+"/"+key;
         if (s3encryptionClient
             .doesObjectExist(
-                location.getKey(), location.getValue())) {
+                bucket, key)) {
             return location;
         } else {
             throw( new IOException("not valid s3 object:" + location));
@@ -63,16 +63,17 @@ public class PushToOmiciaActivitiesImpl implements PushToOmiciaActivities {
     
     // returns local path to vcf file
     @Override
-    public String downloadToLocalEC2(Pair<String,String> location) {
+    public String downloadToLocalEC2(String bucket,String key) {
         String localFile 
             = localTmpdirFilePath
             + "/"
-            + UUID.randomUUID();
+            + UUID.randomUUID()
+            + ".vcf.gz";
         try {
             downloader
                 .downloadFileFromS3Bucket(
-                    location.getKey(),
-                    location.getValue(),
+                    bucket,
+                    key,
                     new File(localFile));
         } catch (InterruptedException ex) {
             Logger
@@ -121,7 +122,7 @@ public class PushToOmiciaActivitiesImpl implements PushToOmiciaActivities {
         command.add(omiciaPythonUploadGender);
         command.add(omiciaPythonUploadFileFormat);
         command.add(location);
-        command.add(id.toString());
+        //command.add(id.toString());
         
         ProcessBuilder processBuilder = new ProcessBuilder(command);
         processBuilder.redirectErrorStream(true);
@@ -145,10 +146,10 @@ public class PushToOmiciaActivitiesImpl implements PushToOmiciaActivities {
             File localFileToDelete 
                 = new File(location);      
             try {
-                Files.delete(localFileToDelete.toPath());
+                Files.list(localFileToDelete.toPath());//Files.delete(localFileToDelete.toPath());
                 logger.log(Level.INFO,"done cleanup");
             } catch (IOException ex) {
-                logger.log(Level.SEVERE,null,ex);               
+              //  logger.log(Level.SEVERE,null,ex);               
             }
             
         } catch (InterruptedException ex) {
