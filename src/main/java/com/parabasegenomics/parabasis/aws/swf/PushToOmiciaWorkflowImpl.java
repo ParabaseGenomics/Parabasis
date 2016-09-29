@@ -6,30 +6,30 @@
 package com.parabasegenomics.parabasis.aws.swf;
 
 import com.amazonaws.services.simpleworkflow.flow.core.Promise;
-import javafx.util.Pair;
 
-/**
- *
- * @author evanmauceli
- */
 public class PushToOmiciaWorkflowImpl implements PushToOmiciaWorkflow {
     
     private final PushToOmiciaActivitiesClient ops
         = new PushToOmiciaActivitiesClientImpl();
     
     @Override
-    public void push(Pair<String, String> location) {
+    public void push(String file) {
         
-        Promise< Pair<String,String> > validLocation
-            = ops.isValidS3Location(location);
-    
+        String bucket = file.substring(0,file.indexOf("/NBDx"));
+        String key = file.substring(file.indexOf("NBDx"),file.length());
+
+        
+        Promise<String> validLocation
+            = ops.isValidS3Location(bucket,key);
+
         Promise<String> localFile 
-            = ops.downloadToLocalEC2(validLocation);
+            = ops.downloadToLocalEC2(bucket,key);
         
         Promise<String> convertedFile
             = ops.convertCoordinates(localFile);
         
         ops.pushToOmicia(convertedFile);
+
     }
     
 }

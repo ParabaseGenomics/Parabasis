@@ -159,12 +159,25 @@ public class GapCo {
             String bamFilepath = bamArray.getString(index);
             File bamFile = new File(bamFilepath);
             
+            String samplename = bamFile.getName().substring(0,bamFile.getName().indexOf("_"));
+            if(samplename.equals("NA12878")) {
+                String [] bits = bamFile.getParent().split("/");
+
+                if (bits[3].equals("MelodyRun_ATT6R")) {
+                    samplename += ("r25");
+                } else if (bits[3].equals("MelodyRun_ATAOJ")) {
+                    samplename += ("r18");
+                }
+                                System.out.print(bits[2]+" "+bits[3]+" ");
+            }
+            System.out.println(samplename);
             String thisResourceFile 
                 = bamFilepath.substring(0,bamFilepath.indexOf(".bam")-3) 
                 + ".resources.json";
             AssayCoverageModel assayCoverageModel = new AssayCoverageModel(assayName);
             assayCoverageModel.initializeFromResourceFileAndIntervals(new File(thisResourceFile),intervals);
             
+            /**
             int variantCount = vcfCohort.getVariantCount();
             for (int i=0; i<variantCount; i++) {
                 final VcfCohortVariant variant = vcfCohort.getCohortVariant(i);
@@ -207,6 +220,26 @@ public class GapCo {
 
                 Interval interval = intervalCoverage.getInterval();
                 
+                for (int b=interval.getStart(); b<interval.getEnd(); b++) {
+                    System.out.println(
+                        samplename
+                        +"\t"
+                        +interval.getContig()
+                        +"\t"
+                        + b
+                        +"\t"
+                        +intervalCoverage.coverageAt(b));
+                }
+            }
+            **/
+            
+            int i=0;
+            List<IntervalCoverage> modelIntervals = assayCoverageModel.getIntervals();
+            for (IntervalCoverage intervalCoverage : modelIntervals) {
+        
+                Interval interval = intervalCoverage.getInterval();
+
+                
                 Double lowCoverageCount = intervalCoverage.getLowCoverageCount(lowCoverageThreshold);
                 double lowCoveragePct = 100.0 * lowCoverageCount/(double) (interval.length()-1);           
                 
@@ -233,31 +266,42 @@ public class GapCo {
                 List<Interval> intervalCoverageLow 
                 = intervalCoverage.getLowCoverageIntervals(lowCoverageThreshold);
             System.out.print(
-                ai.getInterval().getContig()
+                samplename
+                +"\t"
+                +ai.getInterval().getContig()
                 +"\t"
                 +ai.getInterval().getStart()
                 +"\t"
                 +ai.getInterval().getEnd()
                 +"\t"
-                + l
-                +"\t"
-                +decimalFormat
-                    .format(meancov)
+                
+                +ai.getAnnotation(GENE_KEY)
+                //+"\t"
+                //+ l
+                //+"\t"
+                //+decimalFormat
+                //    .format(meancov)
                 +"\t"
                 + decimalFormat
                     .format(intervalCoverage.getMin())
                 +"\t"
+                + decimalFormat
+                    .format(intervalCoverage.getMax())
+                //+"\t"
                 );
-            for (Interval lci : intervalCoverageLow) {
-                System.out.print(lci.getContig()+":"+lci.getStart()+"-"+lci.getEnd()+";");
-            }
-            System.out.print(
-                "\t"
-                +ai.getAnnotation(GENE_KEY));         
+            //for (Interval lci : intervalCoverageLow) {
+            //    System.out.print(lci.getContig()+":"+lci.getStart()+"-"+lci.getEnd()+";");
+            //}
+            //System.out.print(
+            //    "\t"
+            //    +ai.getAnnotation(GENE_KEY));         
             System.out.println("");
             i++;
             }
         }
+    }
+}
+        
         /**
         int i=0;
         List<IntervalCoverage> coverages = lowCoverageModel.getIntervals();
@@ -302,10 +346,7 @@ public class GapCo {
            ++i;
         }
         **/
-    }
-    
-    
-}
-            
         
-
+    
+    
+    
