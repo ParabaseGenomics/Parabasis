@@ -204,6 +204,7 @@
                                 <goal>single</goal>
                             </goals>
                         </execution>
+                        <execution>
                         <id>Build Gap Report</id>
                         <configuration>
                             <appendAssemblyId>false</appendAssemblyId>

@@ -5,7 +5,6 @@
  */
 package com.parabasegenomics.parabasis.aws.swf;
 
-import javafx.util.Pair;
 
 /**
  *
@@ -19,7 +18,7 @@ public class PushToOmiciaWorkflowStarter {
     public static void main(String[] args) {
         PushToOmiciaWorkflow pushToOmiciaWorkflow
             = new PushToOmiciaWorkflowImpl();
-        pushToOmiciaWorkflow.push(new Pair(args[0],args[1]));
+        pushToOmiciaWorkflow.push("start");
     }
     
 }
