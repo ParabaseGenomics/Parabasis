@@ -17,6 +17,7 @@ import htsjdk.samtools.util.Interval;
 import java.io.File;
 import java.io.IOException;
 import java.text.DecimalFormat;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -39,10 +40,13 @@ public class GapsTableReport extends Report {
     throws IOException {
         super(file);
         
+        this.openForWriting();
+        
+        orderedKeys = new ArrayList<>();
+        
         lowCoverageThreshold=threshold;
         decimalFormat = new DecimalFormat(percentPattern);
         orderedKeys.add(COVERAGE_KEY);
-        orderedKeys.add(GAPS_KEY);
     }
     
     public void setAnnotationSummary(AnnotationSummary summary) {
@@ -65,13 +69,16 @@ public class GapsTableReport extends Report {
         }
         header+=NEWLINE;
         bufferedWriter.write(header);  
-        
-        StringBuilder reportLine = new StringBuilder();
-        reportLine.append(assayName);
- 
 
         for (IntervalCoverage intervalCoverage : intervals) {          
             final Interval interval = intervalCoverage.getInterval();
+            
+            if (intervalCoverage
+                .getLowCoverageCount(lowCoverageThreshold)==0) {
+                continue;
+            }
+            
+            StringBuilder reportLine = new StringBuilder();
             
             AnnotatedInterval annotatedInterval
                 = annotationSummary.annotateOne(interval);
