@@ -84,12 +84,25 @@ public class IntervalCoverage {
         return count;
     }
     
+    /**
+     * Return the coverage at the specified position or -1 if
+     * the position is outside of the held interval.
+     * @param position
+     * @return 
+     */
     public double coverageAt(int position) {
         int index=position-offset;
+        if (index<0 || index>=coverageArray.length) {
+            return -1.;
+        }
         return (double) coverageArray[index]/count;
     }
     
     
+    /**
+     * Returns the total read coverage for this interval.
+     * @return 
+     */
     private double coverage() {
         double coverageCount=0.0;
         for (int index=0; index<coverageArray.length; ++index) {
