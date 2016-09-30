@@ -15,6 +15,7 @@ import com.parabasegenomics.parabasis.decorators.GapsDecorator;
 import com.parabasegenomics.parabasis.decorators.GeneModelDecorator;
 import com.parabasegenomics.parabasis.gene.GeneModelCollection;
 import com.parabasegenomics.parabasis.reporting.GapsTableReport;
+import com.parabasegenomics.parabasis.reporting.GeneSummaryReport;
 import com.parabasegenomics.parabasis.util.Reader;
 import htsjdk.samtools.util.Interval;
 import java.io.File;
@@ -69,8 +70,10 @@ public class ReportOnGaps {
     private List<Interval> targetIntervals;
 
     private final File gapReportFile;
+    private final File geneGapReportFile;
 
     private GapsTableReport gapReport;
+    private GeneSummaryReport geneGapReport;
 
     private AnnotationSummary annotationSummary;
     private AssayCoverageModel assayCoverageModel;
@@ -89,7 +92,7 @@ public class ReportOnGaps {
         annotatedIntervals = new ArrayList<>();
        
         gapReportFile = new File(fileToWrite + ".gap.report.txt");
-        
+        geneGapReportFile = new File(fileToWrite+".gap.gene.report.txt");
        
         assayCoverageModel = null;     
         splicingDistance = 10;
@@ -214,6 +217,9 @@ public class ReportOnGaps {
     public void report() 
     throws IOException {      
        
+        geneGapReport = new GeneSummaryReport(geneGapReportFile);
+        geneGapReport.setAnnotationSummary(annotationSummary);
+        
         gapReport = new GapsTableReport(gapReportFile,coverageThresholds[0]);
         gapReport.setAnnotationSummary(annotationSummary);
         List<IntervalCoverage> intervalCoverages 
@@ -226,6 +232,15 @@ public class ReportOnGaps {
         
         gapReport.reportOn(intervalCoverages);
         gapReport.close();
+        
+        for (String gene : targetGenelist) {
+            List<Interval> intervals 
+                = selectIntervalsForGene(gene,targetIntervals);
+     
+            geneGapReport.reportOn(intervals, gene);
+        }
+        geneGapReport.close();
+
     }
 
      /**
@@ -277,5 +292,35 @@ public class ReportOnGaps {
         assayCoverageModel = new AssayCoverageModel(assayName);
         coverageResourceFile = new File(resourceFilepath);
         assayCoverageModel.initializeFromResourceFile(coverageResourceFile);  
+    }
+    
+    
+     /**
+     * Select intervals from the provided list that match a particular name.
+     * @param name
+     * @param intervals
+     * @return 
+     */
+    public List<Interval> selectIntervalsForGene(
+        String name, 
+        List<Interval> intervals) {
+
+        List<Interval> selectedIntervals = new ArrayList<>();
+        for (Interval interval : intervals) {
+            String intervalName = interval.getName();
+            String geneName = intervalName;
+            int underscoreIndex = intervalName.indexOf(UNDERSCORE);
+            if (underscoreIndex != -1) {
+                geneName 
+                    = intervalName
+                        .substring(0,underscoreIndex);
+            }
+            
+            if (geneName.equals(name)) {
+                selectedIntervals.add(interval);
+            }
+        }
+
+        return selectedIntervals;
     }
 }

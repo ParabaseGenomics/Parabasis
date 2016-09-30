@@ -6,7 +6,6 @@
 package com.parabasegenomics.parabasis.target;
 
 import com.parabasegenomics.parabasis.coverage.AssayCoverageModel;
-import static com.parabasegenomics.parabasis.decorators.AnnotationKeys.COVERAGE_KEY;
 import static com.parabasegenomics.parabasis.decorators.AnnotationKeys.GENE_KEY;
 import static com.parabasegenomics.parabasis.decorators.AnnotationKeys.HOM_KEY;
 import com.parabasegenomics.parabasis.decorators.CaptureDecorator;
