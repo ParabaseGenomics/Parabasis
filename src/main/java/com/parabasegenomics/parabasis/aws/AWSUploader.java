@@ -369,7 +369,9 @@ public class AWSUploader extends Application {
         cancelButton.setOnAction(new EventHandler<ActionEvent>() {
             @Override
             public void handle(ActionEvent event) {
-                transferManager.abortMultipartUploads(archiveBucket,new Date());
+                if (archiveBucket != null && !archiveBucket.isEmpty()) {
+                    transferManager.abortMultipartUploads(archiveBucket,new Date());
+                }
                 transferManager.shutdownNow();
                 runNameTextField.clear();
                 sampleIdTextField.clear();
