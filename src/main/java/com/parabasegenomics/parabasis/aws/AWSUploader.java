@@ -345,7 +345,10 @@ public class AWSUploader extends Application {
                sampleIdTextField.clear();
                runNumberTextField.clear();
                uploadProgress.unbind();
-               uploadProgress.setValue(0);        
+               uploadProgress.setValue(0);  
+               assayChoice.getSelectionModel().selectLast();
+               archiveChoice.getSelectionModel().selectFirst();
+
            }
         });
         
