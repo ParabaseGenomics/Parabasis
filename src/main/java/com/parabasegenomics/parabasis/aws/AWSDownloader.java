@@ -21,6 +21,7 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.logging.FileHandler;
+import java.util.logging.Handler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -194,6 +195,8 @@ public class AWSDownloader {
         } else {
             awsDownloader.downloadS3BucketDirectory(args[0],args[1],file);
         }
+        Handler [] handlers = logger.getHandlers();
+        handlers[0].close();
         System.exit(0);
     }
 

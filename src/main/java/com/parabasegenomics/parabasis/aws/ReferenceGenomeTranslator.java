@@ -10,6 +10,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.FileHandler;
+import java.util.logging.Handler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.apache.commons.io.FilenameUtils;
@@ -133,7 +134,9 @@ public class ReferenceGenomeTranslator {
         } catch (InterruptedException ex) {
             logger.log(Level.SEVERE, null, ex);
         }
-     
+        
+        Handler [] handlers = logger.getHandlers();
+        handlers[0].close();
         return (new File(outputVcfFileName));
     }    
 }

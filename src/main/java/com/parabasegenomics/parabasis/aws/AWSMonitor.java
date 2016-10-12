@@ -41,6 +41,7 @@ import java.util.logging.Logger;
 public class AWSMonitor {
     
     private static ListObjectsRequest listObjectsRequest;
+    private static ListObjectsRequest listObjectsRequestV2;
     
     private final ScheduledExecutorService scheduler =
         Executors.newScheduledThreadPool(5);
@@ -95,10 +96,12 @@ public class AWSMonitor {
         
         listObjectsRequest = new ListObjectsRequest()
         .withBucketName(bucket)
-        .withPrefix("NBDxV1.1")
+        .withPrefix("NBDxV1.1");
+        
+        listObjectsRequestV2 = new ListObjectsRequest()
+        .withBucketName(bucket)
         .withPrefix("NBDxV2");
         
-
         referenceGenomeTranslator = new ReferenceGenomeTranslator();
         
         logFile = new File(homeDirectory+"/"+logFileName);
@@ -162,6 +165,16 @@ public class AWSMonitor {
                     .listNextBatchOfObjects(objectListing);  
                 update(objectListing,restart);
             }
+            
+            objectListing = downloader.getEncryptionClient().listObjects(listObjectsRequestV2);
+            update(objectListing,restart);
+            while (objectListing.isTruncated()) {
+                objectListing = downloader
+                    .getEncryptionClient()
+                    .listNextBatchOfObjects(objectListing);  
+                update(objectListing,restart);
+            }
+            
          } catch (AmazonServiceException ase) {
             String logstring 
                 = "Caught an AmazonServiceException\n"
@@ -230,7 +243,7 @@ public class AWSMonitor {
         String [] tokens = key.split("\\/");
         for (int i=0; i<tokens.length;i++) {
             if (tokens[i].equals("NBDxV1.1")) {
-                OMICIA_PROJECT_ID="4409";
+                OMICIA_PROJECT_ID="3923";
                 break;
             } else if (tokens[i].equals("NBDxV2")) {
                 OMICIA_PROJECT_ID="35877";
@@ -317,6 +330,9 @@ public class AWSMonitor {
                 = new File(localFileName);      
             try {
                 Files.delete(localFileToDelete.toPath());
+                Files.delete(translatedVcfFile.toPath());
+                File unmapFile = new File(translatedVcfFilename + ".unmap");
+                Files.delete(unmapFile.toPath());
                 logger.log(Level.INFO,"done cleanup");
             } catch (IOException ex) {
                 logger.log(Level.SEVERE,null,ex);               
