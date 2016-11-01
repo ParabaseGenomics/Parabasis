@@ -10,7 +10,6 @@ import com.amazonaws.services.simpleworkflow.flow.annotations.Activities;
 import com.amazonaws.services.simpleworkflow.flow.annotations.ActivityRegistrationOptions;
 import com.parabasegenomics.parabasis.aws.AWSDownloader;
 import java.io.IOException;
-import org.apache.commons.lang3.tuple.Pair;
 
 
 /**
