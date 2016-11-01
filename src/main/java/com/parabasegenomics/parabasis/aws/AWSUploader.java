@@ -75,7 +75,7 @@ public class AWSUploader extends Application {
     final ChoiceBox assayChoice 
         = new ChoiceBox(FXCollections
             .observableArrayList("NBDxV1.1",
-                                 "NBDxV2"));
+                                 "PDv3"));
     
     final static String SANDBOX_CHOICE = "sandbox";
     final static String PRODUCTION_CHOICE = "production";
@@ -255,6 +255,14 @@ public class AWSUploader extends Application {
                 sampleId = sampleIdTextField.getText();
                 assayChoice.show();
                 assay = assayChoice.getValue().toString();
+                
+                /** 
+                 * The assay name, used by the lab is "PDv3".  The abbreviated
+                 *  test name, used in AWS S3 and Omicia, is "NBDxV2"
+                 */ 
+                if (assay.equals("PDv3")) {
+                    assay = "NBDxV2";
+                }
                 if (runNumberTextField.getText() != null) {
                     alignmentIteration = runNumberTextField.getText();
                 }
