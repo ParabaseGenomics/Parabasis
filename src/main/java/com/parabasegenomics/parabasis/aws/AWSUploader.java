@@ -5,7 +5,9 @@
  */
 package com.parabasegenomics.parabasis.aws;
 
+import com.amazonaws.ClientConfiguration;
 import com.amazonaws.SDKGlobalConfiguration;
+import com.amazonaws.auth.AWSCredentials;
 import com.amazonaws.auth.profile.ProfileCredentialsProvider;
 import com.amazonaws.event.ProgressEvent;
 import com.amazonaws.event.ProgressListener;
@@ -16,6 +18,11 @@ import com.amazonaws.services.s3.model.CryptoConfiguration;
 import com.amazonaws.services.s3.model.KMSEncryptionMaterialsProvider;
 import com.amazonaws.services.s3.transfer.MultipleFileUpload;
 import com.amazonaws.services.s3.transfer.TransferManager;
+import com.amazonaws.services.simpleworkflow.AmazonSimpleWorkflow;
+import com.amazonaws.services.simpleworkflow.AmazonSimpleWorkflowClient;
+import com.parabasegenomics.parabasis.aws.swf.PushToOmiciaWorkflowClientExternal;
+import com.parabasegenomics.parabasis.aws.swf.PushToOmiciaWorkflowClientExternalFactory;
+import com.parabasegenomics.parabasis.aws.swf.PushToOmiciaWorkflowClientExternalFactoryImpl;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
@@ -146,6 +153,7 @@ public class AWSUploader extends Application {
     String assay;
     String archive;
     String archiveBucket;
+    String key;
     TextField runNameTextField;
     TextField sampleIdTextField;
     TextField runNumberTextField;
@@ -179,7 +187,7 @@ public class AWSUploader extends Application {
                 materialProvider,
                 new CryptoConfiguration().withKmsRegion(Regions.US_EAST_1))
             .withRegion(Region.getRegion(Regions.US_EAST_1));
-           
+        
         uploadProgress = new SimpleDoubleProperty();      
                    
         transferManager 
@@ -291,7 +299,7 @@ public class AWSUploader extends Application {
                         = new File(getPathToCompressedFiles());
                                         
                     // AWS file key
-                    String key
+                    key
                         = assay
                         + "/"
                         + sampleId
@@ -321,7 +329,7 @@ public class AWSUploader extends Application {
                                 if (upload.isDone()) {
                                     Platform.runLater(new Runnable() {
                                         @Override
-                                        public void run() {
+                                        public void run() {                                           
                                             cleanWrapup();
                                         }
                                     });
@@ -672,6 +680,62 @@ public class AWSUploader extends Application {
      * Method defining what happens after a clean upload.
      */
     public void cleanWrapup() {
+        
+        if (archiveBucket.equals(PRODUCTION_CHOICE)) {
+            ClientConfiguration config 
+                = new ClientConfiguration().withSocketTimeout(70*1000);   
+        
+            AWSCredentials credentials 
+                = new ProfileCredentialsProvider().getCredentials();
+
+            AmazonSimpleWorkflow service
+                = new AmazonSimpleWorkflowClient(credentials,config);
+
+            service.setEndpoint("https://swf.us-east-1.amazonaws.com");
+            String domain = "PushToOmiciaDomain";
+   
+             // run gaps report
+             // but wait - this depends on the test ordered!!!!
+             // but the key has the test!!
+             // but we'll need to parse the key!!!
+             //  
+            String bamFilepath
+                = PRODUCTION_BUCKET
+                + "/" 
+                + key
+                + "/" 
+                + sampleId 
+                + ".bam";
+            
+            String bamIndexFilepath
+                = PRODUCTION_BUCKET
+                + "/" 
+                + key
+                + "/" 
+                + sampleId 
+                + ".bam.bai";
+                    
+            String vcfFilepath 
+                = PRODUCTION_BUCKET
+                + "/" 
+                + key
+                + "/"
+                + sampleId
+                + vcfFileSuffix
+                + ".gz";
+         
+            PushToOmiciaWorkflowClientExternalFactory pushToOmiciaFactory
+                = new PushToOmiciaWorkflowClientExternalFactoryImpl(service,domain);
+        
+            PushToOmiciaWorkflowClientExternal pusher
+                = pushToOmiciaFactory.getClient(sampleId);
+            
+            //String testOrdered = parseTest(key);
+            pusher.push(vcfFilepath);
+            //pusher.push(vcfFilepath, testOrdered,bamFilepath, bamIndexFilepath);
+       
+        }
+        
         Alert alert = new Alert(AlertType.INFORMATION);
         alert.setTitle("Information");
         alert.setHeaderText(null);
