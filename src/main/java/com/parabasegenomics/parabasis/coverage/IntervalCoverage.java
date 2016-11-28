@@ -21,11 +21,13 @@ public class IntervalCoverage {
     
     private final Interval interval;
     private int count;
-    private Mean mean;
+    private final Mean mean;
     private final StandardDeviation standardDeviation;
     private double coefficientOfVariation;
     private final double [] coverageArray;
     private final int offset;
+    private final Mean [] meanArray;
+    private final StandardDeviation [] deviationArray;
     
     /**
      * Construct with an Interval.
@@ -39,6 +41,9 @@ public class IntervalCoverage {
         coefficientOfVariation=0.0;
         coverageArray = new double [interval.length()-1];
         offset = interval.getStart();
+        
+        meanArray = new Mean [interval.length()-1];
+        deviationArray = new StandardDeviation [interval.length()-1];
     }
     
     /**
@@ -60,8 +65,11 @@ public class IntervalCoverage {
             mean=m;
             standardDeviation=s;
             coefficientOfVariation=cv;  
-            coverageArray = new double [interval.length()];
+            coverageArray = new double [interval.length()-1];
             offset = interval.getStart();
+            
+            meanArray = new Mean [interval.length()-1];
+            deviationArray = new StandardDeviation [interval.length()-1];
     }
 
     /**
@@ -204,6 +212,65 @@ public class IntervalCoverage {
             return;
         }
         ++coverageArray[index];
+    }
+    
+    /**
+     * Update the mean coverage at the given position.  If the specified position
+     * is outside of this interval, do nothing.
+     * @param position The position in genomic coordinates.
+     * @param coverage The coverage to add.
+     */
+    public void updateMeanAt(int position, double coverage) {
+        int index = position-offset;
+        if (index<0 || index>=meanArray.length) {
+            return;
+        }    
+        
+        meanArray[index].increment(coverage);
+    }
+    
+    /**
+     * Update the standard deviation of coverage at the given position.  
+     * If the specified position is outside of this interval, do nothing.
+     * @param position The position in genomic coordinates.
+     * @param coverage The coverage to add.
+     */
+    public void updateStdAt(int position, double coverage) {
+        int index = position-offset;
+        if (index<0 || index>=deviationArray.length) {
+            return;
+        }    
+        
+        deviationArray[index].increment(coverage);
+    }
+    
+    
+    /**
+     * Returns the mean coverage at the given position, or null if the given
+     * position is outside of this interval.
+     * @param position The position in genomic coordinates.
+     * @return 
+     */
+    public Double getMeanAt(int position) {
+        int index = position-offset;
+        if (index<0 || index>=meanArray.length) {
+            return null;
+        }    
+        return meanArray[index].getResult();
+    }
+    
+     /**
+     * Returns the standard deviation of coverage at the given position, or null if the given
+     * position is outside of this interval.
+     * @param position The position in genomic coordinates.
+     * @return 
+     */
+    public Double getStdAt(int position) {
+        int index = position-offset;
+        if (index<0 || index>=meanArray.length) {
+            return null;
+        }    
+        return deviationArray[index].getResult();
     }
     
     /**
