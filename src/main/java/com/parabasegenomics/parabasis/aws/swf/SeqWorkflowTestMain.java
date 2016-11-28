@@ -32,7 +32,7 @@ public class SeqWorkflowTestMain {
             
             
         service.setEndpoint("https://swf.us-east-1.amazonaws.com");
-        String domain = "PushToOmiciaDomain";
+        String domain = "SeqWorkflowDomain";
 
         
         

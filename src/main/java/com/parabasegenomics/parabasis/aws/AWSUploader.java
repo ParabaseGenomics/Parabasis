@@ -692,7 +692,7 @@ public class AWSUploader extends Application {
                 = new AmazonSimpleWorkflowClient(credentials,config);
 
             service.setEndpoint("https://swf.us-east-1.amazonaws.com");
-            String domain = "PushToOmiciaDomain";
+            String domain = "SeqWorkflowDomain";
    
              // run gaps report
              // but wait - this depends on the test ordered!!!!
@@ -724,15 +724,13 @@ public class AWSUploader extends Application {
                 + vcfFileSuffix
                 + ".gz";
          
-            PushToOmiciaWorkflowClientExternalFactory pushToOmiciaFactory
-                = new PushToOmiciaWorkflowClientExternalFactoryImpl(service,domain);
+             SeqWorkflowClientExternalFactory factory
+                = new SeqWorkflowClientExternalFactoryImpl(service,domain);
         
-            PushToOmiciaWorkflowClientExternal pusher
-                = pushToOmiciaFactory.getClient(sampleId);
-            
-            //String testOrdered = parseTest(key);
-            pusher.push(vcfFilepath);
-            //pusher.push(vcfFilepath, testOrdered,bamFilepath, bamIndexFilepath);
+        
+             SeqWorkflowClientExternal pusher
+                 = factory.getClient(sampleId);
+             pusher.push(vcfFilepath);
        
         }
         
