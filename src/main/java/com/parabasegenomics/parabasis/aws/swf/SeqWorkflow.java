@@ -17,7 +17,7 @@ import com.amazonaws.services.simpleworkflow.flow.annotations.WorkflowRegistrati
 @Workflow
 @WorkflowRegistrationOptions(defaultExecutionStartToCloseTimeoutSeconds = 3600)
 
-public interface PushToOmiciaWorkflow {   
+public interface SeqWorkflow {   
     @Execute(version = "1.0")
     public void push(String file); 
 }

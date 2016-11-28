@@ -20,7 +20,7 @@ import java.util.logging.Logger;
  *
  * @author evanmauceli
  */
-public class PushToOmiciaActivitiesImpl implements PushToOmiciaActivities {
+public class SeqWorkflowActivitiesImpl implements SeqWorkflowActivities {
 
     // 4409 for ParabaseValidation/NBDxV1.1
     // 3923 for ParabaseProduction/NBDxV1.1
@@ -77,7 +77,7 @@ public class PushToOmiciaActivitiesImpl implements PushToOmiciaActivities {
                     new File(localFile));
         } catch (InterruptedException ex) {
             Logger
-                .getLogger(PushToOmiciaActivitiesImpl.class.getName())
+                .getLogger(SeqWorkflowActivitiesImpl.class.getName())
                 .log(Level.SEVERE, null, ex);
         }
         return localFile;
@@ -99,8 +99,7 @@ public class PushToOmiciaActivitiesImpl implements PushToOmiciaActivities {
                 = translatedFile.getAbsolutePath();
     
         } catch (IOException ex) {
-            Logger.getLogger(
-                PushToOmiciaActivitiesImpl.class.getName())
+            Logger.getLogger(SeqWorkflowActivitiesImpl.class.getName())
                 .log(Level.SEVERE, null, ex);
         }
        return translatedFilename;

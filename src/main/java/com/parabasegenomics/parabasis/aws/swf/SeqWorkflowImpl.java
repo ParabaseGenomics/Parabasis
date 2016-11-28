@@ -7,10 +7,10 @@ package com.parabasegenomics.parabasis.aws.swf;
 
 import com.amazonaws.services.simpleworkflow.flow.core.Promise;
 
-public class PushToOmiciaWorkflowImpl implements PushToOmiciaWorkflow {
+public class SeqWorkflowImpl implements SeqWorkflow {
     
-    private final PushToOmiciaActivitiesClient ops
-        = new PushToOmiciaActivitiesClientImpl();
+    private final SeqWorkflowActivitiesClient ops
+        = new SeqWorkflowActivitiesClientImpl();
     
     @Override
     public void push(String file) {

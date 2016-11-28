@@ -10,14 +10,14 @@ package com.parabasegenomics.parabasis.aws.swf;
  *
  * @author evanmauceli
  */
-public class PushToOmiciaWorkflowStarter {
+public class SeqWorkflowStarter {
 
     /**
      * @param args the command line arguments
      */
     public static void main(String[] args) {
-        PushToOmiciaWorkflow pushToOmiciaWorkflow
-            = new PushToOmiciaWorkflowImpl();
+        SeqWorkflow pushToOmiciaWorkflow
+            = new SeqWorkflowImpl();
         pushToOmiciaWorkflow.push("start");
     }
     

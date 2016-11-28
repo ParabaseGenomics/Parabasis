@@ -21,7 +21,7 @@ import java.io.IOException;
 @Activities(version="1.0")
 
 
-public interface PushToOmiciaActivities {
+public interface SeqWorkflowActivities {
     
     public static final AWSDownloader downloader 
         = new AWSDownloader();

@@ -5,7 +5,7 @@
  */
 package com.parabasegenomics.parabasis.aws.swf.activities;
 
-import static com.parabasegenomics.parabasis.aws.swf.PushToOmiciaActivities.s3encryptionClient;
+import static com.parabasegenomics.parabasis.aws.swf.SeqWorkflowActivities.s3encryptionClient;
 import java.io.IOException;
 import javafx.util.Pair;
 

@@ -5,8 +5,8 @@
  */
 package com.parabasegenomics.parabasis.aws.swf.activities;
 
-import static com.parabasegenomics.parabasis.aws.swf.PushToOmiciaActivities.downloader;
-import com.parabasegenomics.parabasis.aws.swf.PushToOmiciaActivitiesImpl;
+import static com.parabasegenomics.parabasis.aws.swf.SeqWorkflowActivities.downloader;
+import com.parabasegenomics.parabasis.aws.swf.SeqWorkflowActivitiesImpl;
 import java.io.File;
 import java.util.UUID;
 import java.util.logging.Level;
@@ -38,7 +38,7 @@ public class DownloadS3ToEC2Impl implements DownloadFromS3ToEC2 {
                     new File(localFile));
         } catch (InterruptedException ex) {
             Logger
-                .getLogger(PushToOmiciaActivitiesImpl.class.getName())
+                .getLogger(SeqWorkflowActivitiesImpl.class.getName())
                 .log(Level.SEVERE, null, ex);
         }
         return localFile;
