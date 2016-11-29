@@ -16,9 +16,9 @@ public class SeqWorkflowStarter {
      * @param args the command line arguments
      */
     public static void main(String[] args) {
-        SeqWorkflow pushToOmiciaWorkflow
+        SeqWorkflow seqWorkflow
             = new SeqWorkflowImpl();
-        pushToOmiciaWorkflow.push("start");
+        seqWorkflow.push("start");
     }
     
 }

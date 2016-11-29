@@ -42,4 +42,10 @@ public interface SeqWorkflowActivities {
     // push file to Omicia for processing.
     public void pushToOmicia(String location);
     
+    // run the gaps report locally - return the local path to the report
+    public String runGapsReport(String location);
+    
+    // push the file at "location" to the provided S3 bucket and key.
+    public void pushToS3(String location, String bucket, String key);
+    
 }

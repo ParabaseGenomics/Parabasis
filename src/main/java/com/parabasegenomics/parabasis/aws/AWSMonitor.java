@@ -346,9 +346,7 @@ public class AWSMonitor {
     /**
      * Main class: create a new monitor with assay name and s3bucket and start
      * it up.
-     * @param args: 
-     *      [0] == Name of the assay/test to be monitored.
-     *      [1] == S3 Bucket to monitor.
+     * @param args
      * @throws IOException 
      */
     public static void main(String[] args) 

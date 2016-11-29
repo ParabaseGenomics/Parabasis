@@ -19,6 +19,12 @@ import java.util.logging.Logger;
 /**
  *
  * @author evanmauceli
+ * 
+ * 
+ *         // but wait: need to support more than one Omicia project id
+ * 
+ * 
+ * 
  */
 public class SeqWorkflowActivitiesImpl implements SeqWorkflowActivities {
 
@@ -155,5 +161,27 @@ public class SeqWorkflowActivitiesImpl implements SeqWorkflowActivities {
             logger.log(Level.SEVERE, null, ex);
         }
     }
+      
+      // run the gaps report locally - return the local path to the report
+    @Override
+    public String runGapsReport(String location) {
+        // create json
+        // run main (target::reportOngaps.main)
+        // return thelocal path to the report file - but wait, there are 3 files!!!
+        //   but wait: all files have a common core!!!
         
+
+        
+        return null;
+    }
+    
+    // push the file at "location" to the provided S3 bucket and key.
+    @Override
+    public void pushToS3(String location, String bucket, String key) {
+    
+       // create transfer manager
+        
+    }
+    
+    
 }
