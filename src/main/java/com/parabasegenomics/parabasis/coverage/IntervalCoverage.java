@@ -82,6 +82,13 @@ public class IntervalCoverage {
         coefficientOfVariation
                 = (1+(1/(4*count)))
                 * (standardDeviation.getResult()/mean.getResult());
+        
+        for (int index=0; index<coverageArray.length; ++index) {
+            int position = index+offset;
+            this.updateMeanAt(position,coverageAt(position));
+            this.updateStdAt(position,coverageAt(position));
+        }
+        
     }
     
     /**
