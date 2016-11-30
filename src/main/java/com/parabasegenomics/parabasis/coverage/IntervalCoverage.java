@@ -26,8 +26,8 @@ public class IntervalCoverage {
     private double coefficientOfVariation;
     private final double [] coverageArray;
     private final int offset;
-    private final Mean [] meanArray;
-    private final StandardDeviation [] deviationArray;
+    private Mean [] meanArray;
+    private StandardDeviation [] deviationArray;
     
     /**
      * Construct with an Interval.
@@ -44,6 +44,12 @@ public class IntervalCoverage {
         
         meanArray = new Mean [interval.length()-1];
         deviationArray = new StandardDeviation [interval.length()-1];
+        
+        for (int index=0; index<interval.length()-1; ++index) {
+            meanArray[index] = new Mean();
+            deviationArray[index] = new StandardDeviation();
+        }
+        
     }
     
     /**
@@ -232,7 +238,7 @@ public class IntervalCoverage {
         if (index<0 || index>=meanArray.length) {
             return;
         }    
-        
+
         meanArray[index].increment(coverage);
     }
     
