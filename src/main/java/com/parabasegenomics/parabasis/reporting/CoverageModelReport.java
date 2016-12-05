@@ -50,9 +50,9 @@ public class CoverageModelReport extends Report {
         bufferedWriter.write(COL_HEADER);   
         
        for (IntervalCoverage intervalCoverage : targetCoverageList) {
-           StringBuilder builder = new StringBuilder();
-           
            Interval interval = intervalCoverage.getInterval();
+ 
+           StringBuilder builder = new StringBuilder();
            builder.append(interval.getContig());
            builder.append(TAB);
            builder.append(interval.getStart());
@@ -67,8 +67,9 @@ public class CoverageModelReport extends Report {
            builder.append(TAB);
            builder.append(intervalCoverage.getCoefficientOfVariation());
            builder.append(NEWLINE);
-           
+
            bufferedWriter.write(builder.toString());
+
            
         }
     }
@@ -91,6 +92,7 @@ public class CoverageModelReport extends Report {
         
         while (this.getReader().ready()) {
             String line = this.readLine();
+            System.out.println("line "+line);
             String [] tokens = line.split(TAB);
             Interval interval 
                 = new Interval(

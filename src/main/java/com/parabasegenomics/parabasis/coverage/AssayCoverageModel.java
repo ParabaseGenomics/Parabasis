@@ -216,6 +216,16 @@ public class AssayCoverageModel {
         }   
     }
     
+    public Double getStandardDeviationAt(Interval interval) {
+        String keyString = stringifyInterval(interval);
+        Integer index = modelIntervalIndexMap.get(keyString); 
+        if (index == null) {
+            return null;
+        } else {
+            return intervalCoverages.get(index).getStandardDeviation();
+        }   
+    }
+    
     /**
      * Returns the average count of low coverage bases for the given interval, 
      * or null if the given interval is not in the model.

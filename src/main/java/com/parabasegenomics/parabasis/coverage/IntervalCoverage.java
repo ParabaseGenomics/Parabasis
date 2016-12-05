@@ -26,8 +26,8 @@ public class IntervalCoverage {
     private double coefficientOfVariation;
     private final double [] coverageArray;
     private final int offset;
-    private Mean [] meanArray;
-    private StandardDeviation [] deviationArray;
+    private final Mean [] meanArray;
+    private final StandardDeviation [] deviationArray;
     
     /**
      * Construct with an Interval.
@@ -285,6 +285,23 @@ public class IntervalCoverage {
         }    
         return deviationArray[index].getResult();
     }
+    
+    /**
+     * Returns the coefficient of variation at this position, or null
+     * if the position is out of bounds.
+     * @param position
+     * @return 
+     */
+    public Double getCoefficientOfVariationAt(int position) {
+        int index = position-offset;
+        if (index<0 || index>=meanArray.length) {
+            return null;
+        }    
+        
+        return (1+(1/(4*count)))
+                * (deviationArray[index].getResult()/meanArray[index].getResult());
+    }
+    
     
     /**
      * Returns the current count of low coverage bases for this interval.

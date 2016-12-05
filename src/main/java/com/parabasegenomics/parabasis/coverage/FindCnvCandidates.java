@@ -85,7 +85,8 @@ public class FindCnvCandidates {
             System.out.print("\t"+intervalCoverage.getMean());
             System.out.print("\t" + coverageModel.getZscore(intervalCoverage));
             System.out.println(TAB+coverageModel.getMeanCoverageAt(interval));
-
+            System.out.println(TAB+coverageModel.getStandardDeviationAt(interval));
+            
             
             if (coverageModel.isOutlier(intervalCoverage)) {
                  
