@@ -47,7 +47,7 @@ public class SeqWorkflowTestMain {
         String id = "testPush";
         SeqWorkflowClientExternal pusher
             = factory.getClient(id);
-        pusher.push(file);
+        pusher.doWork(file);
         
         
     }

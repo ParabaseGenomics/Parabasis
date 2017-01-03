@@ -19,5 +19,5 @@ import com.amazonaws.services.simpleworkflow.flow.annotations.WorkflowRegistrati
 
 public interface SeqWorkflow {   
     @Execute(version = "1.0")
-    public void push(String file); 
+    public void doWork(String file); 
 }

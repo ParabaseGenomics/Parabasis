@@ -5,14 +5,14 @@
  */
 package com.parabasegenomics.parabasis.aws.swf;
 
-import com.parabasegenomics.parabasis.aws.AWSMonitor;
+import com.amazonaws.AmazonClientException;
 import com.parabasegenomics.parabasis.aws.ReferenceGenomeTranslator;
+import com.parabasegenomics.parabasis.aws.S3TransferUtility;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -31,65 +31,59 @@ public class SeqWorkflowActivitiesImpl implements SeqWorkflowActivities {
     // 4409 for ParabaseValidation/NBDxV1.1
     // 3923 for ParabaseProduction/NBDxV1.1
     // 35877 for ParabaseProduction/NBDxV2
-    private final static String OMICIA_PROJECT_ID = "35877"; 
+    private final static String [] OMICIA_PROJECT_IDS = { "35877", "3923", "4409" }; 
     private final static String vcfFileSuffix = ".vcf.gz";
     private final static String SLASH = "/";
-    
+     
     private final static String PYTHON_PATH = "/usr/bin/python27";
+    private final static String HOME_DIR = "/home/ec2-user";
     
     private final static String omiciaPythonUploadScript
-            = "/home/ec2-user/omicia_api_examples/python/upload_genome.py";
+            = HOME_DIR + "/omicia_api_examples/python/upload_genome.py";
     
     private final static String omiciaPythonUploadGender = "unspecified";
     private final static String omiciaPythonUploadFileFormat = "vcf";
     
     private final static String localTmpdirFilePath
-        = "/home/ec2-user/tmp/";
+        = HOME_DIR + "/tmp/";
     
-    private final static String homeDirectory = "/home/ec2-user";
-    private final static String logFileName = "Pusher.log";
+    private final static String logFileName = "SeqWorkflow.log";
     
     private static final Logger logger 
-        = Logger.getLogger(AWSMonitor.class.getName());
+        = Logger.getLogger(SeqWorkflowActivitiesImpl.class.getName());
     
-    // full S3 "path" to vcf file
-    @Override
-    public String isValidS3Location(
-        String bucket,String key)
-    throws IOException {
-        String location = bucket+"/"+key;
-        if (s3encryptionClient
-            .doesObjectExist(
-                bucket, key)) {
-            return location;
-        } else {
-            throw( new IOException("not valid s3 object:" + location));
-        }
-    }
+    private S3TransferUtility s3TransferUtility;
+    
     
     // returns local path to vcf file
     @Override
     public String downloadToLocalEC2(String bucket,String key) {
+        
+        // last bit of the key is the filename we want to use upon download
+        String fileName = key.substring(key.lastIndexOf(SLASH));    
         String localFile 
             = localTmpdirFilePath
             + "/"
-            + UUID.randomUUID()
-            + ".vcf.gz";
+            + fileName;
+        
         try {
-            downloader
+            s3TransferUtility
                 .downloadFileFromS3Bucket(
                     bucket,
                     key,
                     new File(localFile));
         } catch (InterruptedException ex) {
-            Logger
-                .getLogger(SeqWorkflowActivitiesImpl.class.getName())
-                .log(Level.SEVERE, null, ex);
+                logger.log(Level.SEVERE, null, ex);
         }
         return localFile;
     }
     
-    // returns local path to converted vcf file
+    /**
+     * Converts a vcf file in hg19 coordinates to one in b37 coordinates
+     * for Omicia, since Omicia doesn't annotate hg19.  
+     * @param location The local path to the hg19 vcf file.
+     * @return Returns the local path to the b37 vcf file.
+     */
     @Override
     public String convertCoordinates(String location) {
         String translatedFilename = null;
@@ -105,24 +99,34 @@ public class SeqWorkflowActivitiesImpl implements SeqWorkflowActivities {
                 = translatedFile.getAbsolutePath();
     
         } catch (IOException ex) {
-            Logger.getLogger(SeqWorkflowActivitiesImpl.class.getName())
-                .log(Level.SEVERE, null, ex);
+                logger.log(Level.SEVERE, null, ex);
         }
        return translatedFilename;
     }
     
-    // push file to Omicia for processing.
+    /**
+     * Push a vcf file to Omicia for annotation.
+     * @param location Local path to the vcf file. 
+     */
     @Override
     public void pushToOmicia(String location) {
         
-        String label="test";
+        String label=location.substring(location.lastIndexOf(SLASH));   
         Integer id=1;
-        File logFile = new File(logFileName);
+        File logFile = new File(label + ".pushToOmicia.log");
+        
+        // set the correct project id for Omicia given where the vcf file is going.
+        String omiciaProjectId = OMICIA_PROJECT_IDS[0];
+        if (location.contains("NBDxV1.1")) {
+            omiciaProjectId = OMICIA_PROJECT_IDS[1];
+        } else if (location.contains("Validation")) {
+            omiciaProjectId = OMICIA_PROJECT_IDS[2];
+        }
         
         List<String> command = new ArrayList<>();
         command.add(PYTHON_PATH);
         command.add(omiciaPythonUploadScript);
-        command.add(OMICIA_PROJECT_ID);
+        command.add(omiciaProjectId);
         command.add(label); // this is the sample ID  - guess we need to keep it around
         command.add(omiciaPythonUploadGender);
         command.add(omiciaPythonUploadFileFormat);
@@ -154,7 +158,7 @@ public class SeqWorkflowActivitiesImpl implements SeqWorkflowActivities {
                 Files.list(localFileToDelete.toPath());//Files.delete(localFileToDelete.toPath());
                 logger.log(Level.INFO,"done cleanup");
             } catch (IOException ex) {
-              //  logger.log(Level.SEVERE,null,ex);               
+              logger.log(Level.SEVERE,null,ex);               
             }
             
         } catch (InterruptedException ex) {
@@ -162,25 +166,34 @@ public class SeqWorkflowActivitiesImpl implements SeqWorkflowActivities {
         }
     }
       
-      // run the gaps report locally - return the local path to the report
+      // run the gaps report locally - return the local paths to the reports
     @Override
-    public String runGapsReport(String location) {
+    public String runGapsReport(String localBamFile) {
         // create json
         // run main (target::reportOngaps.main)
         // return thelocal path to the report file - but wait, there are 3 files!!!
         //   but wait: all files have a common core!!!
         
-
+        String filePath 
+            = localBamFile.substring(0,localBamFile.indexOf(".bam"));
+        String localResourceFile = filePath + ".resources.json";
         
-        return null;
+        
+        
+        String reportBase = "";
+        return reportBase;
     }
     
     // push the file at "location" to the provided S3 bucket and key.
     @Override
     public void pushToS3(String location, String bucket, String key) {
-    
-       // create transfer manager
-        
+   
+        File file = new File(location);
+        try { 
+            s3TransferUtility.uploadFileToS3Bucket(file, bucket, key);
+        } catch (AmazonClientException | InterruptedException ex) {
+            logger.log(Level.SEVERE, null, ex);
+        }
     }
     
     

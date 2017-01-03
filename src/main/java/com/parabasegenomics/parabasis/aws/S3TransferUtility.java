@@ -10,7 +10,6 @@ import com.amazonaws.AmazonServiceException;
 import com.amazonaws.SDKGlobalConfiguration;
 import com.amazonaws.auth.profile.ProfileCredentialsProvider;
 import com.amazonaws.event.ProgressTracker;
-import com.amazonaws.event.request.Progress;
 import com.amazonaws.regions.Region;
 import com.amazonaws.regions.Regions;
 import com.amazonaws.services.s3.AmazonS3EncryptionClient;
@@ -210,4 +209,23 @@ public class S3TransferUtility {
     }
     
     
+    /**
+     * Method to check if the provided S3 location exists.
+     * @param bucket The S3 bucket in question.
+     * @param key "Path" to the file in question.
+     * @return Returns the concatenated bucket and key as a String.
+     * @throws IOException if the location is not valid.
+     */
+    private String isValidS3Location(
+        String bucket,String key)
+    throws IOException {
+        String location = bucket+"/"+key;
+        if (encryptionClient
+            .doesObjectExist(
+                bucket, key)) {
+            return location;
+        } else {
+            throw( new IOException("not valid s3 object:" + location));
+        }
+    }
 }

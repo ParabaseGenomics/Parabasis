@@ -730,7 +730,7 @@ public class AWSUploader extends Application {
         
              SeqWorkflowClientExternal pusher
                  = factory.getClient(sampleId);
-             pusher.push(vcfFilepath);
+             pusher.doWork(vcfFilepath);
        
         }
         
