@@ -36,7 +36,7 @@ public class IntervalCoverage {
      * @param position
      * @return 
      */
-    public double coverageAt(int position) {
+    public double getCoverageAt(int position) {
         int index=position-offset;
         if (index<0 || index>=coverageArray.length) {
             return -1.;
@@ -49,7 +49,7 @@ public class IntervalCoverage {
      * Returns the total read coverage for this interval.
      * @return 
      */
-    private double coverage() {
+    public double getAverageCoverage() {
         double coverageCount=0.0;
         for (int index=0; index<coverageArray.length; ++index) {
             coverageCount += coverageArray[index];

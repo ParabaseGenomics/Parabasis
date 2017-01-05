@@ -32,8 +32,8 @@ public class IntervalCoverageManager {
     private final List<IntervalCoverage> intervalCoverages;
     private final Map<String,Integer> modelIntervalIndexMap;
     private final SamReaderFactory samReaderFactory ;
-    private final OverlapDetector targetOverlapDetector;
     
+    private OverlapDetector targetOverlapDetector;
     private SAMFileHeader samFileHeader;     
     private SamReader samReader;
     
@@ -58,6 +58,68 @@ public class IntervalCoverageManager {
             index++;
         }
         
+    }
+    
+    /**
+     * Reset the manager with the provided intervals.
+     * @param intervals
+     */
+    public void reset(List<Interval> intervals) {
+        intervalCoverages.clear();
+        modelIntervalIndexMap.clear();
+        targetOverlapDetector = new OverlapDetector<>(0,0);
+        
+        targetOverlapDetector.addAll(intervals,intervals);
+        Integer index=0;
+        for (Interval interval : intervals) {
+            intervalCoverages.add(new IntervalCoverage(interval));
+            modelIntervalIndexMap.put(stringifyInterval(interval), index);
+            index++;
+        }
+    }
+    
+    /**
+     * Access the held interval coverage objects.
+     * @return 
+     */
+    public final List<IntervalCoverage> getIntervals() {
+        return intervalCoverages;
+    }
+    
+    /**
+     * Returns the coverage of the provided interval.
+     * @param interval
+     * @return 
+     */
+  
+    public Double getCoverage(Interval interval) {
+        String keyString = stringifyInterval(interval);
+        Integer index = modelIntervalIndexMap.get(keyString); 
+        if (index == null) {
+            return null;
+        } else {
+            return intervalCoverages.get(index).getAverageCoverage();
+        }      
+    }
+    
+     /**
+     * Returns the average count of low coverage bases for the given interval, 
+     * or null if the given interval is not in the model.
+     * @param interval
+     * @param threshold Return if count is less than this number.
+     * @return 
+     */
+    public Double getLowCoverageCountAt(Interval interval, Double threshold) {
+        String keyString = stringifyInterval(interval);
+        Integer index = modelIntervalIndexMap.get(keyString); 
+        if (index == null) {
+            return null;
+        } else {
+            return intervalCoverages
+                .get(index)
+                .getLowCoverageCount(threshold);
+            
+        }   
     }
     
     

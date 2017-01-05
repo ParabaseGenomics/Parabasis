@@ -5,7 +5,7 @@
  */
 package com.parabasegenomics.parabasis.decorators;
 
-import com.parabasegenomics.parabasis.coverage.AssayCoverageModel;
+import com.parabasegenomics.parabasis.coverage.IntervalCoverageManager;
 import static com.parabasegenomics.parabasis.decorators.AnnotationKeys.COVERAGE_KEY;
 import static com.parabasegenomics.parabasis.decorators.FormatPatterns.percentPattern;
 import com.parabasegenomics.parabasis.target.AnnotatedInterval;
@@ -23,17 +23,17 @@ public class CoverageDecorator implements IntervalDecorator {
     private static final String KEY = COVERAGE_KEY;
     private final static String formatPattern = percentPattern;
     private final DecimalFormat decimalFormat;
-    private final AssayCoverageModel coverageModel;
+    private final IntervalCoverageManager intervalCoverageManager;
     
     /**
      * Constructor.  
-     * @param assayCoverageModel
+     * @param intervalCoverageManager
      * @throws IOException 
      */
-    public CoverageDecorator(AssayCoverageModel assayCoverageModel) 
+    public CoverageDecorator(IntervalCoverageManager intervalCoverageManager) 
     throws IOException {
         decimalFormat = new DecimalFormat(formatPattern);
-        coverageModel = assayCoverageModel; 
+        this.intervalCoverageManager = intervalCoverageManager; 
     }
     
     /**
@@ -61,7 +61,7 @@ public class CoverageDecorator implements IntervalDecorator {
      */
     @Override
     public int getCount(Interval interval) {
-        Double coverage = coverageModel.getMeanCoverageAt(interval);
+        Double coverage = intervalCoverageManager.getCoverage(interval);
         if (coverage != null) {
             return coverage.intValue();
         } else {

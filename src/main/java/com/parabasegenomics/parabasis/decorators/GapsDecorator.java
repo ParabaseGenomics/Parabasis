@@ -5,7 +5,7 @@
  */
 package com.parabasegenomics.parabasis.decorators;
 
-import com.parabasegenomics.parabasis.coverage.AssayCoverageModel;
+import com.parabasegenomics.parabasis.coverage.IntervalCoverageManager;
 import static com.parabasegenomics.parabasis.decorators.AnnotationKeys.GAPS_KEY;
 import static com.parabasegenomics.parabasis.decorators.FormatPatterns.percentPattern;
 import com.parabasegenomics.parabasis.target.AnnotatedInterval;
@@ -22,7 +22,7 @@ public class GapsDecorator implements IntervalDecorator {
     private final static String formatPattern = percentPattern;
     private final DecimalFormat decimalFormat;
 
-    private final AssayCoverageModel coverageModel;
+    private final IntervalCoverageManager coverageModel;
     private final Double threshold;
     
     /**
@@ -31,7 +31,9 @@ public class GapsDecorator implements IntervalDecorator {
      * @param threshold coverage less than this value is a "gap".
      * @throws IOException 
      */
-    public GapsDecorator(AssayCoverageModel assayCoverageModel, Double threshold) 
+    public GapsDecorator(
+        IntervalCoverageManager assayCoverageModel, 
+        Double threshold) 
     throws IOException {
         decimalFormat = new DecimalFormat(formatPattern);
         coverageModel = assayCoverageModel; 
