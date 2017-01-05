@@ -102,6 +102,26 @@ public class IntervalCoverageManager {
         }      
     }
     
+    
+    /**
+     * Returns the coverage at the specified position.
+     * @param interval
+     * @param position
+     * @return 
+     */
+    public Double getCoverageAt(Interval interval, String position) {
+        String keyString = stringifyInterval(interval);
+        Integer index = modelIntervalIndexMap.get(keyString); 
+        if (index == null) {
+            return null;
+        } else {           
+            int chrCoordinate = parseStringPosition(position);
+            return intervalCoverages
+                .get(index)
+                .getCoverageAt(chrCoordinate);
+        }
+    }
+    
      /**
      * Returns the average count of low coverage bases for the given interval, 
      * or null if the given interval is not in the model.
@@ -188,6 +208,17 @@ public class IntervalCoverageManager {
         samReader.close();
     }
     
+    /**
+     * Returns the position in a chromosome as an int from the provided string.
+     * @param positionString
+     * @return 
+     */
+    private int parseStringPosition(String positionString) {
+        return ( Integer
+            .parseInt(
+                positionString
+                    .substring(positionString.indexOf(":")+1)) );
+    }
     
     /**
      * Produce a String from the given Interval object.  The String needs to be

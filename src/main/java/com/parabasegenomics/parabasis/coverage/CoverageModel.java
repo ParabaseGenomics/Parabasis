@@ -7,9 +7,11 @@ package com.parabasegenomics.parabasis.coverage;
 
 import htsjdk.samtools.util.Interval;
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.util.List;
 
@@ -22,38 +24,106 @@ public class CoverageModel {
 
     private static final String TAB = "\t";
     
-    private final String [] positions;
-    private final double [] means;
-    private final double [] standardDeviations;
-    private final double [] coeffOfVariations;
+    // a position is a string of the form "chrA:position"
+    private String [] positions;
     
-    private int count;
+    private double [] means;
+    private double [] varianceDeviations;
+    private double [] coeffOfVariations;
+    
+    private Integer count;
+    private Double threshold;
+    
     
     /**
-     * Creates an empty CoverageModel from a list of intervals.  Uses the 
+     * Null constructor, methods fill in the stats.
+     */
+    public CoverageModel() {
+        positions = null;
+        means = null;
+        varianceDeviations = null;
+        coeffOfVariations = null;
+        count=0;
+        threshold=10.;
+    }
+    
+    /**
+     * Initializes the member arrays from a list of intervals.  Use the 
      * updatePosition(...) method to fill the stats.
      * @param intervals 
      */
-    public CoverageModel(List<Interval> intervals) {
+    public void intitialize(List<Interval> intervals) {
         
         Integer baseCount = countBases(intervals);
         positions = new String [baseCount];
         means = new double [baseCount];
-        standardDeviations = new double [baseCount];
+        varianceDeviations = new double [baseCount];
         coeffOfVariations = new double [baseCount];
         
         count=0;
+        threshold=10.;
         
+        Integer index=0;
+        for (Interval interval : intervals) {
+            String contig = interval.getContig();
+            Integer startPos = interval.getStart();
+            Integer endPos = interval.getEnd();
+                
+            for (Integer pos=startPos; pos<endPos; pos++) {
+                positions[index]
+                    = contig + ":" + pos.toString();
+                index++;
+            }  
+        }
     }
     
     /**
-     * Read a CoverageModel from a file.  Directly sets the stats, unlike the 
-     * constructor that takes a list of intervals.
+     * Set the threshold for defining an outlier coverage (by z-score).
+     * @param t 
+     */
+    public void setThreshold(double t) {
+        threshold=t;
+    }
+    
+    /**
+     * Write out the coverage model to a file. The format is:
+     * 
+     * line1: the number of samples used to make the model
+     * line2: the number of positions in the model
+     * line3-N: the model: position"\t"mean"\t"std"\t"cv"\n"
+     * 
+     * @param coverageModelFile
+     * @throws IOException 
+     */
+    public void write(File coverageModelFile) 
+    throws IOException {
+        try (BufferedWriter writer 
+            = new BufferedWriter(new FileWriter(coverageModelFile))) {
+            String sampleCount = count.toString();
+            writer.write(sampleCount);
+            writer.newLine();
+            
+            Integer intervalsSize = positions.length;
+            writer.write(intervalsSize.toString());
+            writer.newLine();
+            
+            for (int index=0; index<intervalsSize; index++) {
+                writer.write(positions[index]
+                    +"\t"+means[index]
+                    +"\t"+varianceDeviations[index]
+                    +"\t"+coeffOfVariations[index]);
+                writer.newLine();
+            }
+        }
+    }
+    
+    /**
+     * Read a CoverageModel from a file.  Directly sets the stats.
      * @param coverageModelFile File containing the coverage model.  
      * @throws FileNotFoundException
      * @throws IOException 
      */
-    public CoverageModel(File coverageModelFile) 
+    public void read(File coverageModelFile) 
     throws FileNotFoundException, IOException {
         BufferedReader reader 
             = new BufferedReader(new FileReader(coverageModelFile));
@@ -86,19 +156,30 @@ public class CoverageModel {
         }
         positions = new String [baseCount];
         means = new double [baseCount];
-        standardDeviations = new double [baseCount];
+        varianceDeviations = new double [baseCount];
         coeffOfVariations = new double [baseCount];
         
         Integer index = 0;
         while (reader.ready()) {
             line = reader.readLine();
+            if (line.isEmpty()) {
+                break;
+            }
             String [] tokens = line.split(TAB);
             positions[index]=tokens[0];
             means[index]=Double.parseDouble(tokens[1]);
-            standardDeviations[index]=Double.parseDouble(tokens[2]);
+            varianceDeviations[index]=Double.parseDouble(tokens[2]);
             coeffOfVariations[index]=Double.parseDouble(tokens[3]);
+            index++;
         }
-        
+        reader.close();
+    }
+    
+    /**
+     * Increment the sample count.
+     */
+    public void incrementCount() {
+        count++;
     }
     
     /**
@@ -112,29 +193,68 @@ public class CoverageModel {
      * correct array element.  If not, throw an IOException.
      * @throws IOException 
      */
-    public void updatePosition(int thisCount, int index, String thisPosition) 
+    public void updatePosition(double thisCount, int index, String thisPosition) 
     throws IOException {
         if (!arrayInSync(index,thisPosition)) {
             throw new IOException("index out of sync with position: " 
                 + index +" "+thisPosition +" "+positions[index]);
         }
-        
-        count++;
+
         if (count==1) {
             means[index]=thisCount;
-            standardDeviations[index]=0;
+            varianceDeviations[index]=0;
             coeffOfVariations[index]=0;
         } else {
-            means[index] += (thisCount-means[index])/count;
             
-            standardDeviations[index] 
-                += ( (thisCount-means[index])*(thisCount-means[index]) )
-                    *( (count-1)/count );
+            double currentMeanDiff = thisCount-means[index];
+            means[index] += (currentMeanDiff)/count;
             
+            double updatedMeanDiff = thisCount-means[index];
+            varianceDeviations[index] += (currentMeanDiff*updatedMeanDiff)/(count-1);
             coeffOfVariations[index]
-                = (1+(1/(4*count))) * (standardDeviations[index]/means[index]);
+                = (1+(1/(4*count))) * (Math.sqrt(varianceDeviations[index])/means[index]);
         }
+        
     }
+    
+    public boolean isOutlier(double testCount, int index, String thisPosition) 
+    throws IOException {
+        if (!arrayInSync(index,thisPosition)) {
+            throw new IOException("index out of sync with position: " 
+                + index +" "+thisPosition +" "+positions[index]);
+        }    
+
+        Double zscore = getZscore(testCount,index);
+        if (zscore == null) {
+           return false;
+       }
+       return (Math.abs(zscore)>threshold);      
+    }
+    
+    /**
+     * Returns the z-score of the provided coverage given the current
+     * state of the model. Returns null if the interval is not held by the model.
+     * 
+     * A naive interpretation: 
+     *  negative zscore = deletion 
+     *  positive zscore = gain
+     * 
+     * @param testCount
+     * @param index
+     * @return 
+     */
+    public Double getZscore(double testCount,Integer index) {
+        if (index != null) {
+            Double mean = means[index];
+            Double std = Math.sqrt(varianceDeviations[index]);
+            Double zscore 
+                = (testCount-mean)/std;
+            return (zscore);
+        }
+        return null;
+    }
+    
+
     
     /**
      * Check that the index into the local arrays is in sync with the given 
