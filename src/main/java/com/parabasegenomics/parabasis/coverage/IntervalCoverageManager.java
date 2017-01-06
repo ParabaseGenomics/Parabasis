@@ -36,6 +36,7 @@ public class IntervalCoverageManager {
     private OverlapDetector targetOverlapDetector;
     private SAMFileHeader samFileHeader;     
     private SamReader samReader;
+    private Integer numReads;
     
     
     public IntervalCoverageManager(String assay, List<Interval> intervals) {
@@ -48,6 +49,8 @@ public class IntervalCoverageManager {
         
         targetOverlapDetector = new OverlapDetector<>(0,0);
         targetOverlapDetector.addAll(intervals,intervals);
+        
+        numReads=0;
         
         // create a new IntervalCoverage object for each target in the assay
         // set the mapping of interval to index in list
@@ -69,6 +72,8 @@ public class IntervalCoverageManager {
         modelIntervalIndexMap.clear();
         targetOverlapDetector = new OverlapDetector<>(0,0);
         
+        numReads=0;
+        
         targetOverlapDetector.addAll(intervals,intervals);
         Integer index=0;
         for (Interval interval : intervals) {
@@ -85,6 +90,15 @@ public class IntervalCoverageManager {
     public final List<IntervalCoverage> getIntervals() {
         return intervalCoverages;
     }
+    
+    /**
+     * Returns the count of accepted reads in the bam file.
+     * @return 
+     */
+    public Integer getReadCount() {
+        return numReads;
+    }
+    
     
     /**
      * Returns the coverage of the provided interval.
@@ -173,7 +187,8 @@ public class IntervalCoverageManager {
             if (samRecord.getDuplicateReadFlag()) {
                 continue;
             }
-
+            ++numReads;
+            
             Interval recordInterval 
                 = new Interval(
                     samRecord.getReferenceName(),

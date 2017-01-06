@@ -14,6 +14,7 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.List;
+import javax.json.JsonArray;
 
 /**
  * Class to provide a statistical description of average coverage performance 
@@ -48,12 +49,10 @@ public class CoverageModel {
     }
     
     /**
-     * Initializes the member arrays from a list of intervals.  Use the 
-     * updatePosition(...) method to fill the stats.
+     * Initialize the member arrays from a list of intervals.
      * @param intervals 
      */
-    public void intitialize(List<Interval> intervals) {
-        
+    public void initialize(List<Interval> intervals) {
         Integer baseCount = countBases(intervals);
         positions = new String [baseCount];
         means = new double [baseCount];
@@ -74,7 +73,65 @@ public class CoverageModel {
                     = contig + ":" + pos.toString();
                 index++;
             }  
-        }
+        } 
+    }
+    
+    /**
+     * Build the member arrays from a list of intervals and bam files.  
+     * @param intervals 
+     * @param jsonArray 
+     * @throws java.io.IOException 
+     */
+    public void build(List<Interval> intervals,JsonArray jsonArray) 
+    throws IOException {
+        
+        initialize(intervals);
+        
+        String assayName="dummy";
+        for (int bamIndex=0; bamIndex<jsonArray.size(); bamIndex++) { 
+            IntervalCoverageManager coverageManager 
+                = new IntervalCoverageManager(assayName,intervals);
+
+            String bamFilepath = jsonArray.getString(bamIndex);
+            coverageManager.parseBam(new File(bamFilepath));
+
+            Integer readCount = coverageManager.getReadCount();
+            Double weight =  1000000000.0/(readCount*75);
+
+            incrementCount();
+
+            boolean isMale = parseBamNameForMF(new File(bamFilepath));
+
+            Integer index=0;
+            for (Interval interval : intervals) {
+                String contig = interval.getContig();
+                Integer startPos = interval.getStart();
+                Integer endPos = interval.getEnd();
+
+                for (Integer pos=startPos; pos<endPos; pos++) {
+                    String positionString 
+                        = contig + ":" + pos.toString();
+
+                    Double locusCoverage 
+                        = weight*coverageManager.getCoverageAt(interval, positionString);
+                    if (isMale && contig.equals("chrX")) {
+                        locusCoverage *= 2.;
+                    }
+                    updatePosition(locusCoverage, index, positionString);
+
+                    index++;  
+                }                          
+            }            
+        }    
+    }
+    
+    
+    /**
+     * Create the model from a list of BAM files provided in a JsonArray.
+     * @param jsonArray 
+     */
+    public void createFromList(JsonArray jsonArray) {
+        
     }
     
     /**
@@ -282,4 +339,19 @@ public class CoverageModel {
     } 
     
     
+  /**
+     * Ugly hack used to identify the NBDxV1.1 samples for male/female coverage levels
+     * adjustments on the X chr.
+     * @param file
+     * @return 
+     */
+     private boolean parseBamNameForMF(File file) {
+        String fileAsString = file.getName();
+        return (fileAsString.contains("AB") 
+            || fileAsString.contains("AMI")
+            || fileAsString.contains("APHL-7")
+            || fileAsString.contains("10844")
+            || fileAsString.contains("CSC31206"));
+    }
+
 }

@@ -83,41 +83,8 @@ public class FindCnvCandidates {
         if (coverageModelFile.exists()) {
             coverageModel.read(coverageModelFile);
         } else {
-            coverageModel.intitialize(targetIntervals);
-            for (int bamIndex=0; bamIndex<bamArray.size(); bamIndex++) { 
-                IntervalCoverageManager coverageManager 
-                    = new IntervalCoverageManager(assayName,targetIntervals);
-
-                String bamFilepath = bamArray.getString(bamIndex);
-                System.out.println(bamFilepath);
-                coverageManager.parseBam(new File(bamFilepath));
-                coverageModel.incrementCount();
-
-                Integer index=0;
-                for (Interval interval : targetIntervals) {
-                    String contig = interval.getContig();
-                    Integer startPos = interval.getStart();
-                    Integer endPos = interval.getEnd();
-
-                    for (Integer pos=startPos; pos<endPos; pos++) {
-                        String positionString 
-                            = contig + ":" + pos.toString();
-
-                        Double locusCoverage 
-                            = coverageManager.getCoverageAt(interval, positionString);
-
-                        System.out.println("\t"+contig+"\t"+pos.toString()+"\t"+locusCoverage);
-                        coverageModel.updatePosition(
-                             locusCoverage, index, positionString);
-
-                        index++;  
-                    }                          
-                }            
-            }
-
-           if (!coverageModelFile.exists()) { 
-               coverageModel.write(coverageModelFile);
-           } 
+            coverageModel.build(targetIntervals,bamArray);
+            coverageModel.write(coverageModelFile);
         }
        
        // load the test bam
@@ -132,7 +99,11 @@ public class FindCnvCandidates {
         String testBamFilepath = testBamArray.getString(0);
         testCoverageManager.parseBam(new File(testBamFilepath));
         
+         Integer readCount = testCoverageManager.getReadCount();
+         Double testWeight =  2*1000000000.0/(readCount*75); // the 2 because all Kaler samples are male
+        
         coverageModel.setThreshold(threshold);
+        
         
         Integer index=0;
         for (Interval interval : targetIntervals) {
@@ -145,7 +116,7 @@ public class FindCnvCandidates {
                     = contig + ":" + pos.toString();
 
                 Double locusCoverage 
-                    = testCoverageManager
+                    = testWeight*testCoverageManager
                         .getCoverageAt(interval, positionString);
 
                 Integer nextPos = pos+1;
@@ -159,12 +130,18 @@ public class FindCnvCandidates {
                     +"\t"
                     + nextPos.toString()
                     +"\t"
-                    +locusCoverage.toString());
+                    +locusCoverage.toString()
+                    +"\t"
+                    +coverageModel.getZscore(locusCoverage, index));
 
                 }
                 index++;
             }
         }
     }
+ 
+   
+
+    
     
 }
