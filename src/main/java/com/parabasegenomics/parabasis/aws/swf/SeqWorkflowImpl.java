@@ -34,7 +34,8 @@ public class SeqWorkflowImpl implements SeqWorkflow {
         Promise<String> convertedFile
             = ops.convertCoordinates(localFile);
         
-        ops.pushToOmicia(convertedFile);
+        Promise<String> pushedToOmicia
+            = ops.pushToOmicia(convertedFile);
         
         Promise<String> localBamFile
             = ops.downloadToLocalEC2(bucket, bamKey);

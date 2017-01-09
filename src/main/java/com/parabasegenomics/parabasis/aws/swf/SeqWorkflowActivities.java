@@ -26,7 +26,7 @@ public interface SeqWorkflowActivities {
     public String convertCoordinates(String location);
     
     // push file to Omicia for processing.
-    public void pushToOmicia(String location);
+    public String pushToOmicia(String location);
     
     // run the gaps report locally - return the local path to the reports
     public String runGapsReport(String location);

@@ -109,7 +109,7 @@ public class SeqWorkflowActivitiesImpl implements SeqWorkflowActivities {
      * @param location Local path to the vcf file. 
      */
     @Override
-    public void pushToOmicia(String location) {
+    public String pushToOmicia(String location) {
         
         String label=location.substring(location.lastIndexOf(SLASH));   
         Integer id=1;
@@ -164,6 +164,7 @@ public class SeqWorkflowActivitiesImpl implements SeqWorkflowActivities {
         } catch (InterruptedException ex) {
             logger.log(Level.SEVERE, null, ex);
         }
+        return "Done";
     }
       
       // run the gaps report locally - return the local paths to the reports
