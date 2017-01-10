@@ -5,7 +5,7 @@
  */
 package com.parabasegenomics.parabasis.target;
 
-import com.parabasegenomics.parabasis.coverage.AssayCoverageModel;
+import com.parabasegenomics.parabasis.coverage.IntervalCoverageManager;
 import static com.parabasegenomics.parabasis.decorators.AnnotationKeys.GENE_KEY;
 import static com.parabasegenomics.parabasis.decorators.AnnotationKeys.HOM_KEY;
 import com.parabasegenomics.parabasis.decorators.CaptureDecorator;
@@ -89,7 +89,7 @@ public class ReportOnAssay {
     private GeneSummaryReport summaryReport;
     private GeneSummaryReport codingSummaryReport;
     private AnnotationSummary annotationSummary;
-    private AssayCoverageModel assayCoverageModel;
+    private IntervalCoverageManager intervalCoverageManager;
     private final int splicingDistance;
     private final String assayName;
     private File coverageResourceFile;
@@ -113,7 +113,7 @@ public class ReportOnAssay {
         codingSummaryReportFile = new File(fileToWrite + ".coding.gene.report.txt");
         codingAssayReportFile = new File(fileToWrite + ".coding.assay.report.txt");
        
-        assayCoverageModel = null;
+        intervalCoverageManager = null;
         referenceSequence = null;      
         splicingDistance = 10;
         assayName = name;      
@@ -140,16 +140,16 @@ public class ReportOnAssay {
     }
     
     /**
-     * Method to set up the AssayCoverageModel from the given resources json 
+     * Method to set up the IntervalCoverageManager. 
      * file.
-     * @param resourceFilepath
+     * @param bamFile
      * @throws IOException 
      */
-    public void loadCoverageModel(String resourceFilepath) 
+    public void loadCoverageManager(String bamFile) 
     throws IOException {
-        assayCoverageModel = new AssayCoverageModel(assayName);
-        coverageResourceFile = new File(resourceFilepath);
-        assayCoverageModel.initializeFromResourceFile(coverageResourceFile);  
+        intervalCoverageManager 
+            = new IntervalCoverageManager(assayName,targetIntervals);
+        intervalCoverageManager.parseBam(new File(bamFile));
     }
     
     /**
@@ -160,10 +160,7 @@ public class ReportOnAssay {
      */
     public void resetCoverageModel() 
     throws IOException {
-        assayCoverageModel
-            .initializeFromResourceFileAndIntervals(
-                coverageResourceFile,
-                codingIntervals);
+        intervalCoverageManager.reset(codingIntervals);
     }
     
     /**
@@ -250,6 +247,11 @@ public class ReportOnAssay {
         coverageThresholds=thresholdArray;
     }
     
+    public void setCoverageResourceFile(File file) {
+        coverageResourceFile=file;
+    }
+    
+    
     public static void main(String[] args) 
     throws IOException {
         
@@ -312,16 +314,18 @@ public class ReportOnAssay {
         if (jsonObject.containsKey(UNIQUE_KMERS)) {
             uniqKmerIntervalFile = jsonObject.getString(UNIQUE_KMERS);
         }
-        
-        // TODO: fix anachronism
-        String coverageResourceFile = null;
-        if (jsonObject.containsKey(BAM)) {
-            coverageResourceFile = resourceFile.getAbsolutePath();
-        }
 
         ReportOnAssay reportOnAssay = new ReportOnAssay(outputFile,assayName);  
         reportOnAssay.loadTargetGenelist(targetGenelistFile);
         reportOnAssay.loadGeneModelCollection(refSeqGeneModelFile,gencodeGeneModelFile);
+        
+         // TODO: fix anachronism
+        String coverageResourceFilepath = null;
+        if (jsonObject.containsKey(BAM)) {
+            coverageResourceFilepath = resourceFile.getAbsolutePath();
+            File coverageResourceFile = new File(coverageResourceFilepath);
+            reportOnAssay.setCoverageResourceFile(coverageResourceFile);
+        }
         
         if (humanReferenceFile != null) {
             reportOnAssay.loadReferenceSequence(humanReferenceFile);
@@ -334,7 +338,7 @@ public class ReportOnAssay {
         if (captureIntervalFile != null) {
             reportOnAssay.loadCaptureFile(captureIntervalFile);
         }
-        if (coverageResourceFile != null) {
+        if (coverageResourceFilepath != null) {
             if (jsonObject.containsKey(COVERAGE_THRESHOLD)) {  
                 JsonArray thresholdArray = jsonObject.getJsonArray(COVERAGE_THRESHOLD);
                 Double [] doubleThresholdArray = new Double [thresholdArray.size()];
@@ -343,7 +347,9 @@ public class ReportOnAssay {
                 }
                 reportOnAssay.setLowCoverageThreshold(doubleThresholdArray);
             }
-            reportOnAssay.loadCoverageModel(coverageResourceFile);
+            JsonArray bamArray = jsonObject.getJsonArray(BAM);
+            String bamFile = bamArray.getString(0); //single file!!!
+            reportOnAssay.loadCoverageManager(bamFile);
         }
         if (uniqKmerIntervalFile != null) {
             reportOnAssay.loadUniqKmerFile(uniqKmerIntervalFile);
@@ -381,7 +387,7 @@ public class ReportOnAssay {
        
        CoverageDecorator coverageDecorator = null;
        if (coverageResourceFile != null) {        
-           coverageDecorator = new CoverageDecorator(assayCoverageModel);
+           coverageDecorator = new CoverageDecorator(intervalCoverageManager);
        }
        
        annotationSummary = new AnnotationSummary();
@@ -402,7 +408,7 @@ public class ReportOnAssay {
        if (coverageResourceFile != null) {
            for (int i=0; i<coverageThresholds.length; i++) {
                GapsDecorator gapsDecorator 
-                   = new GapsDecorator(assayCoverageModel,coverageThresholds[i]);
+                   = new GapsDecorator(intervalCoverageManager,coverageThresholds[i]);
             annotationSummary.addDecorator(gapsDecorator);
            }
        }

@@ -5,8 +5,8 @@
  */
 package com.parabasegenomics.parabasis.target;
 
-import com.parabasegenomics.parabasis.coverage.AssayCoverageModel;
 import com.parabasegenomics.parabasis.coverage.IntervalCoverage;
+import com.parabasegenomics.parabasis.coverage.IntervalCoverageManager;
 import static com.parabasegenomics.parabasis.decorators.AnnotationKeys.GENE_KEY;
 import static com.parabasegenomics.parabasis.decorators.AnnotationKeys.HOM_KEY;
 import com.parabasegenomics.parabasis.decorators.CoverageDecorator;
@@ -76,7 +76,7 @@ public class ReportOnGaps {
     private GeneSummaryReport geneGapReport;
 
     private AnnotationSummary annotationSummary;
-    private AssayCoverageModel assayCoverageModel;
+    private IntervalCoverageManager intervalCoverageManager;
     private final int splicingDistance;
     private final String assayName;
     private File coverageResourceFile;
@@ -94,7 +94,7 @@ public class ReportOnGaps {
         gapReportFile = new File(fileToWrite + ".gap.report.txt");
         geneGapReportFile = new File(fileToWrite+".gap.gene.report.txt");
        
-        assayCoverageModel = null;     
+        intervalCoverageManager = null;     
         splicingDistance = 10;
         assayName = name;      
         decimalFormat = new DecimalFormat(formatPattern);
@@ -149,19 +149,22 @@ public class ReportOnGaps {
             outputFile = jsonObject.getString(OUTPUT);
         }
         
-        
-        // TODO: fix anachronism
-        String coverageResourceFile = null;
-        if (jsonObject.containsKey(BAM)) {
-            coverageResourceFile = resourceFile.getAbsolutePath();
-        }
-
         ReportOnGaps reportOnGaps = new ReportOnGaps(outputFile,assayName);  
         reportOnGaps.loadTargetGenelist(targetGenelistFile);
         reportOnGaps.loadGeneModelCollection(refSeqGeneModelFile,gencodeGeneModelFile);        
         reportOnGaps.loadTargetFile(targetIntervalFile);
 
-        if (coverageResourceFile != null) {
+        
+        // TODO: fix anachronism
+        String coverageResourceFilepath = null;
+        if (jsonObject.containsKey(BAM)) {
+            coverageResourceFilepath = resourceFile.getAbsolutePath();
+            File coverageResourceFile = new File(coverageResourceFilepath);
+            reportOnGaps.setCoverageResourceFile(coverageResourceFile);
+        }
+
+        
+        if (coverageResourceFilepath != null) {
             if (jsonObject.containsKey(COVERAGE_THRESHOLD)) {  
                 JsonArray thresholdArray = jsonObject.getJsonArray(COVERAGE_THRESHOLD);
                 Double [] doubleThresholdArray = new Double [thresholdArray.size()];
@@ -170,10 +173,11 @@ public class ReportOnGaps {
                 }
                 reportOnGaps.setLowCoverageThreshold(doubleThresholdArray);
             }
-            reportOnGaps.loadCoverageModel(coverageResourceFile);
+            JsonArray bamArray = jsonObject.getJsonArray(BAM);
+            String bamFile = bamArray.getString(0); //single file!!!
+            reportOnGaps.loadCoverageManager(bamFile);
         }
 
-        
         reportOnGaps.decorateTargets();    
         reportOnGaps.report();
        
@@ -192,7 +196,7 @@ public class ReportOnGaps {
     
        CoverageDecorator coverageDecorator = null;
        if (coverageResourceFile != null) {        
-           coverageDecorator = new CoverageDecorator(assayCoverageModel);
+           coverageDecorator = new CoverageDecorator(intervalCoverageManager);
        }
        
        annotationSummary = new AnnotationSummary();
@@ -204,12 +208,17 @@ public class ReportOnGaps {
        if (coverageResourceFile != null) {
            for (int i=0; i<coverageThresholds.length; i++) {
                GapsDecorator gapsDecorator 
-                   = new GapsDecorator(assayCoverageModel,coverageThresholds[i]);
+                   = new GapsDecorator(intervalCoverageManager,coverageThresholds[i]);
             annotationSummary.addDecorator(gapsDecorator);
            }
        }
     }
 
+    public void setCoverageResourceFile(File file) {
+        coverageResourceFile=file;
+    }
+    
+    
     /**
      * Print a target-level report.
      * @throws java.io.IOException
@@ -223,12 +232,7 @@ public class ReportOnGaps {
         gapReport = new GapsTableReport(gapReportFile,coverageThresholds[0]);
         gapReport.setAnnotationSummary(annotationSummary);
         List<IntervalCoverage> intervalCoverages 
-            = new ArrayList<>();
-        for (Interval targetInterval : targetIntervals) {
-            intervalCoverages
-                .add(assayCoverageModel
-                    .findIntervalCoverage(targetInterval));
-        }    
+            = intervalCoverageManager.getIntervals();
         
         gapReport.reportOn(intervalCoverages);
         gapReport.close();
@@ -282,16 +286,16 @@ public class ReportOnGaps {
     
     
      /**
-     * Method to set up the AssayCoverageModel from the given resources json 
+     * Method to set up the IntervalCoverageManager. 
      * file.
-     * @param resourceFilepath
+     * @param bamFile
      * @throws IOException 
      */
-    public void loadCoverageModel(String resourceFilepath) 
+    public void loadCoverageManager(String bamFile) 
     throws IOException {
-        assayCoverageModel = new AssayCoverageModel(assayName);
-        coverageResourceFile = new File(resourceFilepath);
-        assayCoverageModel.initializeFromResourceFile(coverageResourceFile);  
+        intervalCoverageManager 
+            = new IntervalCoverageManager(assayName,targetIntervals);
+        intervalCoverageManager.parseBam(new File(bamFile));
     }
     
     
