@@ -5,7 +5,9 @@
  */
 package com.parabasegenomics.parabasis.aws;
 
+import com.amazonaws.ClientConfiguration;
 import com.amazonaws.SDKGlobalConfiguration;
+import com.amazonaws.auth.AWSCredentials;
 import com.amazonaws.auth.profile.ProfileCredentialsProvider;
 import com.amazonaws.event.ProgressEvent;
 import com.amazonaws.event.ProgressListener;
@@ -16,6 +18,11 @@ import com.amazonaws.services.s3.model.CryptoConfiguration;
 import com.amazonaws.services.s3.model.KMSEncryptionMaterialsProvider;
 import com.amazonaws.services.s3.transfer.MultipleFileUpload;
 import com.amazonaws.services.s3.transfer.TransferManager;
+import com.amazonaws.services.simpleworkflow.AmazonSimpleWorkflow;
+import com.amazonaws.services.simpleworkflow.AmazonSimpleWorkflowClient;
+import com.parabasegenomics.parabasis.aws.swf.SeqWorkflowClientExternal;
+import com.parabasegenomics.parabasis.aws.swf.SeqWorkflowClientExternalFactory;
+import com.parabasegenomics.parabasis.aws.swf.SeqWorkflowClientExternalFactoryImpl;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
@@ -146,6 +153,7 @@ public class AWSUploader extends Application {
     String assay;
     String archive;
     String archiveBucket;
+    String archiveKeyfix;
     TextField runNameTextField;
     TextField sampleIdTextField;
     TextField runNumberTextField;
@@ -291,7 +299,7 @@ public class AWSUploader extends Application {
                         = new File(getPathToCompressedFiles());
                                         
                     // AWS file key
-                    String key
+                    archiveKeyfix
                         = assay
                         + "/"
                         + sampleId
@@ -299,11 +307,15 @@ public class AWSUploader extends Application {
                         + dateString
                         + "/"
                         + runName;
+                    
+                    String key = archiveKeyfix;
                     if (!alignmentIteration.isEmpty()) {
                         key += ("_" + alignmentIteration);
                     }
                     key += ("/");                     
                   
+                   
+                    
                     final MultipleFileUpload upload;
                     upload = transferManager
                             .uploadFileList(
@@ -692,7 +704,7 @@ public class AWSUploader extends Application {
         
              SeqWorkflowClientExternal worker
                  = factory.getClient(sampleId);
-             worker.doWork(PRODUCTION_BUCKET,key,assay,sampleId);
+             worker.doWork(archiveBucket,archiveKeyfix,assay,sampleId);
        
         }
 
@@ -703,10 +715,9 @@ public class AWSUploader extends Application {
         alert.showAndWait();
        
         String fullPathToRunDir
-            = new String(
-            basePathString
+            = basePathString
             + "\\"
-            + runName);
+            + runName;
         
         File doneFile = new File(
             fullPathToRunDir

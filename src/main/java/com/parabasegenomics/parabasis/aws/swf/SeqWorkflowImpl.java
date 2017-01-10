@@ -37,13 +37,16 @@ public class SeqWorkflowImpl implements SeqWorkflow {
             + "vcf.gz";
          
         
-        String targetReportSuffix = ".target.report.bed";
-        String geneReportSuffix = ".gene.report.txt";
+        String gapReportSuffix = ".gap.report.txt";
+        String gapGeneReportSuffix = "gap.gene.report.txt";
         String resourceFileSuffix = ".resources.json";
         
-        String targetReportKey = keyPrefix + targetReportSuffix;
-        String geneReportKey = keyPrefix + geneReportSuffix;
+        String targetReportKey = keyPrefix + gapReportSuffix;
+        String geneReportKey = keyPrefix + gapGeneReportSuffix;
         String resourceFileKey = keyPrefix + resourceFileSuffix;
+        
+        ops.setAssay(assay);
+        ops.setThreshold("20");
         
         // push vcf to omicia
         Promise<String> localFile 
@@ -58,17 +61,17 @@ public class SeqWorkflowImpl implements SeqWorkflow {
         // gaps report
         Promise<String> localBamFile
             = ops.downloadToLocalEC2(bucket, bamKey);
-        
-        Promise<String> resourceFile 
+
+        Promise<String> resourceFile
             = ops.createResourceFile(localBamFile);
         
         Promise<String> reportFileBase 
             = ops.runGapsReport(resourceFile);
         
         String localTargetReport 
-            = reportFileBase + targetReportSuffix;
+            = reportFileBase + gapReportSuffix;
         String localGeneReport
-            = reportFileBase + geneReportSuffix;
+            = reportFileBase + gapGeneReportSuffix;
         String localResourceFile 
             = reportFileBase + resourceFileSuffix;
  

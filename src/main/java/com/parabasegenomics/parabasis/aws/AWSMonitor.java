@@ -5,6 +5,7 @@
  */
 package com.parabasegenomics.parabasis.aws;
 
+import com.parabasegenomics.parabasis.util.ReferenceGenomeTranslator;
 import com.amazonaws.AmazonClientException;
 import com.amazonaws.AmazonServiceException;
 import com.amazonaws.services.s3.model.ListObjectsRequest;

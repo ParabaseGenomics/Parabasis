@@ -7,10 +7,11 @@ package com.parabasegenomics.parabasis.aws.swf;
 
 import com.amazonaws.AmazonClientException;
 import com.parabasegenomics.parabasis.util.CreateResourceJsonUtility;
-import com.parabasegenomics.parabasis.aws.ReferenceGenomeTranslator;
+import com.parabasegenomics.parabasis.util.ReferenceGenomeTranslator;
 import com.parabasegenomics.parabasis.aws.S3TransferUtility;
 import com.parabasegenomics.parabasis.target.ReportOnGaps;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.util.ArrayList;
@@ -34,7 +35,7 @@ public class SeqWorkflowActivitiesImpl implements SeqWorkflowActivities {
     // 35893 for ParabaseValidation/NBDxV2
     // 3923 for ParabaseProduction/NBDxV1.1
     // 35877 for ParabaseProduction/NBDxV2
-    private final static String [] OMICIA_PROJECT_IDS = { "35877", "3923"}; 
+    private final static String [] OMICIA_PROJECT_IDS = { "35893", "4409"}; 
     private final static String vcfFileSuffix = ".vcf.gz";
     private final static String SLASH = "/";
      
@@ -53,7 +54,7 @@ public class SeqWorkflowActivitiesImpl implements SeqWorkflowActivities {
     private final static String localTmpdirFilePath
         = HOME_DIR + "/tmp/";
     
-    private final static String localResourcesdirFilePath
+    private final static String localResourcesdirFilepath
        = HOME_DIR + "/Resources/";
        
     private final static String logFileName = "SeqWorkflow.log";
@@ -63,16 +64,8 @@ public class SeqWorkflowActivitiesImpl implements SeqWorkflowActivities {
     
     private S3TransferUtility s3TransferUtility;
     private String assay;
-    
-    
-    @Override
-    public String setAssay(String assay) {
-        this.assay  = assay;
+    private String threshold;
 
-        
-        
-        return (this.assay);
-    }
     
     // returns local path to vcf file
     @Override
@@ -186,56 +179,22 @@ public class SeqWorkflowActivitiesImpl implements SeqWorkflowActivities {
         return "Done";
     }
       
-    // run the gaps report locally - return the local paths to the reports
+    // run the gaps report locally - return the local prefix of the path 
+    // to the reports
     @Override
-    public String runGapsReport(String localBamFile) {
-        // create json
-        // run main (target::reportOngaps.main)
-        // return thelocal path to the report file - but wait, there are 3 files!!!
-        //   but wait: all files have a common core!!!
-        
-        String filePath 
-            = localBamFile.substring(0,localBamFile.indexOf(".bam"));
-        
-        
-        CreateResourceJsonUtility createResourceJson 
-            = new CreateResourceJsonUtility();
-        
-        String localResourceFile20xThreshold = filePath + "_20x.resources.json";
-        createResourceJson.createResourceJson(
-            localResourceFile, 
-            targetFilepath, 
-            assayName,
-            genelist, 
-            refseq, 
-            gencode,
-            "20");
-        
-        String localResourceFile10xThreshold = filePath + "_10x.resources.json";
-        createResourceJson.createResourceJson(
-            localResourceFile, 
-            targetFilepath, 
-            assayName,
-            genelist, 
-            refseq, 
-            gencode,
-            "10");
+    public String runGapsReport(String resourceFile) {
 
         String [] args = new String [1];
-        args[0]=localResourceFile20xThreshold;
+        args[0]=resourceFile;
         try {
             ReportOnGaps.main(args);
         } catch (IOException ex) {
-            logger.log(Level.SEVERE, localResourceFile20xThreshold, ex);
+            logger.log(Level.SEVERE, resourceFile, ex);
         }
-        args[0]=localResourceFile10xThreshold;
-        try {
-            ReportOnGaps.main(args);
-        } catch (IOException ex) {
-            logger.log(Level.SEVERE, localResourceFile10xThreshold, ex);
-        }
-
-        return filePath;
+        
+        String reportFilePrefix 
+            = resourceFile.substring(0,resourceFile.indexOf(".resource.json"));
+        return reportFilePrefix;
     }
     
     // push the file at "location" to the provided S3 bucket and key.
@@ -251,4 +210,49 @@ public class SeqWorkflowActivitiesImpl implements SeqWorkflowActivities {
     }
     
     
+    /**
+     * Creates the json resource file used to create a gaps report.
+     * @param bamFile
+     * @return 
+     */
+    @Override
+    public String createResourceFile(String bamFile) {
+        
+        String targetFilepath = localResourcesdirFilepath + "/NBDx/targets.bed";
+        String genelistFilepath = localResourcesdirFilepath + "/NBDx/genelist";
+        if (assay.equals("NBDxV1.1")) {
+            targetFilepath =  localResourcesdirFilepath + "/NBDxHL/targets.bed";
+            genelistFilepath = localResourcesdirFilepath + "/NBDxHL/genelist";
+        }
+        
+        String refseq =  localResourcesdirFilepath + "/RefSeq_4_11_2016";
+        String gencode = localResourcesdirFilepath + "/gencode_v19_02162015";
+        
+        String jsonFile = "";
+        CreateResourceJsonUtility jsonResource = new CreateResourceJsonUtility();
+        try {
+            jsonFile = jsonResource.createResourceJson(
+                bamFile,
+                targetFilepath,
+                assay,
+                genelistFilepath,
+                refseq,
+                gencode,
+                threshold);
+        } catch (FileNotFoundException ex) {
+            logger.log(Level.SEVERE, "cannot create resource for "+bamFile, ex);
+        }
+        
+        return jsonFile;      
+    }
+ 
+    @Override
+    public void setAssay(String name) {
+        assay=name;
+    }
+    
+    @Override
+    public void setThreshold(String T) {
+        threshold=T;
+    }
 }

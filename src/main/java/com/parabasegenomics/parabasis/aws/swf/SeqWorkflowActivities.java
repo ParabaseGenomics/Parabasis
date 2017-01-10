@@ -18,10 +18,6 @@ import com.amazonaws.services.simpleworkflow.flow.annotations.ActivityRegistrati
 
 
 public interface SeqWorkflowActivities {
- 
-    // sets the assay being sequenced which is used to point to all sorts
-    // of resources
-    public String setAssay(String assay);
     
     // returns local path to vcf file
     public String downloadToLocalEC2(String bucket, String key);
@@ -32,10 +28,18 @@ public interface SeqWorkflowActivities {
     // push file to Omicia for processing.
     public String pushToOmicia(String location);
     
+     // create a json resource file from the provided bam file.
+    public String createResourceFile(String bamFile);
+    
     // run the gaps report locally - return the local path to the reports
-    public String runGapsReport(String location,Integer threshold);
+    public String runGapsReport(String resourceFilepath);
     
     // push the file at "location" to the provided S3 bucket and key.
     public void pushToS3(String location, String bucket, String key);
+   
+    public void setAssay(String name);
+    
+    public void setThreshold(String threshold);
+    
     
 }

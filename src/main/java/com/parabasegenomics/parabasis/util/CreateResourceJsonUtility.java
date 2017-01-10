@@ -22,9 +22,8 @@ import javax.json.JsonWriter;
  */
 public class CreateResourceJsonUtility {
 
-    public void createResourceJson(
-        String file,
-        String bamFileRoot,
+    public String createResourceJson(
+        String bamFile,
         String targetFile,
         String assay,
         String genelist,
@@ -33,7 +32,7 @@ public class CreateResourceJsonUtility {
         String threshold) 
     throws FileNotFoundException {
         
-        String bamFile = bamFileRoot + ".bam";
+        String outputFilepath = bamFile.substring(0,bamFile.indexOf(".bam"));
         JsonObjectBuilder resource = Json.createObjectBuilder();
         resource.add("BAM", Json.createArrayBuilder().add(bamFile));
         resource.add("TARGETS",targetFile);
@@ -42,12 +41,14 @@ public class CreateResourceJsonUtility {
         resource.add("REFSEQ",refseq);
         resource.add("GENCODE",gencode);
         resource.add("THRESHOLD",threshold);
-        resource.add("OUTPUT", bamFileRoot);
+        resource.add("OUTPUT", outputFilepath);
         
-        File outputFile = new File(file);
+        File outputFile = new File(outputFilepath+".resources.json");
         OutputStream outputStream = new FileOutputStream(outputFile);
         JsonWriter writer = Json.createWriter(outputStream);
         writer.writeObject(resource.build());
+        
+        return outputFile.getAbsolutePath();
     }
     
     
