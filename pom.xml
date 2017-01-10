@@ -172,13 +172,13 @@
                                 <appendAssemblyId>false</appendAssemblyId>
                                 <archive>
                                     <manifest>
-                                        <mainClass>com.parabasegenomics.parabasis.aws.swf.PushToOmiciaWorker</mainClass>
+                                        <mainClass>com.parabasegenomics.parabasis.aws.swf.SeqWorkflowWorker</mainClass>
                                     </manifest>
                                 </archive>
                                 <descriptorRefs>
                                     <descriptorRef>jar-with-dependencies</descriptorRef>
                                 </descriptorRefs>
-                                <finalName>PushToOmiciaWorker</finalName>
+                                <finalName>SeqWorkflowWorker</finalName>
                             </configuration>
                             <phase>package</phase>
                             <goals>
@@ -186,18 +186,18 @@
                             </goals>
                         </execution>
                         <execution>
-                            <id>Build PushToOmiciaTest</id>
+                            <id>Build SeqWorkflowTest</id>
                             <configuration>
                                 <appendAssemblyId>false</appendAssemblyId>
                                 <archive>
                                     <manifest>
-                                        <mainClass>com.parabasegenomics.parabasis.aws.swf.PushToOmiciaTestMain</mainClass>
+                                        <mainClass>com.parabasegenomics.parabasis.aws.swf.SeqWorkflowTestMain</mainClass>
                                     </manifest>
                                 </archive>
                                 <descriptorRefs>
                                     <descriptorRef>jar-with-dependencies</descriptorRef>
                                 </descriptorRefs>
-                                <finalName>PushToOmiciaTest</finalName>
+                                <finalName>SeqWorkflowTest</finalName>
                             </configuration>
                             <phase>package</phase>
                             <goals>

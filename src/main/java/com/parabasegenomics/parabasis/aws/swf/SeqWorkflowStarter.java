@@ -18,7 +18,7 @@ public class SeqWorkflowStarter {
     public static void main(String[] args) {
         SeqWorkflow seqWorkflow
             = new SeqWorkflowImpl();
-        seqWorkflow.doWork("start");
+        seqWorkflow.doWork();
     }
     
 }

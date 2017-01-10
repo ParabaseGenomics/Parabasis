@@ -19,6 +19,10 @@ import com.amazonaws.services.simpleworkflow.flow.annotations.ActivityRegistrati
 
 public interface SeqWorkflowActivities {
  
+    // sets the assay being sequenced which is used to point to all sorts
+    // of resources
+    public String setAssay(String assay);
+    
     // returns local path to vcf file
     public String downloadToLocalEC2(String bucket, String key);
     
@@ -29,7 +33,7 @@ public interface SeqWorkflowActivities {
     public String pushToOmicia(String location);
     
     // run the gaps report locally - return the local path to the reports
-    public String runGapsReport(String location);
+    public String runGapsReport(String location,Integer threshold);
     
     // push the file at "location" to the provided S3 bucket and key.
     public void pushToS3(String location, String bucket, String key);

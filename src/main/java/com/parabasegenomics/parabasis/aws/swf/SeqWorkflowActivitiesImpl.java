@@ -6,8 +6,10 @@
 package com.parabasegenomics.parabasis.aws.swf;
 
 import com.amazonaws.AmazonClientException;
+import com.parabasegenomics.parabasis.util.CreateResourceJsonUtility;
 import com.parabasegenomics.parabasis.aws.ReferenceGenomeTranslator;
 import com.parabasegenomics.parabasis.aws.S3TransferUtility;
+import com.parabasegenomics.parabasis.target.ReportOnGaps;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -29,17 +31,21 @@ import java.util.logging.Logger;
 public class SeqWorkflowActivitiesImpl implements SeqWorkflowActivities {
 
     // 4409 for ParabaseValidation/NBDxV1.1
+    // 35893 for ParabaseValidation/NBDxV2
     // 3923 for ParabaseProduction/NBDxV1.1
     // 35877 for ParabaseProduction/NBDxV2
-    private final static String [] OMICIA_PROJECT_IDS = { "35877", "3923", "4409" }; 
+    private final static String [] OMICIA_PROJECT_IDS = { "35877", "3923"}; 
     private final static String vcfFileSuffix = ".vcf.gz";
     private final static String SLASH = "/";
      
+    private final static String [] TEST_IDS = {"NBDx","NBDx_HL"};
+        
+   
     private final static String PYTHON_PATH = "/usr/bin/python27";
     private final static String HOME_DIR = "/home/ec2-user";
     
     private final static String omiciaPythonUploadScript
-            = HOME_DIR + "/omicia_api_examples/python/upload_genome.py";
+            = HOME_DIR + "/omicia_api_examples/python/GenomeWorkflows/upload_genome.py";
     
     private final static String omiciaPythonUploadGender = "unspecified";
     private final static String omiciaPythonUploadFileFormat = "vcf";
@@ -47,13 +53,26 @@ public class SeqWorkflowActivitiesImpl implements SeqWorkflowActivities {
     private final static String localTmpdirFilePath
         = HOME_DIR + "/tmp/";
     
+    private final static String localResourcesdirFilePath
+       = HOME_DIR + "/Resources/";
+       
     private final static String logFileName = "SeqWorkflow.log";
     
     private static final Logger logger 
         = Logger.getLogger(SeqWorkflowActivitiesImpl.class.getName());
     
     private S3TransferUtility s3TransferUtility;
+    private String assay;
     
+    
+    @Override
+    public String setAssay(String assay) {
+        this.assay  = assay;
+
+        
+        
+        return (this.assay);
+    }
     
     // returns local path to vcf file
     @Override
@@ -106,7 +125,9 @@ public class SeqWorkflowActivitiesImpl implements SeqWorkflowActivities {
     
     /**
      * Push a vcf file to Omicia for annotation.
-     * @param location Local path to the vcf file. 
+     * @param location Local path to the vcf file (b37 reference). 
+     * @return Returns "Done" on successful completion, or throws an exception
+     * trying.
      */
     @Override
     public String pushToOmicia(String location) {
@@ -119,9 +140,7 @@ public class SeqWorkflowActivitiesImpl implements SeqWorkflowActivities {
         String omiciaProjectId = OMICIA_PROJECT_IDS[0];
         if (location.contains("NBDxV1.1")) {
             omiciaProjectId = OMICIA_PROJECT_IDS[1];
-        } else if (location.contains("Validation")) {
-            omiciaProjectId = OMICIA_PROJECT_IDS[2];
-        }
+        } 
         
         List<String> command = new ArrayList<>();
         command.add(PYTHON_PATH);
@@ -155,7 +174,7 @@ public class SeqWorkflowActivitiesImpl implements SeqWorkflowActivities {
             File localFileToDelete 
                 = new File(location);      
             try {
-                Files.list(localFileToDelete.toPath());//Files.delete(localFileToDelete.toPath());
+                Files.delete(localFileToDelete.toPath());
                 logger.log(Level.INFO,"done cleanup");
             } catch (IOException ex) {
               logger.log(Level.SEVERE,null,ex);               
@@ -167,7 +186,7 @@ public class SeqWorkflowActivitiesImpl implements SeqWorkflowActivities {
         return "Done";
     }
       
-      // run the gaps report locally - return the local paths to the reports
+    // run the gaps report locally - return the local paths to the reports
     @Override
     public String runGapsReport(String localBamFile) {
         // create json
@@ -177,12 +196,46 @@ public class SeqWorkflowActivitiesImpl implements SeqWorkflowActivities {
         
         String filePath 
             = localBamFile.substring(0,localBamFile.indexOf(".bam"));
-        String localResourceFile = filePath + ".resources.json";
         
         
+        CreateResourceJsonUtility createResourceJson 
+            = new CreateResourceJsonUtility();
         
-        String reportBase = "";
-        return reportBase;
+        String localResourceFile20xThreshold = filePath + "_20x.resources.json";
+        createResourceJson.createResourceJson(
+            localResourceFile, 
+            targetFilepath, 
+            assayName,
+            genelist, 
+            refseq, 
+            gencode,
+            "20");
+        
+        String localResourceFile10xThreshold = filePath + "_10x.resources.json";
+        createResourceJson.createResourceJson(
+            localResourceFile, 
+            targetFilepath, 
+            assayName,
+            genelist, 
+            refseq, 
+            gencode,
+            "10");
+
+        String [] args = new String [1];
+        args[0]=localResourceFile20xThreshold;
+        try {
+            ReportOnGaps.main(args);
+        } catch (IOException ex) {
+            logger.log(Level.SEVERE, localResourceFile20xThreshold, ex);
+        }
+        args[0]=localResourceFile10xThreshold;
+        try {
+            ReportOnGaps.main(args);
+        } catch (IOException ex) {
+            logger.log(Level.SEVERE, localResourceFile10xThreshold, ex);
+        }
+
+        return filePath;
     }
     
     // push the file at "location" to the provided S3 bucket and key.

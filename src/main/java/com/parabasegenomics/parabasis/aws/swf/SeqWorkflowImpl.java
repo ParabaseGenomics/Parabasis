@@ -13,21 +13,39 @@ public class SeqWorkflowImpl implements SeqWorkflow {
         = new SeqWorkflowActivitiesClientImpl();
     
     @Override
-    public void doWork(String file) {
+    public void doWork(
+        String bucket,
+        String keyPrefix,
+        String assay,
+        String sample) {
         
-        String bucket = file.substring(0,file.indexOf("/NBDx"));
-        String vcfKey = file.substring(file.indexOf("NBDx"),file.length());
+
+        String bamKey
+            = bucket
+            + "/" 
+            + keyPrefix
+            + "/" 
+            + sample 
+            + ".bam";
+
+        String vcfKey 
+            = bucket
+            + "/" 
+            + keyPrefix
+            + "/"
+            + sample
+            + "vcf.gz";
+         
         
-        String keyPath =  vcfKey.substring(0, vcfKey.indexOf(".vcf.gz"));
         String targetReportSuffix = ".target.report.bed";
         String geneReportSuffix = ".gene.report.txt";
         String resourceFileSuffix = ".resources.json";
         
-        String bamKey = keyPath + ".bam";
-        String targetReportKey = keyPath + targetReportSuffix;
-        String geneReportKey = keyPath + geneReportSuffix;
-        String resourceFileKey = keyPath + resourceFileSuffix;
+        String targetReportKey = keyPrefix + targetReportSuffix;
+        String geneReportKey = keyPrefix + geneReportSuffix;
+        String resourceFileKey = keyPrefix + resourceFileSuffix;
         
+        // push vcf to omicia
         Promise<String> localFile 
             = ops.downloadToLocalEC2(bucket,vcfKey);
         
@@ -37,11 +55,15 @@ public class SeqWorkflowImpl implements SeqWorkflow {
         Promise<String> pushedToOmicia
             = ops.pushToOmicia(convertedFile);
         
+        // gaps report
         Promise<String> localBamFile
             = ops.downloadToLocalEC2(bucket, bamKey);
         
+        Promise<String> resourceFile 
+            = ops.createResourceFile(localBamFile);
+        
         Promise<String> reportFileBase 
-            = ops.runGapsReport(localBamFile);
+            = ops.runGapsReport(resourceFile);
         
         String localTargetReport 
             = reportFileBase + targetReportSuffix;
@@ -53,6 +75,8 @@ public class SeqWorkflowImpl implements SeqWorkflow {
         ops.pushToS3(localTargetReport, bucket, targetReportKey);
         ops.pushToS3(localGeneReport, bucket, geneReportKey);
         ops.pushToS3(localResourceFile, bucket, resourceFileKey);
+        
+   
     }
     
 }

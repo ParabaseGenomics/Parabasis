@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package com.parabasegenomics.parabasis.aws;
+package com.parabasegenomics.parabasis.util;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -24,16 +24,16 @@ public class CreateResourceJsonUtility {
 
     public void createResourceJson(
         String file,
-        String bamFile,
+        String bamFileRoot,
         String targetFile,
         String assay,
         String genelist,
-        String reference,
         String refseq,
         String gencode,
         String threshold) 
     throws FileNotFoundException {
         
+        String bamFile = bamFileRoot + ".bam";
         JsonObjectBuilder resource = Json.createObjectBuilder();
         resource.add("BAM", Json.createArrayBuilder().add(bamFile));
         resource.add("TARGETS",targetFile);
@@ -42,7 +42,7 @@ public class CreateResourceJsonUtility {
         resource.add("REFSEQ",refseq);
         resource.add("GENCODE",gencode);
         resource.add("THRESHOLD",threshold);
-        resource.add("OUTPUT", file);
+        resource.add("OUTPUT", bamFileRoot);
         
         File outputFile = new File(file);
         OutputStream outputStream = new FileOutputStream(outputFile);

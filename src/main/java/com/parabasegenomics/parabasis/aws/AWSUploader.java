@@ -694,43 +694,13 @@ public class AWSUploader extends Application {
             service.setEndpoint("https://swf.us-east-1.amazonaws.com");
             String domain = "SeqWorkflowDomain";
    
-             // run gaps report
-             // but wait - this depends on the test ordered!!!!
-             // but the key has the test!!
-             // but we'll need to parse the key!!!
-             //  
-            String bamFilepath
-                = PRODUCTION_BUCKET
-                + "/" 
-                + key
-                + "/" 
-                + sampleId 
-                + ".bam";
-            
-            String bamIndexFilepath
-                = PRODUCTION_BUCKET
-                + "/" 
-                + key
-                + "/" 
-                + sampleId 
-                + ".bam.bai";
-                    
-            String vcfFilepath 
-                = PRODUCTION_BUCKET
-                + "/" 
-                + key
-                + "/"
-                + sampleId
-                + vcfFileSuffix
-                + ".gz";
-         
              SeqWorkflowClientExternalFactory factory
                 = new SeqWorkflowClientExternalFactoryImpl(service,domain);
         
         
-             SeqWorkflowClientExternal pusher
+             SeqWorkflowClientExternal worker
                  = factory.getClient(sampleId);
-             pusher.doWork(vcfFilepath);
+             worker.doWork(PRODUCTION_BUCKET,key,assay,sampleId);
        
         }
         
