@@ -41,28 +41,30 @@ public class SeqWorkflowActivitiesImpl implements SeqWorkflowActivities {
      
     private final static String [] TEST_IDS = {"NBDx","NBDx_HL"};
         
-   
     private final static String PYTHON_PATH = "/usr/bin/python27";
     private final static String HOME_DIR = "/home/ec2-user";
-    
-    private final static String omiciaPythonUploadScript
-            = HOME_DIR + "/omicia_api_examples/python/GenomeWorkflows/upload_genome.py";
     
     private final static String omiciaPythonUploadGender = "unspecified";
     private final static String omiciaPythonUploadFileFormat = "vcf";
     
     private final static String localTmpdirFilePath
-        = HOME_DIR + "/tmp/";
+        = HOME_DIR + "/tmp";
     
     private final static String localResourcesdirFilepath
-       = HOME_DIR + "/Resources/";
+       = HOME_DIR + "/Resources";
        
+    private final static String omiciaPythonUploadScript
+            = localResourcesdirFilepath 
+            + "/omicia_api_examples/python/GenomeWorkflows/upload_genome.py";
+    
+    
     private final static String logFileName = "SeqWorkflow.log";
     
     private static final Logger logger 
         = Logger.getLogger(SeqWorkflowActivitiesImpl.class.getName());
     
-    private S3TransferUtility s3TransferUtility;
+    private final S3TransferUtility s3TransferUtility 
+        = new S3TransferUtility();
     private String assay;
     private String threshold;
 
@@ -72,12 +74,11 @@ public class SeqWorkflowActivitiesImpl implements SeqWorkflowActivities {
     public String downloadToLocalEC2(String bucket,String key) {
         
         // last bit of the key is the filename we want to use upon download
-        String fileName = key.substring(key.lastIndexOf(SLASH));    
+        String fileName = key.substring(key.lastIndexOf(SLASH)+1);    
         String localFile 
             = localTmpdirFilePath
             + "/"
             + fileName;
-        
         try {
             s3TransferUtility
                 .downloadFileFromS3Bucket(
@@ -85,7 +86,7 @@ public class SeqWorkflowActivitiesImpl implements SeqWorkflowActivities {
                     key,
                     new File(localFile));
         } catch (InterruptedException ex) {
-                logger.log(Level.SEVERE, null, ex);
+                logger.log(Level.SEVERE, bucket+"/"+key, ex);
         }
         return localFile;
     }
@@ -125,13 +126,18 @@ public class SeqWorkflowActivitiesImpl implements SeqWorkflowActivities {
     @Override
     public String pushToOmicia(String location) {
         
-        String label=location.substring(location.lastIndexOf(SLASH));   
+        String label
+            =location
+                .substring(
+                    location
+                        .lastIndexOf(SLASH)+1,
+                        location.indexOf(".b37.vcf"));   
         Integer id=1;
-        File logFile = new File(label + ".pushToOmicia.log");
+        File logFile = new File(HOME_DIR+ "/" + label + ".pushToOmicia.log");
         
         // set the correct project id for Omicia given where the vcf file is going.
         String omiciaProjectId = OMICIA_PROJECT_IDS[0];
-        if (location.contains("NBDxV1.1")) {
+        if (assay.equals("NBDxV1.1")) {
             omiciaProjectId = OMICIA_PROJECT_IDS[1];
         } 
         
@@ -141,7 +147,6 @@ public class SeqWorkflowActivitiesImpl implements SeqWorkflowActivities {
         command.add(omiciaProjectId);
         command.add(label); // this is the sample ID  - guess we need to keep it around
         command.add(omiciaPythonUploadGender);
-        command.add(omiciaPythonUploadFileFormat);
         command.add(location);
         //command.add(id.toString());
         
@@ -153,7 +158,7 @@ public class SeqWorkflowActivitiesImpl implements SeqWorkflowActivities {
         try {
             process = processBuilder.start();
         } catch (IOException ex) {
-            logger.log(Level.SEVERE, null, ex);
+            logger.log(Level.SEVERE, "cannot start push process", ex);
         }
         try {
             logger.log(Level.INFO, "running:{0}", command.toString());
@@ -199,7 +204,7 @@ public class SeqWorkflowActivitiesImpl implements SeqWorkflowActivities {
     
     // push the file at "location" to the provided S3 bucket and key.
     @Override
-    public void pushToS3(String location, String bucket, String key) {
+    public String pushToS3(String location, String bucket, String key) {
    
         File file = new File(location);
         try { 
@@ -207,6 +212,7 @@ public class SeqWorkflowActivitiesImpl implements SeqWorkflowActivities {
         } catch (AmazonClientException | InterruptedException ex) {
             logger.log(Level.SEVERE, null, ex);
         }
+        return "done";
     }
     
     
@@ -247,12 +253,16 @@ public class SeqWorkflowActivitiesImpl implements SeqWorkflowActivities {
     }
  
     @Override
-    public void setAssay(String name) {
+    public String setAssay(String name) {
         assay=name;
+        return "done";
     }
     
     @Override
-    public void setThreshold(String T) {
+    public String setThreshold(String T) {
         threshold=T;
+        return "done";
     }
+   
 }
+

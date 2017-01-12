@@ -13,7 +13,7 @@ import com.amazonaws.services.simpleworkflow.flow.annotations.ActivityRegistrati
  * @author evanmauceli
  */
 @ActivityRegistrationOptions(defaultTaskScheduleToStartTimeoutSeconds = 300,
-                             defaultTaskStartToCloseTimeoutSeconds = 300)
+                             defaultTaskStartToCloseTimeoutSeconds = 600)
 @Activities(version="1.0")
 
 
@@ -35,11 +35,10 @@ public interface SeqWorkflowActivities {
     public String runGapsReport(String resourceFilepath);
     
     // push the file at "location" to the provided S3 bucket and key.
-    public void pushToS3(String location, String bucket, String key);
+    public String pushToS3(String location, String bucket, String key);
    
-    public void setAssay(String name);
+    public String setAssay(String name);
     
-    public void setThreshold(String threshold);
-    
-    
+    public String setThreshold(String threshold);
+  
 }

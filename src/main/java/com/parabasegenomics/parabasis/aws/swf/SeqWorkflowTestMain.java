@@ -20,7 +20,9 @@ public class SeqWorkflowTestMain {
     /**
      * @param args the command line arguments
      */
-    public static void main(String[] args) {
+    public static void main(String[] args) 
+    throws InterruptedException {
+
        ClientConfiguration config 
             = new ClientConfiguration().withSocketTimeout(70*1000);   
         
@@ -38,16 +40,14 @@ public class SeqWorkflowTestMain {
         
         SeqWorkflowClientExternalFactory factory
             = new SeqWorkflowClientExternalFactoryImpl(service,domain);
-        
-        String file =
-            "parabase.genomics.sandbox"
-            +"/"
-            +"NBDxV1.1/NA12878A/2016-07-26-17:01:21/160723_M03281_0053_000000000-ANLYB/NA12878A_S1.vcf.gz";
-        
+
         String id = "testPush";
         SeqWorkflowClientExternal pusher
             = factory.getClient(id);
-        pusher.doWork("a","b","c","d");
+        pusher.doWork(
+            "parabase.genomics.sandbox",
+            "NBDxV1.1/NA12878A/2016-07-25-15:21:42/160718_M03281_0050_000000000-ANMNN",
+            "NBDxV1.1","NA12878A_S2");
         
         
     }

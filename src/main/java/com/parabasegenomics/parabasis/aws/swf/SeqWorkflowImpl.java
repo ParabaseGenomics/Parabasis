@@ -9,6 +9,10 @@ import com.amazonaws.services.simpleworkflow.flow.core.Promise;
 
 public class SeqWorkflowImpl implements SeqWorkflow {
     
+    private final static String gapReportSuffix = ".gap.report.txt";
+    private final static String gapGeneReportSuffix = ".gap.gene.report.txt";
+    private final static String resourceFileSuffix = ".resources.json";
+    
     private final SeqWorkflowActivitiesClient ops
         = new SeqWorkflowActivitiesClientImpl();
     
@@ -18,33 +22,19 @@ public class SeqWorkflowImpl implements SeqWorkflow {
         String keyPrefix,
         String assay,
         String sample) {
-        
 
-        String bamKey
-            = bucket
-            + "/" 
-            + keyPrefix
+        String bamKey =
+            keyPrefix
             + "/" 
             + sample 
             + ".bam";
 
         String vcfKey 
-            = bucket
-            + "/" 
-            + keyPrefix
+            = keyPrefix
             + "/"
             + sample
-            + "vcf.gz";
-         
-        
-        String gapReportSuffix = ".gap.report.txt";
-        String gapGeneReportSuffix = "gap.gene.report.txt";
-        String resourceFileSuffix = ".resources.json";
-        
-        String targetReportKey = keyPrefix + gapReportSuffix;
-        String geneReportKey = keyPrefix + gapGeneReportSuffix;
-        String resourceFileKey = keyPrefix + resourceFileSuffix;
-        
+            + ".vcf.gz";
+
         ops.setAssay(assay);
         ops.setThreshold("20");
         
@@ -57,7 +47,7 @@ public class SeqWorkflowImpl implements SeqWorkflow {
         
         Promise<String> pushedToOmicia
             = ops.pushToOmicia(convertedFile);
-        
+
         // gaps report
         Promise<String> localBamFile
             = ops.downloadToLocalEC2(bucket, bamKey);
@@ -65,21 +55,25 @@ public class SeqWorkflowImpl implements SeqWorkflow {
         Promise<String> resourceFile
             = ops.createResourceFile(localBamFile);
         
-        Promise<String> reportFileBase 
-            = ops.runGapsReport(resourceFile);
+        //Promise<String> reportFileBase 
+        //    = ops.runGapsReport(resourceFile);
         
-        String localTargetReport 
-            = reportFileBase + gapReportSuffix;
-        String localGeneReport
-            = reportFileBase + gapGeneReportSuffix;
-        String localResourceFile 
-            = reportFileBase + resourceFileSuffix;
- 
-        ops.pushToS3(localTargetReport, bucket, targetReportKey);
-        ops.pushToS3(localGeneReport, bucket, geneReportKey);
-        ops.pushToS3(localResourceFile, bucket, resourceFileKey);
         
-   
+        
+        /**
+        String gapFile = reportFileBase + gapReportSuffix;
+        String gapFileKey = keyPrefix + "/" + sample + gapReportSuffix;
+        ops.pushToS3(gapFile, bucket, gapFileKey);
+
+        String gapGeneFile = reportFileBase + gapGeneReportSuffix;
+        String gapGeneFileKey = keyPrefix + "/" + sample + gapGeneReportSuffix;
+        ops.pushToS3(gapGeneFile, bucket, gapGeneFileKey);
+        
+        String gapResourceFile = reportFileBase + resourceFileSuffix;
+        String resourceFileKey = keyPrefix + "/" + sample + resourceFileSuffix;
+        ops.pushToS3(gapResourceFile, bucket, resourceFileKey);
+        */
+        
     }
     
 }

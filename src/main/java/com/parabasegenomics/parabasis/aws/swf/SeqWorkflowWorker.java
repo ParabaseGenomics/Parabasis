@@ -36,7 +36,7 @@ public class SeqWorkflowWorker {
             = new ClientConfiguration().withSocketTimeout(70*1000);   
         
         AWSCredentials credentials 
-        = new ProfileCredentialsProvider().getCredentials();
+            = new ProfileCredentialsProvider().getCredentials();
         
         AmazonSimpleWorkflow service
             = new AmazonSimpleWorkflowClient(credentials,config);

@@ -150,6 +150,7 @@ public class AWSUploader extends Application {
     String alignmentIteration;
     String runName;
     String sampleId;
+    String extendedSampleId; // contains "_S1", for example
     String assay;
     String archive;
     String archiveBucket;
@@ -297,7 +298,16 @@ public class AWSUploader extends Application {
                     List<File> compressedFiles = compressFiles(files);
                     File compressedFileDirectory
                         = new File(getPathToCompressedFiles());
-                                        
+                          
+                    for (File file : files) {
+                        String name = file.getName();
+                        if (name.contains(".vcf.gz")) {
+                            extendedSampleId 
+                                = name.substring(0,name.indexOf(".vcf.gz"));
+                            break;
+                        }
+                    }
+                    
                     // AWS file key
                     archiveKeyfix
                         = assay
@@ -685,29 +695,6 @@ public class AWSUploader extends Application {
      */
     public void cleanWrapup() {
 
-        if (archiveBucket.equals(PRODUCTION_CHOICE)) {
-            ClientConfiguration config 
-                = new ClientConfiguration().withSocketTimeout(70*1000);   
-        
-            AWSCredentials credentials 
-                = new ProfileCredentialsProvider().getCredentials();
-
-            AmazonSimpleWorkflow service
-                = new AmazonSimpleWorkflowClient(credentials,config);
-
-            service.setEndpoint("https://swf.us-east-1.amazonaws.com");
-            String domain = "SeqWorkflowDomain";
-   
-             SeqWorkflowClientExternalFactory factory
-                = new SeqWorkflowClientExternalFactoryImpl(service,domain);
-        
-        
-             SeqWorkflowClientExternal worker
-                 = factory.getClient(sampleId);
-             worker.doWork(archiveBucket,archiveKeyfix,assay,sampleId);
-       
-        }
-
         Alert alert = new Alert(AlertType.INFORMATION);
         alert.setTitle("Information");
         alert.setHeaderText(null);
@@ -735,13 +722,38 @@ public class AWSUploader extends Application {
             localWriteAlert.setContentText("Cannot create upload successful file.");
             localWriteAlert.showAndWait();
         }
-
+        
         runNameTextField.clear();
         sampleIdTextField.clear();
         runNumberTextField.clear();
         uploadProgress.unbind();
         uploadProgress.setValue(0);
         transferManager.shutdownNow();
+        
+        
+        if (archiveBucket.equals(SANDBOX_CHOICE)) {
+            ClientConfiguration config 
+                = new ClientConfiguration().withSocketTimeout(70*1000);   
+        
+            AWSCredentials credentials 
+                = new ProfileCredentialsProvider().getCredentials();
+
+            AmazonSimpleWorkflow service
+                = new AmazonSimpleWorkflowClient(credentials,config);
+
+            service.setEndpoint("https://swf.us-east-1.amazonaws.com");
+            String domain = "SeqWorkflowDomain";
+   
+             SeqWorkflowClientExternalFactory factory
+                = new SeqWorkflowClientExternalFactoryImpl(service,domain);
+        
+        
+             SeqWorkflowClientExternal worker
+                 = factory.getClient(extendedSampleId);
+             worker.doWork(archiveBucket,archiveKeyfix,assay,extendedSampleId);
+       
+        }
+
     }
     
     /**

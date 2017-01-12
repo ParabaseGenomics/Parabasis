@@ -7,6 +7,7 @@ package com.parabasegenomics.parabasis.aws;
 
 import com.amazonaws.SDKGlobalConfiguration;
 import com.amazonaws.auth.profile.ProfileCredentialsProvider;
+import com.amazonaws.event.ProgressTracker;
 import com.amazonaws.regions.Region;
 import com.amazonaws.regions.Regions;
 import com.amazonaws.services.s3.AmazonS3EncryptionClient;
@@ -51,6 +52,8 @@ public class AWSDownloader {
     private static FileHandler fileHandler;
     private String kms_cmk_id;      
           
+    private final ProgressTracker progressTracker;
+    
     public AWSDownloader() {
         System.setProperty(SDKGlobalConfiguration.ENABLE_S3_SIGV4_SYSTEM_PROPERTY, "true");
                 
@@ -80,10 +83,24 @@ public class AWSDownloader {
             .withRegion(Region.getRegion(Regions.US_EAST_1));
         
         transferManager 
-                = new TransferManager(encryptionClient);               
+                = new TransferManager(encryptionClient);   
+        
+        progressTracker = new ProgressTracker();
     }
 
-            /**
+    /**
+     * Returns the Progress associated with a transfer.
+     * @return 
+     */
+    public Double getPctTransferred() {
+        long requestedBytes = progressTracker.getProgress().getRequestContentLength();
+        long transferredBytes = progressTracker.getProgress().getResponseBytesTransferred();
+        
+        return (double) transferredBytes/requestedBytes;
+    }
+    
+    
+    /**
      * Method to return the AWS KMS key ID from the credentials file.
      * @return A String with the AWS KMS key ID
      */
