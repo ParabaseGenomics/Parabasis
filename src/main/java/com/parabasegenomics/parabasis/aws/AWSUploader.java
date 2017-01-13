@@ -20,9 +20,10 @@ import com.amazonaws.services.s3.transfer.MultipleFileUpload;
 import com.amazonaws.services.s3.transfer.TransferManager;
 import com.amazonaws.services.simpleworkflow.AmazonSimpleWorkflow;
 import com.amazonaws.services.simpleworkflow.AmazonSimpleWorkflowClient;
-import com.parabasegenomics.parabasis.aws.swf.SeqWorkflowClientExternal;
-import com.parabasegenomics.parabasis.aws.swf.SeqWorkflowClientExternalFactory;
-import com.parabasegenomics.parabasis.aws.swf.SeqWorkflowClientExternalFactoryImpl;
+import com.parabasegenomics.parabasis.aws.swf.S3NameResource;
+import com.parabasegenomics.parabasis.aws.swf.SequencingWorkflowClientExternal;
+import com.parabasegenomics.parabasis.aws.swf.SequencingWorkflowClientExternalFactory;
+import com.parabasegenomics.parabasis.aws.swf.SequencingWorkflowClientExternalFactoryImpl;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
@@ -695,6 +696,48 @@ public class AWSUploader extends Application {
      */
     public void cleanWrapup() {
 
+        if (archiveBucket.equals(SANDBOX_CHOICE)) {
+            ClientConfiguration config 
+                = new ClientConfiguration().withSocketTimeout(70*1000);   
+        
+            AWSCredentials credentials 
+                = new ProfileCredentialsProvider().getCredentials();
+
+            AmazonSimpleWorkflow service
+                = new AmazonSimpleWorkflowClient(credentials,config);
+
+            service.setEndpoint("https://swf.us-east-1.amazonaws.com");
+            String domain = "SeqWorkflowDomain";
+   
+             SequencingWorkflowClientExternalFactory factory
+                = new SequencingWorkflowClientExternalFactoryImpl(service,domain);
+        
+        
+             SequencingWorkflowClientExternal worker
+                 = factory.getClient(extendedSampleId);
+             
+             String vcfKey 
+                 = archiveKeyfix 
+                 + "/" 
+                 + extendedSampleId
+                 + ".vcf.gz";
+             
+             String bamKey 
+                 = archiveKeyfix 
+                 + "/" 
+                 + extendedSampleId
+                 + ".bam";
+             
+             S3NameResource vcfResource 
+                 = new S3NameResource(archiveBucket,vcfKey);
+             S3NameResource bamResource 
+                 = new S3NameResource(archiveBucket,bamKey);
+             
+             worker.process(vcfResource,bamResource);
+       
+        }
+        
+        
         Alert alert = new Alert(AlertType.INFORMATION);
         alert.setTitle("Information");
         alert.setHeaderText(null);
@@ -729,31 +772,7 @@ public class AWSUploader extends Application {
         uploadProgress.unbind();
         uploadProgress.setValue(0);
         transferManager.shutdownNow();
-        
-        
-        if (archiveBucket.equals(SANDBOX_CHOICE)) {
-            ClientConfiguration config 
-                = new ClientConfiguration().withSocketTimeout(70*1000);   
-        
-            AWSCredentials credentials 
-                = new ProfileCredentialsProvider().getCredentials();
-
-            AmazonSimpleWorkflow service
-                = new AmazonSimpleWorkflowClient(credentials,config);
-
-            service.setEndpoint("https://swf.us-east-1.amazonaws.com");
-            String domain = "SeqWorkflowDomain";
-   
-             SeqWorkflowClientExternalFactory factory
-                = new SeqWorkflowClientExternalFactoryImpl(service,domain);
-        
-        
-             SeqWorkflowClientExternal worker
-                 = factory.getClient(extendedSampleId);
-             worker.processSample(archiveBucket,archiveKeyfix,assay,extendedSampleId);
-       
-        }
-
+             
     }
     
     /**

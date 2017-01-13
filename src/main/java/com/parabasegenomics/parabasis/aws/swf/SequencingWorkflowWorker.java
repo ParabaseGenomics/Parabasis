@@ -48,7 +48,8 @@ public class SequencingWorkflowWorker {
         
         ActivityWorker activityWorker 
             = new ActivityWorker(service,domain,taskList);
-        activityWorker.addActivitiesImplementation(new SequencingWorkflowActivitiesImpl());
+        activityWorker.addActivitiesImplementation(new PushToOmiciaActivitiesImpl());
+        activityWorker.addActivitiesImplementation(new CreateGapsReportsActivitiesImpl());
         activityWorker.start();
         
         WorkflowWorker workflowWorker

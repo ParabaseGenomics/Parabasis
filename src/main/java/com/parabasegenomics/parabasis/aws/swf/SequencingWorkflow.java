@@ -20,9 +20,5 @@ import com.amazonaws.services.simpleworkflow.flow.annotations.WorkflowRegistrati
 public interface SequencingWorkflow {   
     
     @Execute(version = "1.0")
-    public void processSample(
-        String bucket,
-        String keyPrefix,
-        String assay,
-        String sample); 
+    public void process(S3NameResource vcfParser, S3NameResource bamParser);
 }

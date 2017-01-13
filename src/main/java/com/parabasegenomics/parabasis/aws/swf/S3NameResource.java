@@ -13,7 +13,7 @@ package com.parabasegenomics.parabasis.aws.swf;
  * 
  * @author evanmauceli
  */
-public class S3NameParser {
+public class S3NameResource {
     
     private static final String SLASH = "/";
     
@@ -22,7 +22,7 @@ public class S3NameParser {
     
     private String [] tokens;
     
-    public S3NameParser(String bucket, String key) {
+    public S3NameResource(String bucket, String key) {
         s3Bucket=bucket;
         s3Key=key;      
         

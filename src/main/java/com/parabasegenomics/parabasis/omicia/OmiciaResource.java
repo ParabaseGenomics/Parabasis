@@ -19,6 +19,7 @@ public class OmiciaResource {
     
     public static final String V1 = "NBDxV1.1";
     public static final String V2 = "NBDxV2";
+    public static final String defaultSex = "unspecified";
     
     public OmiciaResource() {
         
@@ -57,4 +58,8 @@ public class OmiciaResource {
         }
     }
     
+    
+    public String getDefaultSex() {
+        return defaultSex;
+    }
 }

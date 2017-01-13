@@ -45,14 +45,14 @@ public class S3TransferUtility {
     private static final File credentialsFile 
         = new File(System.getProperty("user.home")+"/.aws/kms_credentials");
     
-    private static final Logger logger 
+    private final Logger logger 
         = Logger.getLogger(S3TransferUtility.class.getName());
     private static final String logFileName = "S3TransferUntility.log";
     
     private final TransferManager transferManager; 
     
     private static AmazonS3EncryptionClient encryptionClient;
-    private static FileHandler fileHandler;
+    private  FileHandler fileHandler;
     private String kms_cmk_id;  
     
     private final ProgressTracker progressTracker;
@@ -89,9 +89,7 @@ public class S3TransferUtility {
                 = new TransferManager(encryptionClient);               
         
         progressTracker = new ProgressTracker();
-            
-       
-        
+
     }
     
     /**

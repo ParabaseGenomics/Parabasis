@@ -19,6 +19,7 @@ public class SeqWorkflowTestMain {
 
     /**
      * @param args the command line arguments
+     * @throws java.lang.InterruptedException
      */
     public static void main(String[] args) 
     throws InterruptedException {
@@ -35,19 +36,26 @@ public class SeqWorkflowTestMain {
             
         service.setEndpoint("https://swf.us-east-1.amazonaws.com");
         String domain = "SeqWorkflowDomain";
-
-        
-        
+ 
         SequencingWorkflowClientExternalFactory factory
             = new SequencingWorkflowClientExternalFactoryImpl(service,domain);
 
-        String id = "testPush";
-        SequencingWorkflowClientExternal pusher
+        String id = "process test";
+        SequencingWorkflowClientExternal client
             = factory.getClient(id);
-        pusher.processSample(
+        
+        S3NameResource s3NameParserVcf 
+            = new S3NameResource(
             "parabase.genomics.sandbox",
-            "NBDxV1.1/NA12878A/2016-07-25-15:21:42/160718_M03281_0050_000000000-ANMNN",
-            "NBDxV1.1","NA12878A_S2");
+            "NBDxV1.1/NA12878A/2016-07-25-15:21:42/160718_M03281_0050_000000000-ANMNN/NA12878A_S2.vcf.gz");
+        
+        S3NameResource s3NameParserBam
+            = new S3NameResource(
+            "parabase.genomics.sandbox",
+            "NBDxV1.1/NA12878A/2016-07-25-15:21:42/160718_M03281_0050_000000000-ANMNN/NA12878A_S2.bam");
+        
+        
+        client.process(s3NameParserVcf,s3NameParserBam);
         
         
     }
