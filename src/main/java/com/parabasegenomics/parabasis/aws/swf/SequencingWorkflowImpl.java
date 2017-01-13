@@ -32,7 +32,9 @@ public class SequencingWorkflowImpl implements SequencingWorkflow {
     public void processNextGapsReport(
         Promise<Void> donePrevious, 
         S3NameResource bamParser) {
-        gapsReports10xWorkflow.process(bamParser,10);
+        if (donePrevious.isReady()) {
+            gapsReports10xWorkflow.process(bamParser,10);
+        }
     }
     
 }
