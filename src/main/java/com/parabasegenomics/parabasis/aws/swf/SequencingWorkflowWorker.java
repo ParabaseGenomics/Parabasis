@@ -17,7 +17,7 @@ import com.amazonaws.services.simpleworkflow.flow.WorkflowWorker;
  *
  * @author evanmauceli
  */
-public class SeqWorkflowWorker {
+public class SequencingWorkflowWorker {
 
     
     /**
@@ -48,12 +48,12 @@ public class SeqWorkflowWorker {
         
         ActivityWorker activityWorker 
             = new ActivityWorker(service,domain,taskList);
-        activityWorker.addActivitiesImplementation(new SeqWorkflowActivitiesImpl());
+        activityWorker.addActivitiesImplementation(new SequencingWorkflowActivitiesImpl());
         activityWorker.start();
         
         WorkflowWorker workflowWorker
             = new WorkflowWorker(service,domain,taskList);
-        workflowWorker.addWorkflowImplementationType(SeqWorkflowImpl.class);
+        workflowWorker.addWorkflowImplementationType(SequencingWorkflowImpl.class);
         workflowWorker.start();
     }
     

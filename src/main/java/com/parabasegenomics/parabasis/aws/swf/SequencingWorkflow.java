@@ -17,9 +17,10 @@ import com.amazonaws.services.simpleworkflow.flow.annotations.WorkflowRegistrati
 @Workflow
 @WorkflowRegistrationOptions(defaultExecutionStartToCloseTimeoutSeconds = 3600)
 
-public interface SeqWorkflow {   
+public interface SequencingWorkflow {   
+    
     @Execute(version = "1.0")
-    public void doWork(
+    public void processSample(
         String bucket,
         String keyPrefix,
         String assay,

@@ -9,6 +9,7 @@ import com.amazonaws.AmazonClientException;
 import com.parabasegenomics.parabasis.util.CreateResourceJsonUtility;
 import com.parabasegenomics.parabasis.util.ReferenceGenomeTranslator;
 import com.parabasegenomics.parabasis.aws.S3TransferUtility;
+import com.parabasegenomics.parabasis.omicia.OmiciaResource;
 import com.parabasegenomics.parabasis.target.ReportOnGaps;
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -29,13 +30,8 @@ import java.util.logging.Logger;
  * 
  * 
  */
-public class SeqWorkflowActivitiesImpl implements SeqWorkflowActivities {
+public class SequencingWorkflowActivitiesImpl implements SequencingWorkflowActivities {
 
-    // 4409 for ParabaseValidation/NBDxV1.1
-    // 35893 for ParabaseValidation/NBDxV2
-    // 3923 for ParabaseProduction/NBDxV1.1
-    // 35877 for ParabaseProduction/NBDxV2
-    private final static String [] OMICIA_PROJECT_IDS = { "35893", "4409"}; 
     private final static String vcfFileSuffix = ".vcf.gz";
     private final static String SLASH = "/";
      
@@ -57,11 +53,13 @@ public class SeqWorkflowActivitiesImpl implements SeqWorkflowActivities {
             = localResourcesdirFilepath 
             + "/omicia_api_examples/python/GenomeWorkflows/upload_genome.py";
     
+    private final static OmiciaResource omiciaResource
+        = new OmiciaResource();
     
     private final static String logFileName = "SeqWorkflow.log";
     
     private static final Logger logger 
-        = Logger.getLogger(SeqWorkflowActivitiesImpl.class.getName());
+        = Logger.getLogger(SequencingWorkflowActivitiesImpl.class.getName());
     
     private final S3TransferUtility s3TransferUtility 
         = new S3TransferUtility();
@@ -136,10 +134,8 @@ public class SeqWorkflowActivitiesImpl implements SeqWorkflowActivities {
         File logFile = new File(HOME_DIR+ "/" + label + ".pushToOmicia.log");
         
         // set the correct project id for Omicia given where the vcf file is going.
-        String omiciaProjectId = OMICIA_PROJECT_IDS[0];
-        if (assay.equals("NBDxV1.1")) {
-            omiciaProjectId = OMICIA_PROJECT_IDS[1];
-        } 
+        String omiciaProjectId = omiciaResource.getValidationId(assay);
+        
         
         List<String> command = new ArrayList<>();
         command.add(PYTHON_PATH);

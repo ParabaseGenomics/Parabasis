@@ -750,7 +750,7 @@ public class AWSUploader extends Application {
         
              SeqWorkflowClientExternal worker
                  = factory.getClient(extendedSampleId);
-             worker.doWork(archiveBucket,archiveKeyfix,assay,extendedSampleId);
+             worker.processSample(archiveBucket,archiveKeyfix,assay,extendedSampleId);
        
         }
 

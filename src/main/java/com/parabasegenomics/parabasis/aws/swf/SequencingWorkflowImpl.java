@@ -7,17 +7,17 @@ package com.parabasegenomics.parabasis.aws.swf;
 
 import com.amazonaws.services.simpleworkflow.flow.core.Promise;
 
-public class SeqWorkflowImpl implements SeqWorkflow {
+public class SequencingWorkflowImpl implements SequencingWorkflow {
     
     private final static String gapReportSuffix = ".gap.report.txt";
     private final static String gapGeneReportSuffix = ".gap.gene.report.txt";
     private final static String resourceFileSuffix = ".resources.json";
     
-    private final SeqWorkflowActivitiesClient ops
-        = new SeqWorkflowActivitiesClientImpl();
+    private final SequencingWorkflowActivitiesClient client
+        = new SequencingWorkflowActivitiesClientImpl();
     
     @Override
-    public void doWork(
+    public void processSample(
         String bucket,
         String keyPrefix,
         String assay,
@@ -35,25 +35,25 @@ public class SeqWorkflowImpl implements SeqWorkflow {
             + sample
             + ".vcf.gz";
 
-        ops.setAssay(assay);
-        ops.setThreshold("20");
+        client.setAssay(assay);
+        client.setThreshold("20");
         
         // push vcf to omicia
         Promise<String> localFile 
-            = ops.downloadToLocalEC2(bucket,vcfKey);
+            = client.downloadToLocalEC2(bucket,vcfKey);
         
         Promise<String> convertedFile
-            = ops.convertCoordinates(localFile);
+            = client.convertCoordinates(localFile);
         
         Promise<String> pushedToOmicia
-            = ops.pushToOmicia(convertedFile);
+            = client.pushToOmicia(convertedFile);
 
         // gaps report
         Promise<String> localBamFile
-            = ops.downloadToLocalEC2(bucket, bamKey);
+            = client.downloadToLocalEC2(bucket, bamKey);
 
         Promise<String> resourceFile
-            = ops.createResourceFile(localBamFile);
+            = client.createResourceFile(localBamFile);
         
         //Promise<String> reportFileBase 
         //    = ops.runGapsReport(resourceFile);
@@ -65,15 +65,16 @@ public class SeqWorkflowImpl implements SeqWorkflow {
         String gapFileKey = keyPrefix + "/" + sample + gapReportSuffix;
         ops.pushToS3(gapFile, bucket, gapFileKey);
 
-        String gapGeneFile = reportFileBase + gapGeneReportSuffix;
+        String gapGeneFile = reportFileBase + gapGdeneReportSuffix;
         String gapGeneFileKey = keyPrefix + "/" + sample + gapGeneReportSuffix;
         ops.pushToS3(gapGeneFile, bucket, gapGeneFileKey);
         
-        String gapResourceFile = reportFileBase + resourceFileSuffix;
+       
         String resourceFileKey = keyPrefix + "/" + sample + resourceFileSuffix;
-        ops.pushToS3(gapResourceFile, bucket, resourceFileKey);
-        */
+        client.pushToS3(resourceFile, bucket, resourceFileKey);
+       */
         
     }
+    
     
 }

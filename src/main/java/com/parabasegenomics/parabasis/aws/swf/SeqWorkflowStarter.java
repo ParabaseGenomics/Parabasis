@@ -16,9 +16,9 @@ public class SeqWorkflowStarter {
      * @param args the command line arguments
      */
     public static void main(String[] args) {
-        SeqWorkflow seqWorkflow
-            = new SeqWorkflowImpl();
-        seqWorkflow.doWork("a","b","c","d");
+        SequencingWorkflow seqWorkflow
+            = new SequencingWorkflowImpl();
+        seqWorkflow.processSample("a","b","c","d");
     }
     
 }

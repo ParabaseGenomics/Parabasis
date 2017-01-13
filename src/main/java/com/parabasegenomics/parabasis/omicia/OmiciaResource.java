@@ -5,33 +5,56 @@
  */
 package com.parabasegenomics.parabasis.omicia;
 
+
 /**
- * Class to hold the Omicia workspace and project we're working with.
+ * Omicia handler.
+ * 
+ * 4409 for ParabaseValidation/NBDxV1.1
+   35893 for ParabaseValidation/NBDxV2
+   3923 for ParabaseProduction/NBDxV1.1
+   35877 for ParabaseProduction/NBDxV2
  * @author evanmauceli
  */
 public class OmiciaResource {
     
-    private final String project;
-    private final String workspace;
+    public static final String V1 = "NBDxV1.1";
+    public static final String V2 = "NBDxV2";
     
-    public OmiciaResource(String theProject, String theWorkspace) {
-        project = theProject;
-        workspace = theWorkspace;
+    public OmiciaResource() {
+        
     }
-    
+   
     /**
-     * Returns the current workspace.
+     * Returns the validation id for the provided assay.
+     * @param assay
      * @return 
      */
-    public String getWorkspace() {
-        return workspace;
+    public String getValidationId(String assay) {
+        switch (assay) {
+            case V1:
+                return "4409";
+            case V2:
+                return "35893";
+            default:
+                throw new IllegalArgumentException("no validation ID for " + assay);
+        }
     }
     
+    
     /**
-     * Returns the current project.
+     * Returns the validation id for the provided assay.
+     * @param assay
      * @return 
      */
-    public String getProject() {
-        return project;
+    public String getProductionId(String assay) {
+        switch (assay) {
+            case V1:
+                return "3923";
+            case V2:
+                return "35877";
+            default:
+                throw new IllegalArgumentException("no production ID for " + assay);
+        }
     }
+    
 }

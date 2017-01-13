@@ -38,13 +38,13 @@ public class SeqWorkflowTestMain {
 
         
         
-        SeqWorkflowClientExternalFactory factory
-            = new SeqWorkflowClientExternalFactoryImpl(service,domain);
+        SequencingWorkflowClientExternalFactory factory
+            = new SequencingWorkflowClientExternalFactoryImpl(service,domain);
 
         String id = "testPush";
-        SeqWorkflowClientExternal pusher
+        SequencingWorkflowClientExternal pusher
             = factory.getClient(id);
-        pusher.doWork(
+        pusher.processSample(
             "parabase.genomics.sandbox",
             "NBDxV1.1/NA12878A/2016-07-25-15:21:42/160718_M03281_0050_000000000-ANMNN",
             "NBDxV1.1","NA12878A_S2");

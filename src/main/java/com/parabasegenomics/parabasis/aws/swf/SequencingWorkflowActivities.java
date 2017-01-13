@@ -17,7 +17,7 @@ import com.amazonaws.services.simpleworkflow.flow.annotations.ActivityRegistrati
 @Activities(version="1.0")
 
 
-public interface SeqWorkflowActivities {
+public interface SequencingWorkflowActivities {
     
     // returns local path to vcf file
     public String downloadToLocalEC2(String bucket, String key);
