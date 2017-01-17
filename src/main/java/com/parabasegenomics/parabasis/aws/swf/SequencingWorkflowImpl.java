@@ -5,6 +5,7 @@
  */
 package com.parabasegenomics.parabasis.aws.swf;
 
+import com.amazonaws.services.simpleworkflow.flow.annotations.Asynchronous;
 import com.amazonaws.services.simpleworkflow.flow.core.Promise;
 
 /**
@@ -13,27 +14,52 @@ import com.amazonaws.services.simpleworkflow.flow.core.Promise;
  */
 public class SequencingWorkflowImpl implements SequencingWorkflow {
 
-    private final PushToOmiciaWorkflow pushToOmiciaWorkflow;
-    private final CreateGapsReportsWorkflow gapsReports20xWorkflow;
-    private final CreateGapsReportsWorkflow gapsReports10xWorkflow;
+    private final PushToOmiciaWorkflowClientFactory pushToOmiciaWorkflowFactory
+        = new PushToOmiciaWorkflowClientFactoryImpl();
+    
+    private final CreateGapsReportsWorkflowClientFactory gapsReports20xWorkflowFactory
+        = new CreateGapsReportsWorkflowClientFactoryImpl();
+    
+    private final CreateGapsReportsWorkflowClientFactory gapsReports10xWorkflowFactory
+        = new CreateGapsReportsWorkflowClientFactoryImpl();
+    
+    private final String id="sequencingWorkflow";
     
     public SequencingWorkflowImpl() {
-        pushToOmiciaWorkflow = new PushToOmiciaWorkflowImpl();
-        gapsReports20xWorkflow = new CreateGapsReportsWorkflowImpl();
-        gapsReports10xWorkflow = new CreateGapsReportsWorkflowImpl();
+        //gapsReports20xWorkflowFactory = new CreateGapsReportsWorkflowClientExternalFactoryImpl();
+        //gapsReports10xWorkflowFactory = new CreateGapsReportsWorkflowClientExternalFactoryImpl();
     }
     
+    @Override
     public void process(S3NameResource vcfParser, S3NameResource bamParser) {
-        Promise<Void> pushedToOmicia = pushToOmiciaWorkflow.process(vcfParser);
-        Promise<Void> gaps20xDone = gapsReports20xWorkflow.process(bamParser,20);
+
+        PushToOmiciaWorkflowClient pushToOmiciaWorkflowClient 
+            = pushToOmiciaWorkflowFactory.getClient(id);
+
+        pushToOmiciaWorkflowClient.process(vcfParser);
+        Promise<Void> gaps20xDone = processFirstGapsReport(bamParser);
         processNextGapsReport(gaps20xDone,bamParser);
     }
     
+    @Asynchronous
+    public Promise<Void> processFirstGapsReport(S3NameResource bamParser) {
+        CreateGapsReportsWorkflowClient gapsReports20xWorkflowClient 
+            = gapsReports20xWorkflowFactory.getClient(id);
+         
+        gapsReports20xWorkflowClient.process(bamParser,20);
+        return Promise.Void();
+    }
+    
+    @Asynchronous
     public void processNextGapsReport(
         Promise<Void> donePrevious, 
         S3NameResource bamParser) {
+        
+        CreateGapsReportsWorkflowClient gapsReports10xWorkflowClient 
+            = gapsReports10xWorkflowFactory.getClient(id);
+        
         if (donePrevious.isReady()) {
-            gapsReports10xWorkflow.process(bamParser,10);
+            gapsReports10xWorkflowClient.process(bamParser,10);
         }
     }
     

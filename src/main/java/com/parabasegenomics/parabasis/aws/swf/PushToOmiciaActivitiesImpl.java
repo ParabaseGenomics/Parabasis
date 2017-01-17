@@ -29,7 +29,7 @@ public class PushToOmiciaActivitiesImpl implements PushToOmiciaActivities {
     
     private S3NameResource nameResource;
     
-    private static final Logger logger 
+    private final Logger logger 
         = Logger.getLogger(PushToOmiciaActivitiesImpl.class.getName());
     
 

@@ -49,11 +49,11 @@ public class SeqWorkflowTestMain {
             "parabase.genomics.sandbox",
             "NBDxV1.1/NA12878A/2016-07-25-15:21:42/160718_M03281_0050_000000000-ANMNN/NA12878A_S2.vcf.gz");
         
+        
         S3NameResource s3NameParserBam
             = new S3NameResource(
             "parabase.genomics.sandbox",
             "NBDxV1.1/NA12878A/2016-07-25-15:21:42/160718_M03281_0050_000000000-ANMNN/NA12878A_S2.bam");
-        
         
         client.process(s3NameParserVcf,s3NameParserBam);
         

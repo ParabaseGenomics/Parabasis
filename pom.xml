@@ -70,115 +70,24 @@
         <plugins>
             <plugin>
                 <artifactId>maven-assembly-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <id>Build TargetMaker</id>
-                        <configuration>
-                            <appendAssemblyId>false</appendAssemblyId>
-                            <archive>
-                                <manifest>
-                                    <mainClass>com.parabasegenomics.parabasis.util.TargetMaker</mainClass>
-                                </manifest>
-                            </archive>
-                            <descriptorRefs>
-                                <descriptorRef>jar-with-dependencies</descriptorRef>
-                            </descriptorRefs>
-                            <finalName>TargetMaker</finalName>
-                        </configuration>
-                        <phase>package</phase>
-                        <goals>
-                            <goal>single</goal>
-                        </goals>
-                        </execution>                      
+                <executions>                    
+                        
+                         
+                        
+                       
                         <execution>
-                            <id>Build AssayReport</id>
+                            <id>Build Sequencing workflow worker</id>
                             <configuration>
                                 <appendAssemblyId>false</appendAssemblyId>
                                 <archive>
                                     <manifest>
-                                        <mainClass>com.parabasegenomics.parabasis.target.ReportOnAssay</mainClass>
+                                        <mainClass>com.parabasegenomics.parabasis.aws.swf.SequencingWorkflowWorker</mainClass>
                                     </manifest>
                                 </archive>
                                 <descriptorRefs>
                                     <descriptorRef>jar-with-dependencies</descriptorRef>
                                 </descriptorRefs>
-                                <finalName>AssayReport</finalName>
-                            </configuration>
-                            <phase>package</phase>
-                            <goals>
-                                <goal>single</goal>
-                            </goals>
-                        </execution>                       
-                         <execution>
-                            <id>Build AWSUploader</id>
-                            <configuration>
-                                <appendAssemblyId>false</appendAssemblyId>
-                                <archive>
-                                    <manifest>
-                                        <mainClass>com.parabasegenomics.parabasis.aws.AWSUploader</mainClass>
-                                    </manifest>
-                                </archive>
-                                <descriptorRefs>
-                                    <descriptorRef>jar-with-dependencies</descriptorRef>
-                                </descriptorRefs>
-                                <finalName>AWSUploader</finalName>
-                            </configuration>
-                            <phase>package</phase>
-                            <goals>
-                                <goal>single</goal>
-                            </goals>
-                        </execution>
-                        <execution>
-                            <id>Build AWSMonitor</id>
-                            <configuration>
-                                <appendAssemblyId>false</appendAssemblyId>
-                                <archive>
-                                    <manifest>
-                                        <mainClass>com.parabasegenomics.parabasis.aws.AWSMonitor</mainClass>
-                                    </manifest>
-                                </archive>
-                                <descriptorRefs>
-                                    <descriptorRef>jar-with-dependencies</descriptorRef>
-                                </descriptorRefs>
-                                <finalName>AWSMonitor</finalName>
-                            </configuration>
-                            <phase>package</phase>
-                            <goals>
-                                <goal>single</goal>
-                            </goals>
-                        </execution>
-                        <execution>
-                            <id>Build AWSDownload</id>
-                            <configuration>
-                                <appendAssemblyId>false</appendAssemblyId>
-                                <archive>
-                                    <manifest>
-                                        <mainClass>com.parabasegenomics.parabasis.aws.AWSDownloader</mainClass>
-                                    </manifest>
-                                </archive>
-                                <descriptorRefs>
-                                    <descriptorRef>jar-with-dependencies</descriptorRef>
-                                </descriptorRefs>
-                                <finalName>AWSDownload</finalName>
-                            </configuration>
-                            <phase>package</phase>
-                            <goals>
-                                <goal>single</goal>
-                            </goals>
-                        </execution>
-                        <execution>
-                            <id>Build PushToOmiciaWorker</id>
-                            <configuration>
-                                <appendAssemblyId>false</appendAssemblyId>
-                                <archive>
-                                    <manifest>
-                                        <mainClass>com.parabasegenomics.parabasis.aws.swf.SeqWorkflowWorker</mainClass>
-                                    </manifest>
-                                </archive>
-                                <descriptorRefs>
-                                    <descriptorRef>jar-with-dependencies</descriptorRef>
-                                </descriptorRefs>
-                                <finalName>SeqWorkflowWorker</finalName>
+                                <finalName>SequencingWorkflowWorker</finalName>
                             </configuration>
                             <phase>package</phase>
                             <goals>
@@ -204,44 +113,8 @@
                                 <goal>single</goal>
                             </goals>
                         </execution>
-                        <execution>
-                            <id>Build CNVDetector</id>
-                            <configuration>
-                                <appendAssemblyId>false</appendAssemblyId>
-                                <archive>
-                                    <manifest>
-                                        <mainClass>com.parabasegenomics.parabasis.coverage.FindCnvCandidates</mainClass>
-                                    </manifest>
-                                </archive>
-                                <descriptorRefs>
-                                    <descriptorRef>jar-with-dependencies</descriptorRef>
-                                </descriptorRefs>
-                                <finalName>FindCNVCandidates</finalName>
-                            </configuration>
-                            <phase>package</phase>
-                            <goals>
-                                <goal>single</goal>
-                            </goals>
-                        </execution>
-                        <execution>
-                        <id>Build Gap Report</id>
-                        <configuration>
-                            <appendAssemblyId>false</appendAssemblyId>
-                            <archive>
-                                <manifest>
-                                    <mainClass>com.parabasegenomics.parabasis.target.ReportOnGaps</mainClass>
-                                </manifest>
-                            </archive>
-                            <descriptorRefs>
-                                <descriptorRef>jar-with-dependencies</descriptorRef>
-                            </descriptorRefs>
-                            <finalName>ReportOnGaps</finalName>
-                        </configuration>
-                        <phase>package</phase>
-                        <goals>
-                            <goal>single</goal>
-                        </goals>
-                        </execution>                      
+                        
+                        
                 </executions>
             </plugin>
             

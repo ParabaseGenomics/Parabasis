@@ -145,8 +145,8 @@ public class CreateGapsReportsActivitiesImpl implements  CreateGapsReportsActivi
         File resourceFile = new File(ec2Resource.getTmpDir() + "/" + resourceFilename);
         String resourceFileKey = keyPrefix + "/" + resourceFilename;
         
-        pushFileToS3(targetGapFile,bucket,targetGapFileKey);
-        pushFileToS3(geneGapFile,bucket,geneGapFileKey);
+        //pushFileToS3(targetGapFile,bucket,targetGapFileKey);
+        //pushFileToS3(geneGapFile,bucket,geneGapFileKey);
         pushFileToS3(resourceFile,bucket,resourceFileKey);
         
     }
@@ -166,7 +166,7 @@ public class CreateGapsReportsActivitiesImpl implements  CreateGapsReportsActivi
             s3TransferUtility.uploadFileToS3Bucket(file, bucket, key);
         } catch (AmazonClientException ex) {
             String message 
-                = "Cannot upload:"+file.getAbsolutePath()+ " to " + nameResource.getBucket() + "/" + key;
+                = "Cannot upload:"+file.getAbsolutePath()+ " to " + nameResource.getBucket() +"\t"+bucket+ "\t" + key;
             logger.log(Level.SEVERE, message, ex);
         }  
     }

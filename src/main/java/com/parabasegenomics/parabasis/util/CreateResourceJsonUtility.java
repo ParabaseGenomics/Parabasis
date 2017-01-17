@@ -32,7 +32,7 @@ public class CreateResourceJsonUtility {
         String threshold) 
     throws FileNotFoundException {
         
-        String outputFilepath = bamFile.substring(0,bamFile.indexOf(".bam"));
+        String outputFilepath = bamFile.substring(0,bamFile.indexOf(".bam")-3);
         JsonObjectBuilder resource = Json.createObjectBuilder();
         resource.add("BAM", Json.createArrayBuilder().add(bamFile));
         resource.add("TARGETS",targetFile);

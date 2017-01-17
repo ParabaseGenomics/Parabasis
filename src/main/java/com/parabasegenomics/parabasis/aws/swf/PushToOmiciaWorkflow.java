@@ -8,7 +8,6 @@ package com.parabasegenomics.parabasis.aws.swf;
 import com.amazonaws.services.simpleworkflow.flow.annotations.Execute;
 import com.amazonaws.services.simpleworkflow.flow.annotations.Workflow;
 import com.amazonaws.services.simpleworkflow.flow.annotations.WorkflowRegistrationOptions;
-import com.amazonaws.services.simpleworkflow.flow.core.Promise;
 
 /**
  *
@@ -20,7 +19,7 @@ import com.amazonaws.services.simpleworkflow.flow.core.Promise;
 
 public interface PushToOmiciaWorkflow {
     
-     @Execute(version = "1.0")
-     public Promise<Void> process(S3NameResource vcfParser);
+     @Execute(version = "1.4")
+     public void process(S3NameResource vcfParser);
     
 }

@@ -12,9 +12,9 @@ package com.parabasegenomics.parabasis.aws.swf;
  */
 public class GapsReportResource {
     
-    private final static String gapTargetReportSuffix = ".gap.report.txt";
-    private final static String gapGeneReportSuffix = ".gap.gene.report.txt";
-    private final static String resourceFileSuffix = ".resources.json";
+    private final String gapTargetReportSuffix = ".gap.report.txt";
+    private final String gapGeneReportSuffix = ".gap.gene.report.txt";
+    private final String resourceFileSuffix = ".resources.json";
     
     S3NameResource s3NameParser;
     

@@ -15,22 +15,30 @@ package com.parabasegenomics.parabasis.aws.swf;
  */
 public class S3NameResource {
     
-    private static final String SLASH = "/";
+    private final String SLASH = "/";
+    private final String PRODUCTION = "production";
     
-    private final String s3Bucket;
-    private final String s3Key;
-    
-    private String [] tokens;
+    private  String s3Bucket;
+    private  String s3Key;
+
     
     public S3NameResource(String bucket, String key) {
         s3Bucket=bucket;
-        s3Key=key;      
-        
-        tokens = new String [5];
-        parseKey();
-        
+        s3Key=key;   
     }
     
+    public S3NameResource() {
+        s3Bucket=null;
+        s3Key=null;
+    }
+    
+    public void setBucket(String bucket) {
+        s3Bucket=bucket;
+    }
+    public void setKey(String key) {
+        s3Key=key;
+    }
+       
     public String getBucket() {
         return s3Bucket;
     }
@@ -43,7 +51,7 @@ public class S3NameResource {
      * @return 
      */
     public boolean isProduction() {
-        return (s3Bucket.contains("produciton"));
+        return (s3Bucket.contains(PRODUCTION));
     }
     
     
@@ -52,6 +60,7 @@ public class S3NameResource {
      * @return 
      */
     public String getAssay() {
+        String [] tokens = s3Key.split(SLASH);
         return tokens[0];
     }
     
@@ -60,6 +69,7 @@ public class S3NameResource {
      * @return 
      */
     public String getSampleId() {
+        String [] tokens = s3Key.split(SLASH);
         return tokens[1];
     }
     
@@ -68,23 +78,8 @@ public class S3NameResource {
      * @return 
      */
     public String getFilename() {
+        String [] tokens = s3Key.split(SLASH);
         return tokens[4];
-    }
-    
-    /**
-     * Returns the run ID from the key.
-     * @return 
-     */
-    public String getRunId() {
-        return tokens[3];
-    }
-    
-    /**
-     * Returns the date from the key.
-     * @return 
-     */     
-    public String getDate() {
-        return tokens[2];
     }
     
     /**
@@ -95,12 +90,4 @@ public class S3NameResource {
         return s3Key.substring(0,s3Key.lastIndexOf(SLASH));
     }
     
-    
-    /**
-     * Fill the tokens array by parsing the key. 
-     * @return 
-     */
-    private void parseKey() {
-        tokens = s3Key.split(SLASH);
-    }
 }

@@ -5,6 +5,7 @@
  */
 package com.parabasegenomics.parabasis.aws.swf;
 
+import com.amazonaws.services.simpleworkflow.flow.annotations.Asynchronous;
 import com.amazonaws.services.simpleworkflow.flow.core.Promise;
 
 /**
@@ -13,16 +14,25 @@ import com.amazonaws.services.simpleworkflow.flow.core.Promise;
  */
 public class CreateGapsReportsWorkflowImpl implements CreateGapsReportsWorkflow {
     
-    private final CreateGapsReportsActivitiesClient gapsReportsActivitiesClient;
+    private final CreateGapsReportsActivitiesClient gapsReportsActivitiesClient
+        = new CreateGapsReportsActivitiesClientImpl();
     
     public CreateGapsReportsWorkflowImpl() {
-        gapsReportsActivitiesClient = new CreateGapsReportsActivitiesClientImpl();
+        
     }
     
     @Override
-    public Promise<Void> process(S3NameResource bamResource, Integer threshold) {
+    public void process(S3NameResource bamResource, Integer threshold) {
         
-        gapsReportsActivitiesClient.initialize(bamResource, threshold);
+        Promise<Void> init 
+            = gapsReportsActivitiesClient.initialize(bamResource, threshold);
+        Promise<Void> processed 
+            = processAfterInitialized(init);
+        
+    }
+
+    @Asynchronous
+    Promise<Void> processAfterInitialized(Promise<Void> init) {
         
         Promise<String> localBamFile 
             = gapsReportsActivitiesClient.downloadToLocalEC2();
@@ -36,9 +46,7 @@ public class CreateGapsReportsWorkflowImpl implements CreateGapsReportsWorkflow 
         Promise<Void> pushedReports 
             = gapsReportsActivitiesClient.pushGapReportsToS3(ranReports);
         
-  
         return pushedReports;
-        
     }
-
+    
 }

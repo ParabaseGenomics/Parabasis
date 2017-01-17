@@ -5,22 +5,27 @@
  */
 package com.parabasegenomics.parabasis.aws.swf;
 
+import com.amazonaws.services.simpleworkflow.flow.annotations.Asynchronous;
 import com.amazonaws.services.simpleworkflow.flow.core.Promise;
 
 
 public class PushToOmiciaWorkflowImpl implements PushToOmiciaWorkflow {
 
-    private final PushToOmiciaActivitiesClient pushToOmiciaActivitiesClient;
+    private final PushToOmiciaActivitiesClient pushToOmiciaActivitiesClient
+        = new PushToOmiciaActivitiesClientImpl();
     
-    public PushToOmiciaWorkflowImpl() {
-        pushToOmiciaActivitiesClient = new PushToOmiciaActivitiesClientImpl();
-        
+    public PushToOmiciaWorkflowImpl() {    
     }
+    
     @Override
-    public Promise<Void> process(S3NameResource vcfParser) {
-        pushToOmiciaActivitiesClient.initialize(vcfParser);
-  
-        Promise<String> localVcfFile 
+    public void process(S3NameResource vcfParser) {
+        Promise<Void> init = pushToOmiciaActivitiesClient.initialize(vcfParser);
+        Promise<Void> processed = processAfterInitialized(init); 
+    }
+    
+    @Asynchronous
+    Promise<Void> processAfterInitialized(Promise<Void> init) {
+         Promise<String> localVcfFile 
             = pushToOmiciaActivitiesClient.downloadToLocalEC2();
         
         Promise<String> convertedVcfFile

@@ -11,22 +11,22 @@ package com.parabasegenomics.parabasis.aws.swf;
  */
 public class EC2Resource {
     
-    private final static String PYTHON_PATH = "/usr/bin/python27";
-    private final static String HOME_DIR = "/home/ec2-user"; 
+    private final String PYTHON_PATH = "/usr/bin/python27";
+    private final String HOME_DIR = "/home/ec2-user"; 
     
-    private final static String localTmpdirPath
+    private final String localTmpdirPath
         = HOME_DIR + "/tmp";
     
-    private final static String localResourcesdirPath
+    private final String localResourcesdirPath
        = HOME_DIR + "/Resources";
        
-    private final static String omiciaPythonUploadScript
+    private final String omiciaPythonUploadScript
             = localResourcesdirPath 
             + "/omicia_api_examples/python/GenomeWorkflows/upload_genome.py";
     
-    private final static String refseqBuild
+    private final String refseqBuild
         = localResourcesdirPath + "/RefSeq_4_11_2016";
-    private final static String gencodeBuild
+    private final String gencodeBuild
         = localResourcesdirPath + "/gencode_v19_02162015";
     
     public EC2Resource() {       

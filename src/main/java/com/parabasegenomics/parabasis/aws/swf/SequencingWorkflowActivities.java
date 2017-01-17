@@ -5,7 +5,6 @@
  */
 package com.parabasegenomics.parabasis.aws.swf;
 
-import com.amazonaws.AmazonServiceException;
 import com.amazonaws.services.simpleworkflow.flow.annotations.Activities;
 import com.amazonaws.services.simpleworkflow.flow.annotations.ActivityRegistrationOptions;
 
@@ -13,25 +12,16 @@ import com.amazonaws.services.simpleworkflow.flow.annotations.ActivityRegistrati
  *
  * @author evanmauceli
  */
+
 @ActivityRegistrationOptions(defaultTaskScheduleToStartTimeoutSeconds = 300,
                              defaultTaskStartToCloseTimeoutSeconds = 300)
-@Activities(version="1.4")
+@Activities(version="1.0")
 
-public interface CreateGapsReportsActivities {
-    
 
-    public void initialize(S3NameResource bamResource, Integer threshold);
+public interface SequencingWorkflowActivities {
     
-    public String downloadToLocalEC2();
-    
-    public String createResourceFile(String bamFile);
-    
-    // run the gaps report locally - return the local path to the reports
-    public void runGapsReport(String resourceFilepath);
-    
-    // push the gap reports to S3 for archiving.
-    public void pushGapReportsToS3()
-    throws AmazonServiceException, InterruptedException;
-    
+    public void dummy();
     
 }
+
+   

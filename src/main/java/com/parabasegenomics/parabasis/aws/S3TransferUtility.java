@@ -37,22 +37,22 @@ import java.util.logging.Logger;
  * @author evanmauceli
  */
 public class S3TransferUtility {
-    private static final String KEY_TAG = "[kms]";
-    private static final String EQUALS = "=";
+    private final String KEY_TAG = "[kms]";
+    private final String EQUALS = "=";
 
-    private static final String DATE_FORMAT = "yyyy-MM-dd-HH:mm:ss";
+    private final String DATE_FORMAT = "yyyy-MM-dd-HH:mm:ss";
     
-    private static final File credentialsFile 
+    private final File credentialsFile 
         = new File(System.getProperty("user.home")+"/.aws/kms_credentials");
     
     private final Logger logger 
         = Logger.getLogger(S3TransferUtility.class.getName());
-    private static final String logFileName = "S3TransferUntility.log";
+    private final String logFileName = "S3TransferUntility.log";
     
-    private final TransferManager transferManager; 
+    //private final TransferManager transferManager; 
     
-    private static AmazonS3EncryptionClient encryptionClient;
-    private  FileHandler fileHandler;
+    private final AmazonS3EncryptionClient encryptionClient;
+    private FileHandler fileHandler;
     private String kms_cmk_id;  
     
     private final ProgressTracker progressTracker;
@@ -84,9 +84,6 @@ public class S3TransferUtility {
                 materialProvider,
                 new CryptoConfiguration().withKmsRegion(Regions.US_EAST_1))
             .withRegion(Region.getRegion(Regions.US_EAST_1));
-        
-        transferManager 
-                = new TransferManager(encryptionClient);               
         
         progressTracker = new ProgressTracker();
 
@@ -123,6 +120,9 @@ public class S3TransferUtility {
             String key,
             File destinationFile) 
     throws InterruptedException {   
+        TransferManager transferManager 
+                = new TransferManager(encryptionClient);               
+        
         Download download
             = transferManager
                 .download(bucket, key, destinationFile);
@@ -135,7 +135,8 @@ public class S3TransferUtility {
             + destinationFile;
         logger.log(Level.INFO,logString);
         download.waitForCompletion();
-    }    
+    }
+        
     
     
     /**
@@ -149,7 +150,10 @@ public class S3TransferUtility {
             String bucket,
             String keyPrefix,
             File destinationDirectory) 
-    throws InterruptedException {        
+    throws InterruptedException {      
+        TransferManager transferManager 
+            = new TransferManager(encryptionClient);               
+                
         MultipleFileDownload download 
                 = transferManager
                     .downloadDirectory(bucket, keyPrefix, destinationDirectory);
@@ -163,6 +167,7 @@ public class S3TransferUtility {
             + destinationDirectory;
         logger.log(Level.INFO,logString);
         download.waitForCompletion();
+        
     }    
     
     /**
@@ -177,6 +182,9 @@ public class S3TransferUtility {
         String bucket,
         String key) 
     throws AmazonClientException, AmazonServiceException, InterruptedException {
+
+        TransferManager transferManager 
+            = new TransferManager(encryptionClient);     
         
         Upload upload = transferManager.upload(bucket,key,file);   
         upload.addProgressListener(progressTracker);
