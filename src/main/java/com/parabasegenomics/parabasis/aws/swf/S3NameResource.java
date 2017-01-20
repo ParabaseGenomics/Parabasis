@@ -32,6 +32,11 @@ public class S3NameResource {
         s3Key=null;
     }
     
+    public void S3NameResource(S3NameResource toCopy) {
+        this.s3Bucket = toCopy.getBucket();
+        this.s3Key = toCopy.getKey();
+    }
+    
     public void setBucket(String bucket) {
         s3Bucket=bucket;
     }

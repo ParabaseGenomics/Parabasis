@@ -14,26 +14,24 @@ public class PushToOmiciaWorkflowImpl implements PushToOmiciaWorkflow {
     private final PushToOmiciaActivitiesClient pushToOmiciaActivitiesClient
         = new PushToOmiciaActivitiesClientImpl();
     
-    public PushToOmiciaWorkflowImpl() {    
-    }
-    
     @Override
-    public void process(S3NameResource vcfParser) {
-        Promise<Void> init = pushToOmiciaActivitiesClient.initialize(vcfParser);
-        Promise<Void> processed = processAfterInitialized(init); 
-    }
-    
-    @Asynchronous
-    Promise<Void> processAfterInitialized(Promise<Void> init) {
-         Promise<String> localVcfFile 
-            = pushToOmiciaActivitiesClient.downloadToLocalEC2();
+    public void pushToOmicia(S3NameResource nameResource) {
+        Promise<String> localVcfFile 
+            = pushToOmiciaActivitiesClient.downloadToLocalEC2(nameResource);
         
         Promise<String> convertedVcfFile
             = pushToOmiciaActivitiesClient.convertCoordinates(localVcfFile);
+       
+        uploadToOmicia(convertedVcfFile,nameResource);
+    }
+    
+    
+    @Asynchronous
+    public void uploadToOmicia(
+        Promise<String> convertedFile,
+        S3NameResource nameResource) {
         
-        Promise<Void> pushedToOmicia
-            = pushToOmiciaActivitiesClient.pushToOmicia(convertedVcfFile); 
+        pushToOmiciaActivitiesClient.push(convertedFile.get(), nameResource);
         
-        return pushedToOmicia;
     }
 }

@@ -16,37 +16,32 @@ public class CreateGapsReportsWorkflowImpl implements CreateGapsReportsWorkflow 
     
     private final CreateGapsReportsActivitiesClient gapsReportsActivitiesClient
         = new CreateGapsReportsActivitiesClientImpl();
-    
-    public CreateGapsReportsWorkflowImpl() {
-        
-    }
-    
-    @Override
-    public void process(S3NameResource bamResource, Integer threshold) {
-        
-        Promise<Void> init 
-            = gapsReportsActivitiesClient.initialize(bamResource, threshold);
-        Promise<Void> processed 
-            = processAfterInitialized(init);
-        
-    }
 
-    @Asynchronous
-    Promise<Void> processAfterInitialized(Promise<Void> init) {
+    @Override
+    public void runGapsReport(S3NameResource bamResource, Integer threshold) {
         
         Promise<String> localBamFile 
-            = gapsReportsActivitiesClient.downloadToLocalEC2();
+            = gapsReportsActivitiesClient.downloadToLocalEC2(bamResource);
         
         Promise<String> resourceFilepath
-            = gapsReportsActivitiesClient.createResourceFile(localBamFile);
+            = createResourceFile(localBamFile,threshold,bamResource);
         
         Promise<Void> ranReports 
             = gapsReportsActivitiesClient.runGapsReport(resourceFilepath);
         
-        Promise<Void> pushedReports 
-            = gapsReportsActivitiesClient.pushGapReportsToS3(ranReports);
-        
-        return pushedReports;
+        gapsReportsActivitiesClient.pushGapReportsToS3(bamResource);
+ 
     }
-    
+
+    @Asynchronous
+    Promise<String> createResourceFile(
+        Promise<String> bamFile, 
+        Integer threshold,
+        S3NameResource bamResource) {
+     
+        return (gapsReportsActivitiesClient
+                .createResourceFile(bamFile.get(),threshold,bamResource));
+       
+    }
+        
 }

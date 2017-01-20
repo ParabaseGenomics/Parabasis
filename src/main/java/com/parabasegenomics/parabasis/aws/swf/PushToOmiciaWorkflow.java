@@ -20,6 +20,6 @@ import com.amazonaws.services.simpleworkflow.flow.annotations.WorkflowRegistrati
 public interface PushToOmiciaWorkflow {
     
      @Execute(version = "1.4")
-     public void process(S3NameResource vcfParser);
+     public void pushToOmicia(S3NameResource vcfParser);
     
 }

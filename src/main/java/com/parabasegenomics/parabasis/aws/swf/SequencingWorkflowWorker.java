@@ -12,7 +12,6 @@ import com.amazonaws.services.simpleworkflow.AmazonSimpleWorkflow;
 import com.amazonaws.services.simpleworkflow.AmazonSimpleWorkflowClient;
 import com.amazonaws.services.simpleworkflow.flow.ActivityWorker;
 import com.amazonaws.services.simpleworkflow.flow.WorkflowWorker;
-import java.util.concurrent.TimeUnit;
 
 /**
  *
@@ -49,7 +48,7 @@ public class SequencingWorkflowWorker {
         
         ActivityWorker activityWorker 
             = new ActivityWorker(service,domain,taskList);
-        activityWorker.addActivitiesImplementation(new SequencingWorkflowActivitiesImpl());
+        //activityWorker.addActivitiesImplementation(new SequencingWorkflowActivitiesImpl());
         activityWorker.addActivitiesImplementation(new PushToOmiciaActivitiesImpl());
         activityWorker.addActivitiesImplementation(new CreateGapsReportsActivitiesImpl());
         activityWorker.start();

@@ -18,19 +18,19 @@ import com.amazonaws.services.simpleworkflow.flow.annotations.ActivityRegistrati
 @Activities(version="1.4")
 
 public interface CreateGapsReportsActivities {
-    
 
-    public void initialize(S3NameResource bamResource, Integer threshold);
+    public String downloadToLocalEC2(S3NameResource nameResource);
     
-    public String downloadToLocalEC2();
-    
-    public String createResourceFile(String bamFile);
+    public String createResourceFile(
+        String bamFile, 
+        Integer coverageThreshold,
+        S3NameResource nameResource);
     
     // run the gaps report locally - return the local path to the reports
     public void runGapsReport(String resourceFilepath);
     
     // push the gap reports to S3 for archiving.
-    public void pushGapReportsToS3()
+    public void pushGapReportsToS3(S3NameResource nameResource)
     throws AmazonServiceException, InterruptedException;
     
     

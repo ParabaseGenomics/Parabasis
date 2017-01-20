@@ -17,6 +17,7 @@ import com.amazonaws.services.s3.model.CryptoConfiguration;
 import com.amazonaws.services.s3.model.KMSEncryptionMaterialsProvider;
 import com.amazonaws.services.s3.transfer.Download;
 import com.amazonaws.services.s3.transfer.MultipleFileDownload;
+import com.amazonaws.services.s3.transfer.MultipleFileUpload;
 import com.amazonaws.services.s3.transfer.TransferManager;
 import com.amazonaws.services.s3.transfer.Upload;
 import java.io.BufferedReader;
@@ -24,6 +25,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
+import java.util.List;
 import java.util.logging.FileHandler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -45,7 +47,7 @@ public class S3TransferUtility {
     private final File credentialsFile 
         = new File(System.getProperty("user.home")+"/.aws/kms_credentials");
     
-    private final Logger logger 
+    private static final Logger logger 
         = Logger.getLogger(S3TransferUtility.class.getName());
     private final String logFileName = "S3TransferUntility.log";
     
@@ -55,11 +57,13 @@ public class S3TransferUtility {
     private FileHandler fileHandler;
     private String kms_cmk_id;  
     
+    private final TransferManager transferManager;
+    
     private final ProgressTracker progressTracker;
     
     public S3TransferUtility()  {
         System.setProperty(SDKGlobalConfiguration.ENABLE_S3_SIGV4_SYSTEM_PROPERTY, "true");
-                
+        
         try {
             fileHandler = new FileHandler("%h/"+logFileName,true);
         } catch (IOException ex) {
@@ -85,6 +89,7 @@ public class S3TransferUtility {
                 new CryptoConfiguration().withKmsRegion(Regions.US_EAST_1))
             .withRegion(Region.getRegion(Regions.US_EAST_1));
         
+        transferManager = new TransferManager(encryptionClient);
         progressTracker = new ProgressTracker();
 
     }
@@ -119,10 +124,7 @@ public class S3TransferUtility {
             String bucket,
             String key,
             File destinationFile) 
-    throws InterruptedException {   
-        TransferManager transferManager 
-                = new TransferManager(encryptionClient);               
-        
+    throws InterruptedException { 
         Download download
             = transferManager
                 .download(bucket, key, destinationFile);
@@ -135,6 +137,9 @@ public class S3TransferUtility {
             + destinationFile;
         logger.log(Level.INFO,logString);
         download.waitForCompletion();
+         if (download.isDone()) {
+            transferManager.shutdownNow();
+        }
     }
         
     
@@ -151,9 +156,6 @@ public class S3TransferUtility {
             String keyPrefix,
             File destinationDirectory) 
     throws InterruptedException {      
-        TransferManager transferManager 
-            = new TransferManager(encryptionClient);               
-                
         MultipleFileDownload download 
                 = transferManager
                     .downloadDirectory(bucket, keyPrefix, destinationDirectory);
@@ -168,6 +170,9 @@ public class S3TransferUtility {
         logger.log(Level.INFO,logString);
         download.waitForCompletion();
         
+        if (download.isDone()) {
+            transferManager.shutdownNow();
+        }
     }    
     
     /**
@@ -182,16 +187,37 @@ public class S3TransferUtility {
         String bucket,
         String key) 
     throws AmazonClientException, AmazonServiceException, InterruptedException {
-
-        TransferManager transferManager 
-            = new TransferManager(encryptionClient);     
-        
         Upload upload = transferManager.upload(bucket,key,file);   
         upload.addProgressListener(progressTracker);
         
         upload.waitForCompletion();
     }
     
+    public void uploadFileListToS3Bucket(
+        String bucket,
+        String keyPrefix,
+        File localDir,    
+        List<File> filesToUpload) 
+    throws AmazonClientException, AmazonServiceException, InterruptedException {
+        
+        final MultipleFileUpload upload
+            = transferManager.uploadFileList(
+                bucket, keyPrefix, localDir, filesToUpload);
+
+        String logString 
+            = "Uploading to: " 
+            + bucket 
+            + "/" 
+            + keyPrefix 
+            + " from " 
+            + localDir;
+        logger.log(Level.INFO,logString);
+                
+        upload.waitForCompletion();
+        if (upload.isDone()) {
+            transferManager.shutdownNow();
+        }
+    }
     
     
     /**

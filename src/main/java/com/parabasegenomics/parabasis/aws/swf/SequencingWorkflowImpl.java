@@ -16,37 +16,35 @@ public class SequencingWorkflowImpl implements SequencingWorkflow {
 
     private final PushToOmiciaWorkflowClientFactory pushToOmiciaWorkflowFactory
         = new PushToOmiciaWorkflowClientFactoryImpl();
-    
+
     private final CreateGapsReportsWorkflowClientFactory gapsReports20xWorkflowFactory
         = new CreateGapsReportsWorkflowClientFactoryImpl();
     
     private final CreateGapsReportsWorkflowClientFactory gapsReports10xWorkflowFactory
         = new CreateGapsReportsWorkflowClientFactoryImpl();
-    
-    private final String id="sequencingWorkflow";
-    
-    public SequencingWorkflowImpl() {
-        //gapsReports20xWorkflowFactory = new CreateGapsReportsWorkflowClientExternalFactoryImpl();
-        //gapsReports10xWorkflowFactory = new CreateGapsReportsWorkflowClientExternalFactoryImpl();
-    }
-    
+   
     @Override
     public void process(S3NameResource vcfParser, S3NameResource bamParser) {
 
         PushToOmiciaWorkflowClient pushToOmiciaWorkflowClient 
-            = pushToOmiciaWorkflowFactory.getClient(id);
+            = pushToOmiciaWorkflowFactory.getClient();
 
-        pushToOmiciaWorkflowClient.process(vcfParser);
-        Promise<Void> gaps20xDone = processFirstGapsReport(bamParser);
-        processNextGapsReport(gaps20xDone,bamParser);
+        CreateGapsReportsWorkflowClient gapsReports20xWorkflowClient 
+            = gapsReports20xWorkflowFactory.getClient();
+                 
+        pushToOmiciaWorkflowClient.pushToOmicia(vcfParser);
+        gapsReports20xWorkflowClient.runGapsReport(bamParser,20);
+        
+        //Promise<Void> gaps20xDone = processFirstGapsReport(bamParser);
+        //processNextGapsReport(gaps20xDone,bamParser);
     }
     
     @Asynchronous
     public Promise<Void> processFirstGapsReport(S3NameResource bamParser) {
         CreateGapsReportsWorkflowClient gapsReports20xWorkflowClient 
-            = gapsReports20xWorkflowFactory.getClient(id);
+            = gapsReports20xWorkflowFactory.getClient();
          
-        gapsReports20xWorkflowClient.process(bamParser,20);
+        gapsReports20xWorkflowClient.runGapsReport(bamParser,20);
         return Promise.Void();
     }
     
@@ -55,11 +53,11 @@ public class SequencingWorkflowImpl implements SequencingWorkflow {
         Promise<Void> donePrevious, 
         S3NameResource bamParser) {
         
-        CreateGapsReportsWorkflowClient gapsReports10xWorkflowClient 
-            = gapsReports10xWorkflowFactory.getClient(id);
+         CreateGapsReportsWorkflowClient gapsReports10xWorkflowClient 
+            = gapsReports10xWorkflowFactory.getClient();
         
         if (donePrevious.isReady()) {
-            gapsReports10xWorkflowClient.process(bamParser,10);
+            gapsReports10xWorkflowClient.runGapsReport(bamParser,10);
         }
     }
     

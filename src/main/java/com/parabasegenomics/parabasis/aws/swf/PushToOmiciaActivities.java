@@ -21,16 +21,14 @@ import com.amazonaws.services.simpleworkflow.flow.annotations.ActivityRegistrati
 @Activities(version="1.4")
 
 public interface PushToOmiciaActivities {
-    
-    public void initialize(S3NameResource vcfResource);
-    
+
      // returns local path to vcf file
-    public String downloadToLocalEC2();
+    public String downloadToLocalEC2(S3NameResource nameResource);
     
     // returns local path to converted vcf file
     public String convertCoordinates(String location);
     
     // push file to Omicia for processing.
-    public void pushToOmicia(String location);
+    public void push(String location, S3NameResource nameResource);
 
 }

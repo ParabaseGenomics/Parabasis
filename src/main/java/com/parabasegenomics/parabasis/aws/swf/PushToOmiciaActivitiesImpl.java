@@ -27,20 +27,12 @@ public class PushToOmiciaActivitiesImpl implements PushToOmiciaActivities {
     private final EC2Resource ec2Resource = new EC2Resource();
     private final S3TransferUtility s3TransferUtility = new S3TransferUtility();
     
-    private S3NameResource nameResource;
-    
-    private final Logger logger 
+    private static final Logger logger 
         = Logger.getLogger(PushToOmiciaActivitiesImpl.class.getName());
     
-
-    @Override
-    public void initialize(S3NameResource vcfResource) {
-        nameResource = vcfResource;
-    }
-    
     
     @Override
-    public String downloadToLocalEC2() {
+    public String downloadToLocalEC2(S3NameResource nameResource) {
         
         // last bit of the key is the filename we want to use upon download
         String localFile 
@@ -92,14 +84,16 @@ public class PushToOmiciaActivitiesImpl implements PushToOmiciaActivities {
      /**
      * Push a vcf file to Omicia for annotation.
      * @param location Local path to the vcf file (b37 reference).
+     * @param nameResource
      */
     @Override
-    public void pushToOmicia(String location) {
+    public void push(
+        String location, 
+        S3NameResource nameResource) {
         // set the correct project id for Omicia given where the vcf file is going.
         String omiciaProjectId 
             = omiciaResource.getValidationId(nameResource.getAssay());
-        
-        
+            
         List<String> command = new ArrayList<>();
         command.add(ec2Resource.getPythonPath());
         command.add(ec2Resource.getOmiciaScriptPath());

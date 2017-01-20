@@ -5,13 +5,13 @@
  */
 package com.parabasegenomics.parabasis.aws.swf;
 
-import com.amazonaws.AmazonClientException;
 import com.amazonaws.AmazonServiceException;
-import com.amazonaws.services.simpleworkflow.flow.annotations.Asynchronous;
 import com.parabasegenomics.parabasis.aws.S3TransferUtility;
 import com.parabasegenomics.parabasis.util.CreateResourceJsonUtility;
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -23,26 +23,12 @@ public class CreateGapsReportsActivitiesImpl implements  CreateGapsReportsActivi
     
     private final EC2Resource ec2Resource = new EC2Resource();
     private final S3TransferUtility s3TransferUtility = new S3TransferUtility();
-    private GapsReportResource gapsReportResource;
-    
-    private S3NameResource nameResource;
-    private Integer coverageThreshold;
-    
+
     private static final Logger logger 
         = Logger.getLogger(CreateGapsReportsActivitiesImpl.class.getName());
     
-
-    
     @Override
-    public void initialize(S3NameResource bamResource, Integer threshold) {
-        nameResource = bamResource;
-        gapsReportResource = new GapsReportResource(nameResource);
-        coverageThreshold = threshold;  
-    }
-    
-    
-    @Override
-    public String downloadToLocalEC2() {
+    public String downloadToLocalEC2(S3NameResource nameResource) {
         // the filename we want to use upon download
         String localFilepath
             = ec2Resource.getTmpDir()
@@ -73,10 +59,15 @@ public class CreateGapsReportsActivitiesImpl implements  CreateGapsReportsActivi
     /**
      * Creates the json file with resources required to create the gaps reports.
      * @param localBamFile
+     * @param coverageThreshold
+     * @param nameResource
      * @return Returns the path to the resource file.
      */
     @Override
-    public String createResourceFile(String localBamFile) {
+    public String createResourceFile(
+        String localBamFile,
+        Integer coverageThreshold,
+        S3NameResource nameResource) {
         
         String targetFilepath 
             = ec2Resource.getResourceDir() + "/NBDx/targets.bed";
@@ -123,52 +114,43 @@ public class CreateGapsReportsActivitiesImpl implements  CreateGapsReportsActivi
     
     /**
      * Push the local file to S3 for archiving.
+     * @param nameResource
      * @return 
      * @throws java.lang.InterruptedException 
      */
     @Override
-    public void pushGapReportsToS3() 
+    public void pushGapReportsToS3(S3NameResource nameResource) 
     throws AmazonServiceException, InterruptedException {
        
+        GapsReportResource gapsReportResource
+            = new GapsReportResource(nameResource);
+        
         String bucket = nameResource.getBucket();
         String keyPrefix = nameResource.getKeyPrefix();
         
         String targetGapFilename = gapsReportResource.getTargetReportFilename();
         File targetGapFile = new File(ec2Resource.getTmpDir() + "/" + targetGapFilename);
-        String targetGapFileKey = keyPrefix + "/" + targetGapFilename;
  
         String geneGapFilename = gapsReportResource.getGeneReportFilename();
         File geneGapFile = new File(ec2Resource.getTmpDir() + "/" + geneGapFilename);
-        String geneGapFileKey = keyPrefix + "/" + geneGapFilename;
         
         String resourceFilename = gapsReportResource.getResourceFilename();
         File resourceFile = new File(ec2Resource.getTmpDir() + "/" + resourceFilename);
-        String resourceFileKey = keyPrefix + "/" + resourceFilename;
         
-        //pushFileToS3(targetGapFile,bucket,targetGapFileKey);
-        //pushFileToS3(geneGapFile,bucket,geneGapFileKey);
-        pushFileToS3(resourceFile,bucket,resourceFileKey);
+        List<File> filesToUpload = new ArrayList<>();
+        //filesToUpload.add(targetGapFile);
+        //filesToUpload.add(geneGapFile);
+        filesToUpload.add(resourceFile);
+        File localDir = new File(ec2Resource.getTmpDir());
         
-    }
-    
-    /**
-     *
-     * @param file
-     * @param bucket
-     * @param key
-     * @throws AmazonServiceException
-     * @throws InterruptedException
-     */
-    @Asynchronous
-    public void pushFileToS3(File file, String bucket, String key) 
-    throws AmazonServiceException, InterruptedException {
-        try { 
-            s3TransferUtility.uploadFileToS3Bucket(file, bucket, key);
-        } catch (AmazonClientException ex) {
-            String message 
-                = "Cannot upload:"+file.getAbsolutePath()+ " to " + nameResource.getBucket() +"\t"+bucket+ "\t" + key;
-            logger.log(Level.SEVERE, message, ex);
-        }  
+        s3TransferUtility
+            .uploadFileListToS3Bucket(
+            bucket,
+            keyPrefix,
+            localDir,    
+            filesToUpload);
+        
+
     }
     
 }

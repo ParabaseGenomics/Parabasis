@@ -20,6 +20,6 @@ import com.amazonaws.services.simpleworkflow.flow.annotations.WorkflowRegistrati
 public interface CreateGapsReportsWorkflow {
     
      @Execute(version = "1.4")
-     public void process(S3NameResource bamParser, Integer threshold);
+     public void runGapsReport(S3NameResource bamParser, Integer threshold);
     
 }
