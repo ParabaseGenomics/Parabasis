@@ -5,6 +5,7 @@
  */
 package com.parabasegenomics.parabasis.aws.swf;
 
+import com.amazonaws.AmazonClientException;
 import com.amazonaws.AmazonServiceException;
 import com.parabasegenomics.parabasis.aws.S3TransferUtility;
 import com.parabasegenomics.parabasis.util.CreateResourceJsonUtility;
@@ -140,15 +141,19 @@ public class CreateGapsReportsActivitiesImpl implements  CreateGapsReportsActivi
         List<File> filesToUpload = new ArrayList<>();
         //filesToUpload.add(targetGapFile);
         //filesToUpload.add(geneGapFile);
-        filesToUpload.add(resourceFile);
+        filesToUpload.add(new File(resourceFile.getAbsolutePath()));
         File localDir = new File(ec2Resource.getTmpDir());
         
+        try {
         s3TransferUtility
             .uploadFileListToS3Bucket(
             bucket,
             keyPrefix,
             localDir,    
             filesToUpload);
+        } catch (AmazonClientException ace) {
+            System.out.println("grr:"+bucket+" "+keyPrefix+" "+localDir+" "+filesToUpload.get(0));
+        }
         
 
     }

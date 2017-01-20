@@ -26,13 +26,13 @@ public class SequencingWorkflowImpl implements SequencingWorkflow {
     @Override
     public void process(S3NameResource vcfParser, S3NameResource bamParser) {
 
-        PushToOmiciaWorkflowClient pushToOmiciaWorkflowClient 
-            = pushToOmiciaWorkflowFactory.getClient();
+        //PushToOmiciaWorkflowClient pushToOmiciaWorkflowClient 
+        //    = pushToOmiciaWorkflowFactory.getClient();
 
         CreateGapsReportsWorkflowClient gapsReports20xWorkflowClient 
             = gapsReports20xWorkflowFactory.getClient();
                  
-        pushToOmiciaWorkflowClient.pushToOmicia(vcfParser);
+        //pushToOmiciaWorkflowClient.pushToOmicia(vcfParser);
         gapsReports20xWorkflowClient.runGapsReport(bamParser,20);
         
         //Promise<Void> gaps20xDone = processFirstGapsReport(bamParser);

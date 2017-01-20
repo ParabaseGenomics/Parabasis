@@ -34,23 +34,18 @@ public class CreateGapsReportsWorkflowImpl implements CreateGapsReportsWorkflow 
     }
 
     @Asynchronous
-    Promise<String> createResourceFile(
+    public Promise<String> createResourceFile(
         Promise<String> bamFile, 
         Integer threshold,
         S3NameResource bamResource) {
-     
+
         return (gapsReportsActivitiesClient
-                .createResourceFile(bamFile.get(),threshold,bamResource));
-       
+            .createResourceFile(bamFile.get(),threshold,bamResource));
     }
     
     @Asynchronous
-    void push(S3NameResource nameResource, Promise<Void> ranReports) {
-        if (ranReports.isReady()) {
-            gapsReportsActivitiesClient.pushGapReportsToS3(nameResource);
-        } //else {
-          //  throw new IllegalStateException("reports not created");
-        //}
+    public void push(S3NameResource nameResource, Promise<Void> ranReports) {
+        gapsReportsActivitiesClient.pushGapReportsToS3(nameResource);
     }
         
 }

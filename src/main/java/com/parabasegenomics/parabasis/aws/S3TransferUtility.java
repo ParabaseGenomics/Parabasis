@@ -137,9 +137,7 @@ public class S3TransferUtility {
             + destinationFile;
         logger.log(Level.INFO,logString);
         download.waitForCompletion();
-         if (download.isDone()) {
-            transferManager.shutdownNow();
-        }
+        
     }
         
     
@@ -171,7 +169,7 @@ public class S3TransferUtility {
         download.waitForCompletion();
         
         if (download.isDone()) {
-            transferManager.shutdownNow();
+            transferManager.shutdownNow(false);
         }
     }    
     
@@ -188,7 +186,7 @@ public class S3TransferUtility {
         String key) 
     throws AmazonClientException, AmazonServiceException, InterruptedException {
         Upload upload = transferManager.upload(bucket,key,file);   
-        upload.addProgressListener(progressTracker);
+        //upload.addProgressListener(progressTracker);
         
         upload.waitForCompletion();
     }
@@ -199,7 +197,7 @@ public class S3TransferUtility {
         File localDir,    
         List<File> filesToUpload) 
     throws AmazonClientException, AmazonServiceException, InterruptedException {
-        
+
         final MultipleFileUpload upload
             = transferManager.uploadFileList(
                 bucket, keyPrefix, localDir, filesToUpload);
@@ -210,13 +208,15 @@ public class S3TransferUtility {
             + "/" 
             + keyPrefix 
             + " from " 
-            + localDir;
+            + localDir + "/" + filesToUpload.get(0);
         logger.log(Level.INFO,logString);
-                
-        upload.waitForCompletion();
-        if (upload.isDone()) {
-            transferManager.shutdownNow();
-        }
+        
+        //try {
+        //    upload.waitForCompletion();
+        //} catch (AmazonClientException ace) {
+        //    logger.log(Level.SEVERE,"aiggh:"+localDir+" "+ace.getStackTrace());
+        //}
+        
     }
     
     

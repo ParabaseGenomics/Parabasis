@@ -34,12 +34,8 @@ public class PushToOmiciaWorkflowImpl implements PushToOmiciaWorkflow {
     private void uploadToOmicia(
         Promise<String> convertedFile,
         S3NameResource nameResource) {
-        
-        if (convertedFile.isReady()) {
-            pushToOmiciaActivitiesClient.push(convertedFile.get(), nameResource);
-        } //else {
-        //    throw new IllegalStateException("not read to upload " + convertedFile);
-        //}
+
+        pushToOmiciaActivitiesClient.push(convertedFile.get(), nameResource);
         
     }
 }
