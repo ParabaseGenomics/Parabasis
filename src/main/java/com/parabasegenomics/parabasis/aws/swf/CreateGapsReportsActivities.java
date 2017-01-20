@@ -27,7 +27,7 @@ public interface CreateGapsReportsActivities {
         S3NameResource nameResource);
     
     // run the gaps report locally - return the local path to the reports
-    public void runGapsReport(String resourceFilepath);
+    public void generateGapsReport(String resourceFilepath);
     
     // push the gap reports to S3 for archiving.
     public void pushGapReportsToS3(S3NameResource nameResource)

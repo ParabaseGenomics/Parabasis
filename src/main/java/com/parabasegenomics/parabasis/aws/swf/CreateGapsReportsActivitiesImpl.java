@@ -108,7 +108,7 @@ public class CreateGapsReportsActivitiesImpl implements  CreateGapsReportsActivi
      * @return 
      */
     @Override
-    public void runGapsReport(String resourceFilepath) {
+    public void generateGapsReport(String resourceFilepath) {
         // do nothing yet
     }
     

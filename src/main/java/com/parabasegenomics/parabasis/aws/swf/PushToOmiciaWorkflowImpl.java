@@ -25,13 +25,21 @@ public class PushToOmiciaWorkflowImpl implements PushToOmiciaWorkflow {
         uploadToOmicia(convertedVcfFile,nameResource);
     }
     
-    
+    /**
+     *
+     * @param convertedFile
+     * @param nameResource
+     */
     @Asynchronous
-    public void uploadToOmicia(
+    private void uploadToOmicia(
         Promise<String> convertedFile,
         S3NameResource nameResource) {
         
-        pushToOmiciaActivitiesClient.push(convertedFile.get(), nameResource);
+        if (convertedFile.isReady()) {
+            pushToOmiciaActivitiesClient.push(convertedFile.get(), nameResource);
+        } //else {
+        //    throw new IllegalStateException("not read to upload " + convertedFile);
+        //}
         
     }
 }
