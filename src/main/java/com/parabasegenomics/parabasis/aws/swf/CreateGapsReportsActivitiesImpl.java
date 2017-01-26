@@ -11,8 +11,10 @@ import com.parabasegenomics.parabasis.aws.S3TransferUtility;
 import com.parabasegenomics.parabasis.util.CreateResourceJsonUtility;
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.FileHandler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -27,7 +29,23 @@ public class CreateGapsReportsActivitiesImpl implements  CreateGapsReportsActivi
 
     private static final Logger logger 
         = Logger.getLogger(CreateGapsReportsActivitiesImpl.class.getName());
+    private final String logFileName = "CreateGapsReportActivitiesImpl.log";
+    private FileHandler fileHandler;
     
+    public CreateGapsReportsActivitiesImpl() {
+        
+        try {
+            fileHandler = new FileHandler("%h/"+logFileName,true);
+        } catch (IOException ex) {
+        }
+
+        fileHandler.setLevel(Level.ALL);
+        logger.setLevel(Level.ALL);
+        logger.setUseParentHandlers(false);
+        logger.addHandler(fileHandler);
+    }
+     
+     
     @Override
     public String downloadToLocalEC2(S3NameResource nameResource) {
         // the filename we want to use upon download
@@ -145,17 +163,26 @@ public class CreateGapsReportsActivitiesImpl implements  CreateGapsReportsActivi
         File localDir = new File(ec2Resource.getTmpDir());
         
         try {
-        s3TransferUtility
-            .uploadFileListToS3Bucket(
-            bucket,
-            keyPrefix,
-            localDir,    
-            filesToUpload);
-        } catch (AmazonClientException ace) {
-            System.out.println("grr:"+bucket+" "+keyPrefix+" "+localDir+" "+filesToUpload.get(0));
+            s3TransferUtility
+                .uploadFileListToS3Bucket(
+                bucket,
+                keyPrefix,
+                localDir,    
+                filesToUpload);
+        } catch (AmazonClientException ex) {
+            String message = "Cannot upload to: " 
+                + nameResource.getBucket()
+                + "/"
+                + nameResource.getKey();
+            logger.log(Level.SEVERE, message, ex);
         }
         
-
+    }
+    
+    
+    @Override
+    public void dummyUp() {
+        
     }
     
 }

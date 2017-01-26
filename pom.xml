@@ -36,7 +36,7 @@
         <dependency>
             <groupId>com.amazonaws</groupId>
             <artifactId>aws-java-sdk</artifactId>
-            <version>1.11.57</version>
+            <version>1.11.83</version>
         </dependency>
         <dependency>
             <groupId>log4j</groupId>
@@ -71,10 +71,7 @@
             <plugin>
                 <artifactId>maven-assembly-plugin</artifactId>
                 <executions>                    
-                        
-                         
-                        
-                       
+
                         <execution>
                             <id>Build Sequencing workflow worker</id>
                             <configuration>

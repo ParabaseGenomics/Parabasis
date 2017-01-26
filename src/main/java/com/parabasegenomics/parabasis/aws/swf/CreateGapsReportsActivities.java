@@ -34,4 +34,5 @@ public interface CreateGapsReportsActivities {
     throws AmazonServiceException, InterruptedException;
     
     
+    public void dummyUp();
 }

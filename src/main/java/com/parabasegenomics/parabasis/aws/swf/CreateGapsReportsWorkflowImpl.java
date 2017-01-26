@@ -19,7 +19,7 @@ public class CreateGapsReportsWorkflowImpl implements CreateGapsReportsWorkflow 
 
     @Override
     public void runGapsReport(S3NameResource bamResource, Integer threshold) {
-        
+           
         Promise<String> localBamFile 
             = gapsReportsActivitiesClient.downloadToLocalEC2(bamResource);
         

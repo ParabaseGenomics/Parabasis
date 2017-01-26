@@ -12,6 +12,7 @@ import com.amazonaws.auth.profile.ProfileCredentialsProvider;
 import com.amazonaws.event.ProgressTracker;
 import com.amazonaws.regions.Region;
 import com.amazonaws.regions.Regions;
+import com.amazonaws.services.s3.AmazonS3ClientBuilder;
 import com.amazonaws.services.s3.AmazonS3EncryptionClient;
 import com.amazonaws.services.s3.model.CryptoConfiguration;
 import com.amazonaws.services.s3.model.KMSEncryptionMaterialsProvider;
@@ -19,6 +20,7 @@ import com.amazonaws.services.s3.transfer.Download;
 import com.amazonaws.services.s3.transfer.MultipleFileDownload;
 import com.amazonaws.services.s3.transfer.MultipleFileUpload;
 import com.amazonaws.services.s3.transfer.TransferManager;
+import com.amazonaws.services.s3.transfer.TransferManagerBuilder;
 import com.amazonaws.services.s3.transfer.Upload;
 import java.io.BufferedReader;
 import java.io.File;
@@ -58,8 +60,8 @@ public class S3TransferUtility {
     private String kms_cmk_id;  
     
     private final TransferManager transferManager;
-    
-    private final ProgressTracker progressTracker;
+
+    private ProgressTracker progressTracker;
     
     public S3TransferUtility()  {
         System.setProperty(SDKGlobalConfiguration.ENABLE_S3_SIGV4_SYSTEM_PROPERTY, "true");
@@ -82,15 +84,19 @@ public class S3TransferUtility {
                 
         KMSEncryptionMaterialsProvider materialProvider 
                 = new KMSEncryptionMaterialsProvider(kms_cmk_id);
-       
+
         encryptionClient = new AmazonS3EncryptionClient(
                 new ProfileCredentialsProvider().getCredentials(), 
                 materialProvider,
                 new CryptoConfiguration().withKmsRegion(Regions.US_EAST_1))
             .withRegion(Region.getRegion(Regions.US_EAST_1));
-        
-        transferManager = new TransferManager(encryptionClient);
-        progressTracker = new ProgressTracker();
+
+        transferManager 
+            = TransferManagerBuilder.standard()
+                .withS3Client(encryptionClient)
+                .build();
+                
+        //progressTracker = new ProgressTracker();
 
     }
     
@@ -201,21 +207,23 @@ public class S3TransferUtility {
         final MultipleFileUpload upload
             = transferManager.uploadFileList(
                 bucket, keyPrefix, localDir, filesToUpload);
-
+        
         String logString 
             = "Uploading to: " 
             + bucket 
             + "/" 
             + keyPrefix 
             + " from " 
-            + localDir + "/" + filesToUpload.get(0);
+            + localDir
+            +" "
+            + filesToUpload.get(0);
         logger.log(Level.INFO,logString);
-        
-        //try {
-        //    upload.waitForCompletion();
-        //} catch (AmazonClientException ace) {
-        //    logger.log(Level.SEVERE,"aiggh:"+localDir+" "+ace.getStackTrace());
-        //}
+       
+        AmazonClientException waitForException = upload.waitForException();
+        if (waitForException != null) {
+            logger.log(Level.INFO,waitForException.getMessage());
+        }
+       
         
     }
     
@@ -233,7 +241,7 @@ public class S3TransferUtility {
             key = reader.readLine();
             if (key.equals(KEY_TAG)) {
                 String keyLine = reader.readLine();
-                key = keyLine.substring(keyLine.indexOf(EQUALS));
+                key = keyLine.substring(keyLine.indexOf(EQUALS)+1);
                 return key;
             }
         }
