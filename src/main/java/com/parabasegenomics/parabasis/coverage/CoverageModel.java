@@ -48,6 +48,7 @@ public class CoverageModel {
         coeffOfVariations = null;
         count=0;
         threshold=10.;
+        counts = null;
     }
     
     /**
@@ -272,7 +273,7 @@ public class CoverageModel {
                 + index +" "+thisPosition +" "+positions[index]);
         }
 
-        if (count==1) {
+        if (counts[index]==0) {
             means[index]=thisCount;
             varianceDeviations[index]=0;
             coeffOfVariations[index]=0;
@@ -281,12 +282,13 @@ public class CoverageModel {
             
             ++counts[index];
             double currentMeanDiff = thisCount-means[index];
-            means[index] += (currentMeanDiff)/count;
+            means[index] += (currentMeanDiff)/counts[index];
             
             double updatedMeanDiff = thisCount-means[index];
-            varianceDeviations[index] += (currentMeanDiff*updatedMeanDiff)/(count-1);
+            varianceDeviations[index] += (currentMeanDiff*updatedMeanDiff)/(counts[index]-1);
             coeffOfVariations[index]
-                = (1+(1/(4*count))) * (Math.sqrt(varianceDeviations[index])/means[index]);
+                = (1+(1/(4*counts[index]))) * (Math.sqrt(varianceDeviations[index])/means[index]);
+            
         }
         
     }
