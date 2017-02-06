@@ -8,6 +8,7 @@ package com.parabasegenomics.parabasis.coverage;
 import static com.parabasegenomics.parabasis.decorators.AnnotationKeys.GENE_KEY;
 import static com.parabasegenomics.parabasis.decorators.AnnotationKeys.HOM_KEY;
 import com.parabasegenomics.parabasis.util.Reader;
+import com.parabasegenomics.parabasis.vcf.VcfChrXCounter;
 import htsjdk.samtools.util.Interval;
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -43,6 +44,7 @@ public class FindCnvCandidates {
     private static final String GENELIST = "GENELIST";
     private static final String OUTPUT = "OUTPUT";
     private static final String COVERAGE_THRESHOLD = "THRESHOLD";
+    private static final String VCF = "VCF";
     
     /**
      * @param args the command line arguments
@@ -65,14 +67,28 @@ public class FindCnvCandidates {
             throw new IOException(
                 "Must specify a targets file in the json resource");
         }
-        
+       
         JsonArray bamArray = jsonObject.getJsonArray(BAM);
         
         String assayName = "genericAssay";
         if (jsonObject.containsKey(ASSAY)) {
             assayName = jsonObject.getString(ASSAY);
         }
-        
+
+        JsonReader testReader 
+            = Json.createReader(new FileReader(testResourceFile.getAbsolutePath()));
+        JsonObject testJsonObject = testReader.readObject();
+           
+        String vcfFile;
+        VcfChrXCounter vcfChrXCounter = null;
+        if (testJsonObject.containsKey(VCF)) {
+            vcfFile = testJsonObject.getString(VCF);
+            vcfChrXCounter = new VcfChrXCounter(vcfFile);
+        } else {
+            throw new IOException(
+                "Must specify a vcf file for this sample in the json resource");
+        }
+   
         Reader utilityReader = new Reader();
         List<Interval> targetIntervals
             = utilityReader.readBEDFile(targetIntervalFile);
@@ -83,7 +99,7 @@ public class FindCnvCandidates {
         if (coverageModelFile.exists()) {
             coverageModel.read(coverageModelFile);
         } else {
-            coverageModel.build(targetIntervals,bamArray);
+            coverageModel.build(targetIntervals,bamArray, vcfChrXCounter.isMale());
             coverageModel.write(coverageModelFile);
         }
        
@@ -91,17 +107,16 @@ public class FindCnvCandidates {
        IntervalCoverageManager testCoverageManager
            = new IntervalCoverageManager(assayName,targetIntervals);
        
-       JsonReader testReader 
-            = Json.createReader(new FileReader(testResourceFile.getAbsolutePath()));
-        JsonObject testJsonObject = testReader.readObject();
-           
+      
         JsonArray testBamArray = testJsonObject.getJsonArray(BAM);
         String testBamFilepath = testBamArray.getString(0);
         testCoverageManager.parseBam(new File(testBamFilepath));
         
-         Integer readCount = testCoverageManager.getReadCount();
-         Double testWeight =  2*1000000000.0/(readCount*75); // the 2 because all Kaler samples are male
-        
+        Integer readCount = testCoverageManager.getReadCount();
+        Double testWeight =  1000000000.0/(readCount*75); 
+        if (vcfChrXCounter.isMale())  {
+            testWeight *=2 ;
+        }       
         coverageModel.setThreshold(threshold);
         
         
@@ -120,9 +135,9 @@ public class FindCnvCandidates {
                         .getCoverageAt(interval, positionString);
 
                 Integer nextPos = pos+1;
-                if (coverageModel
-                    .isOutlier(locusCoverage,index,positionString)) {
-                    
+                //if (coverageModel
+                //    .isOutlier(locusCoverage,index,positionString)) {
+                  if (true)  {
                     System.err.println(
                     contig
                     +"\t"

@@ -35,7 +35,7 @@ public class VcfLoader {
     private int variantCount;
     
     private final BufferedReader reader;
-    private VcfCohort cohort;
+    private final VcfCohort cohort;
     
     public VcfLoader(String filePath) 
     throws FileNotFoundException {

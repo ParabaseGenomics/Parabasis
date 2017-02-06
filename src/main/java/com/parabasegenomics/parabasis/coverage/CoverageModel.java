@@ -80,9 +80,10 @@ public class CoverageModel {
      * Build the member arrays from a list of intervals and bam files.  
      * @param intervals 
      * @param jsonArray 
+     * @param isMale 
      * @throws java.io.IOException 
      */
-    public void build(List<Interval> intervals,JsonArray jsonArray) 
+    public void build(List<Interval> intervals,JsonArray jsonArray, boolean isMale) 
     throws IOException {
         
         initialize(intervals);
@@ -99,8 +100,6 @@ public class CoverageModel {
             Double weight =  1000000000.0/(readCount*75);
 
             incrementCount();
-
-            boolean isMale = parseBamNameForMF(new File(bamFilepath));
 
             Integer index=0;
             for (Interval interval : intervals) {
@@ -345,7 +344,7 @@ public class CoverageModel {
      * @param file
      * @return 
      */
-     private boolean parseBamNameForMF(File file) {
+     public boolean parseBamNameForMF(File file) {
         String fileAsString = file.getName();
         return (fileAsString.contains("AB") 
             || fileAsString.contains("AMI")
