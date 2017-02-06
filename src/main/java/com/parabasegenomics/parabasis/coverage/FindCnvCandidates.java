@@ -69,6 +69,7 @@ public class FindCnvCandidates {
         }
        
         JsonArray bamArray = jsonObject.getJsonArray(BAM);
+        JsonArray vcfArray = jsonObject.getJsonArray(VCF);
         
         String assayName = "genericAssay";
         if (jsonObject.containsKey(ASSAY)) {
@@ -82,7 +83,7 @@ public class FindCnvCandidates {
         String vcfFile;
         VcfChrXCounter vcfChrXCounter = null;
         if (testJsonObject.containsKey(VCF)) {
-            vcfFile = testJsonObject.getString(VCF);
+            vcfFile = testJsonObject.getJsonArray(VCF).getString(0);
             vcfChrXCounter = new VcfChrXCounter(vcfFile);
         } else {
             throw new IOException(
@@ -99,7 +100,7 @@ public class FindCnvCandidates {
         if (coverageModelFile.exists()) {
             coverageModel.read(coverageModelFile);
         } else {
-            coverageModel.build(targetIntervals,bamArray, vcfChrXCounter.isMale());
+            coverageModel.build(targetIntervals,bamArray,vcfArray);
             coverageModel.write(coverageModelFile);
         }
        

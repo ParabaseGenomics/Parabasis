@@ -5,6 +5,7 @@
  */
 package com.parabasegenomics.parabasis.coverage;
 
+import com.parabasegenomics.parabasis.vcf.VcfChrXCounter;
 import htsjdk.samtools.util.Interval;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -79,21 +80,24 @@ public class CoverageModel {
     /**
      * Build the member arrays from a list of intervals and bam files.  
      * @param intervals 
-     * @param jsonArray 
-     * @param isMale 
+     * @param bamArray 
+     * @param vcfArray
      * @throws java.io.IOException 
      */
-    public void build(List<Interval> intervals,JsonArray jsonArray, boolean isMale) 
+    public void build(
+        List<Interval> intervals,
+        JsonArray bamArray, 
+        JsonArray vcfArray) 
     throws IOException {
         
         initialize(intervals);
         
         String assayName="dummy";
-        for (int bamIndex=0; bamIndex<jsonArray.size(); bamIndex++) { 
+        for (int bamIndex=0; bamIndex<bamArray.size(); bamIndex++) { 
             IntervalCoverageManager coverageManager 
                 = new IntervalCoverageManager(assayName,intervals);
 
-            String bamFilepath = jsonArray.getString(bamIndex);
+            String bamFilepath = bamArray.getString(bamIndex);
             coverageManager.parseBam(new File(bamFilepath));
 
             Integer readCount = coverageManager.getReadCount();
@@ -101,6 +105,10 @@ public class CoverageModel {
 
             incrementCount();
 
+            VcfChrXCounter vcfChrXCounter 
+                = new VcfChrXCounter(vcfArray.getString(bamIndex));
+            boolean isMale = vcfChrXCounter.isMale();
+            
             Integer index=0;
             for (Interval interval : intervals) {
                 String contig = interval.getContig();
