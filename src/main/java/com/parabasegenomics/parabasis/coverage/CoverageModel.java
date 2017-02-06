@@ -32,6 +32,7 @@ public class CoverageModel {
     private double [] means;
     private double [] varianceDeviations;
     private double [] coeffOfVariations;
+    private int [] counts;
     
     private Integer count;
     private Double threshold;
@@ -59,6 +60,7 @@ public class CoverageModel {
         means = new double [baseCount];
         varianceDeviations = new double [baseCount];
         coeffOfVariations = new double [baseCount];
+        counts = new int [baseCount];
         
         count=0;
         threshold=10.;
@@ -124,7 +126,10 @@ public class CoverageModel {
                     if (isMale && contig.equals("chrX")) {
                         locusCoverage *= 2.;
                     }
-                    updatePosition(locusCoverage, index, positionString);
+                    
+                    if (locusCoverage >= 40) {
+                        updatePosition(locusCoverage, index, positionString);
+                    }
 
                     index++;  
                 }                          
@@ -175,7 +180,8 @@ public class CoverageModel {
                 writer.write(positions[index]
                     +"\t"+means[index]
                     +"\t"+varianceDeviations[index]
-                    +"\t"+coeffOfVariations[index]);
+                    +"\t"+coeffOfVariations[index]
+                    +"\t"+counts[index]);
                 writer.newLine();
             }
         }
@@ -222,6 +228,7 @@ public class CoverageModel {
         means = new double [baseCount];
         varianceDeviations = new double [baseCount];
         coeffOfVariations = new double [baseCount];
+        counts = new int [baseCount];
         
         Integer index = 0;
         while (reader.ready()) {
@@ -234,6 +241,7 @@ public class CoverageModel {
             means[index]=Double.parseDouble(tokens[1]);
             varianceDeviations[index]=Double.parseDouble(tokens[2]);
             coeffOfVariations[index]=Double.parseDouble(tokens[3]);
+            counts[index]=Integer.parseInt(tokens[4]);
             index++;
         }
         reader.close();
@@ -268,8 +276,10 @@ public class CoverageModel {
             means[index]=thisCount;
             varianceDeviations[index]=0;
             coeffOfVariations[index]=0;
+            counts[index]=1;
         } else {
             
+            ++counts[index];
             double currentMeanDiff = thisCount-means[index];
             means[index] += (currentMeanDiff)/count;
             
