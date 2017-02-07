@@ -128,7 +128,7 @@ public class CoverageModel {
                         locusCoverage *= 2.;
                     }
                     
-                    if (locusCoverage >= 40) {
+                    if (locusCoverage >= 40 && locusCoverage <= 200) {
                         updatePosition(locusCoverage, index, positionString);
                     }
 
@@ -272,7 +272,7 @@ public class CoverageModel {
             throw new IOException("index out of sync with position: " 
                 + index +" "+thisPosition +" "+positions[index]);
         }
-
+        
         if (counts[index]==0) {
             means[index]=thisCount;
             varianceDeviations[index]=0;
@@ -300,6 +300,11 @@ public class CoverageModel {
                 + index +" "+thisPosition +" "+positions[index]);
         }    
 
+        // don't look where the model is inaccurate
+        if (means[index]==0 ) {
+            return false;
+        }
+        
         Double zscore = getZscore(testCount,index);
         if (zscore == null) {
            return false;
