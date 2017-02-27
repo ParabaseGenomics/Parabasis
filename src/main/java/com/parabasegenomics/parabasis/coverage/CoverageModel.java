@@ -126,16 +126,12 @@ public class CoverageModel {
                         = weight*coverageManager.getCoverageAt(interval, positionString);
                     if (isMale && contig.equals("chrX")) {
                         locusCoverage *= 2.;
-                    }
-                    
-                    if (locusCoverage >= 40 && locusCoverage <= 200) {
-                        updatePosition(locusCoverage, index, positionString);
-                    }
-
+                    }                    
+                    updatePosition(locusCoverage, index, positionString);
                     index++;  
                 }                          
-            }            
-        }    
+            } 
+        }        
     }
     
     
@@ -302,6 +298,10 @@ public class CoverageModel {
 
         // don't look where the model is inaccurate
         if (means[index]==0 ) {
+            return false;
+        }
+        
+        if(varianceDeviations[index]==0) {
             return false;
         }
         

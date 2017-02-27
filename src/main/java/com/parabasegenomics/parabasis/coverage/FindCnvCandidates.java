@@ -136,9 +136,9 @@ public class FindCnvCandidates {
                         .getCoverageAt(interval, positionString);
 
                 Integer nextPos = pos+1;
-                //if (coverageModel
-                //    .isOutlier(locusCoverage,index,positionString)) {
-                  if (true)  {
+                if (coverageModel
+                    .isOutlier(locusCoverage,index,positionString)) {
+                   
                     System.err.println(
                     contig
                     +"\t"
