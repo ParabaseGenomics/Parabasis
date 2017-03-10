@@ -297,7 +297,7 @@ public class CoverageModel {
         }    
 
         // don't look where the model is inaccurate
-        if (means[index]==0 ) {
+        if (means[index]<20 ) {
             return false;
         }
         
