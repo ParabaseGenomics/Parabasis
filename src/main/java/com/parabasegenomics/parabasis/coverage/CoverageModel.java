@@ -26,6 +26,8 @@ public class CoverageModel {
 
     private static final String TAB = "\t";
     
+    private Double T = 20.;
+    
     // a position is a string of the form "chrA:position"
     private String [] positions;
     
@@ -33,7 +35,6 @@ public class CoverageModel {
     private double [] varianceDeviations;
     private double [] coeffOfVariations;
     private int [] counts;
-    
     private Integer count;
     private Double threshold;
     
@@ -47,7 +48,7 @@ public class CoverageModel {
         varianceDeviations = null;
         coeffOfVariations = null;
         count=0;
-        threshold=10.;
+        threshold=T;
         counts = null;
     }
     
@@ -62,16 +63,15 @@ public class CoverageModel {
         varianceDeviations = new double [baseCount];
         coeffOfVariations = new double [baseCount];
         counts = new int [baseCount];
-        
         count=0;
-        threshold=10.;
+        threshold=T;
         
-        Integer index=0;
+        Integer index = 0;
         for (Interval interval : intervals) {
             String contig = interval.getContig();
             Integer startPos = interval.getStart();
             Integer endPos = interval.getEnd();
-                
+
             for (Integer pos=startPos; pos<endPos; pos++) {
                 positions[index]
                     = contig + ":" + pos.toString();
@@ -297,7 +297,7 @@ public class CoverageModel {
         }    
 
         // don't look where the model is inaccurate
-        if (means[index]<20 ) {
+        if (means[index]<T ) {
             return false;
         }
         
@@ -362,20 +362,4 @@ public class CoverageModel {
         return number;
     } 
     
-    
-  /**
-     * Ugly hack used to identify the NBDxV1.1 samples for male/female coverage levels
-     * adjustments on the X chr.
-     * @param file
-     * @return 
-     */
-     public boolean parseBamNameForMF(File file) {
-        String fileAsString = file.getName();
-        return (fileAsString.contains("AB") 
-            || fileAsString.contains("AMI")
-            || fileAsString.contains("APHL-7")
-            || fileAsString.contains("10844")
-            || fileAsString.contains("CSC31206"));
-    }
-
 }

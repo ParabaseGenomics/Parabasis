@@ -90,6 +90,8 @@ public class FindCnvCandidates {
                 "Must specify a vcf file for this sample in the json resource");
         }
    
+        boolean sampleIsMale = vcfChrXCounter.isMale();
+        
         Reader utilityReader = new Reader();
         List<Interval> targetIntervals
             = utilityReader.readBEDFile(targetIntervalFile);
@@ -115,9 +117,7 @@ public class FindCnvCandidates {
         
         Integer readCount = testCoverageManager.getReadCount();
         Double testWeight =  1000000000.0/(readCount*75); 
-        if (vcfChrXCounter.isMale())  {
-            testWeight *=2 ;
-        }       
+     
         coverageModel.setThreshold(threshold);
         
         
@@ -127,12 +127,17 @@ public class FindCnvCandidates {
             Integer startPos = interval.getStart();
             Integer endPos = interval.getEnd();
 
+            double scaleFactor = testWeight;
+            if (sampleIsMale && contig.equals("chrX")) {
+                scaleFactor *= 2.;
+            }
+            
             for (Integer pos=startPos; pos<endPos; pos++) {
                 String positionString 
                     = contig + ":" + pos.toString();
 
                 Double locusCoverage 
-                    = testWeight*testCoverageManager
+                    = scaleFactor*testCoverageManager
                         .getCoverageAt(interval, positionString);
 
                 Integer nextPos = pos+1;
